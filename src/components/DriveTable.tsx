@@ -57,7 +57,23 @@ const DriveTable = ({ folders, files, onFolderClick, onFileClick, onRefresh, cur
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    if (!files || files.length === 0) return;
+    console.log('File input event triggered:', {
+      files: files ? Array.from(files).map(f => ({
+        name: f.name,
+        type: f.type,
+        size: f.size
+      })) : 'No files'
+    });
+
+    if (!files || files.length === 0) {
+      console.log('No files selected in input');
+      return;
+    }
+
+    if (!currentFolder?.id) {
+      toast.error('Please select a folder to upload files');
+      return;
+    }
 
     setIsUploading(true);
     const formData = new FormData();
@@ -69,24 +85,37 @@ const DriveTable = ({ folders, files, onFolderClick, onFileClick, onRefresh, cur
       size: f.size
     })));
     
-    // Add all selected files to formData
-    for (let i = 0; i < files.length; i++) {
-      formData.append('files', files[i]);
-    }
+    // Add all selected files to formData with the correct key name 'files'
+    Array.from(files).forEach((file, index) => {
+      console.log(`Appending file ${index + 1} to FormData:`, {
+        name: file.name,
+        type: file.type,
+        size: file.size
+      });
+      formData.append('files', file);
+    });
 
-    // Add folder ID if we're in a folder
-    if (currentFolder?.id) {
-      formData.append('folderId', currentFolder.id.toString());
-      console.log('Uploading to folder ID:', currentFolder.id);
-    } else {
-      console.log('No folder ID provided - uploading to root');
-    }
+    // Verify FormData contents
+    console.log('FormData entries:', Array.from(formData.entries()).map(([key, value]) => ({
+      key,
+      value: value instanceof File ? {
+        name: value.name,
+        type: value.type,
+        size: value.size
+      } : value
+    })));
 
     try {
-      console.log('Starting file upload...');
-      const response = await fetch('/api/upload', {
+      console.log('Starting file upload request...');
+      const response = await fetch(`/api/folders/${currentFolder.id}/files`, {
         method: 'POST',
         body: formData,
+      });
+
+      console.log('Upload response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries())
       });
 
       if (!response.ok) {

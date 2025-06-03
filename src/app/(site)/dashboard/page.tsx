@@ -136,8 +136,11 @@ const Dashboard = () => {
         // Store the files from the current folder
         setPrevFiles(folderData.files || []);
       } else {
+        // At root level, get all files that don't belong to any folder
+        const filesResponse = await fetch('/api/files');
+        const filesData = await filesResponse.json();
         setCurrentFolder(null);
-        setPrevFiles([]);
+        setPrevFiles(filesData.files || []);
       }
     } catch (error) {
       console.error('Error fetching folders and files:', error);

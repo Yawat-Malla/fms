@@ -30,6 +30,7 @@ export const authOptions: NextAuthOptions = {
             password: true,
             role: true,
             profilePicture: true,
+            username: true,
           },
         });
 
@@ -49,6 +50,7 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           role: user.role,
           profilePicture: user.profilePicture,
+          username: user.username,
         };
       },
     }),
@@ -66,6 +68,7 @@ export const authOptions: NextAuthOptions = {
         token.role = user.role;
         token.name = user.name;
         token.profilePicture = user.profilePicture;
+        token.username = user.username;
       }
 
       // Handle session updates
@@ -75,6 +78,7 @@ export const authOptions: NextAuthOptions = {
           name: session.user.name ?? token.name,
           email: session.user.email ?? token.email,
           profilePicture: session.user.profilePicture ?? token.profilePicture,
+          username: session.user.username ?? token.username,
         });
       }
 
@@ -88,6 +92,7 @@ export const authOptions: NextAuthOptions = {
           name: token.name,
           email: token.email,
           profilePicture: token.profilePicture,
+          username: token.username,
         });
       }
       return session;

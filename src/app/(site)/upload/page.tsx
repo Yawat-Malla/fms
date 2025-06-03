@@ -99,11 +99,21 @@ const UploadPage = () => {
       formData.append('source', source);
       formData.append('grantType', grantType);
       formData.append('remarks', remarks);
-      // Append files for each section, with section info
-      a4Files.forEach(file => formData.append('a4Files', file));
-      nepaliFiles.forEach(file => formData.append('nepaliFiles', file));
-      extraFiles.forEach(file => formData.append('extraFiles', file));
-      otherFiles.forEach(file => formData.append('otherFiles', file));
+      
+      // Append files with their section-specific keys
+      a4Files.forEach(file => {
+        formData.append('a4Files', file);
+      });
+      nepaliFiles.forEach(file => {
+        formData.append('nepaliFiles', file);
+      });
+      extraFiles.forEach(file => {
+        formData.append('extraFiles', file);
+      });
+      otherFiles.forEach(file => {
+        formData.append('otherFiles', file);
+      });
+
       // Send request to API
       const response = await fetch('/api/upload', {
         method: 'POST',

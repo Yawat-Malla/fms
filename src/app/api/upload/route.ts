@@ -132,113 +132,165 @@ export async function POST(request: Request) {
     }
 
     const formData = await request.formData();
-    const files = formData.getAll('files') as File[];
-    const folderId = formData.get('folderId') as string;
+    const title = formData.get('title') as string;
+    const fiscalYear = formData.get('fiscalYear') as string;
+    const source = formData.get('source') as string;
+    const grantType = formData.get('grantType') as string;
+    const remarks = formData.get('remarks') as string;
 
-    console.log('[Upload API] Received request:', {
-      fileCount: files.length,
-      folderId,
-      userId: session.user.id
+    // Get files from each section
+    const a4Files = formData.getAll('a4Files') as File[];
+    const nepaliFiles = formData.getAll('nepaliFiles') as File[];
+    const extraFiles = formData.getAll('extraFiles') as File[];
+    const otherFiles = formData.getAll('otherFiles') as File[];
+
+    console.log('[Upload API] Received files:', {
+      a4Files: a4Files.length,
+      nepaliFiles: nepaliFiles.length,
+      extraFiles: extraFiles.length,
+      otherFiles: otherFiles.length
     });
 
-    if (!files || files.length === 0) {
-      console.error('[Upload API] No files provided');
-      return NextResponse.json({ error: 'No files provided' }, { status: 400 });
-    }
-
-    // Get folder information if folderId is provided
-    let folder = null;
-    if (folderId) {
-      folder = await prisma.folder.findUnique({
-        where: { id: parseInt(folderId) },
-        include: {
-          fiscalYear: true,
-          source: true,
-          grantType: true
-        }
+    // Get or create fiscal year
+    let fiscalYearRecord = await prisma.fiscalYear.findFirst({
+      where: { name: fiscalYear }
+    });
+    if (!fiscalYearRecord) {
+      fiscalYearRecord = await prisma.fiscalYear.create({
+        data: { name: fiscalYear }
       });
-
-      if (!folder) {
-        console.error('[Upload API] Folder not found:', folderId);
-        return NextResponse.json({ error: 'Folder not found' }, { status: 404 });
-      }
     }
 
-    // Create upload directory if it doesn't exist
-    if (!existsSync(UPLOAD_DIR)) {
-      console.log('[Upload API] Creating uploads directory');
-      await mkdir(UPLOAD_DIR, { recursive: true });
-    }
-
-    const savedFiles = [];
-    for (const file of files) {
-      console.log('[Upload API] Processing file:', {
-        name: file.name,
-        type: file.type,
-        size: file.size
+    // Get or create source
+    let sourceRecord = await prisma.source.findFirst({
+      where: { name: source }
+    });
+    if (!sourceRecord) {
+      sourceRecord = await prisma.source.create({
+        data: { name: source }
       });
+    }
 
-      const buffer = Buffer.from(await file.arrayBuffer());
-      const fileName = file.name;
-      const filePath = folder 
-        ? join(folder.path, fileName)
-        : join(UPLOAD_DIR, fileName);
+    // Get or create grant type
+    let grantTypeRecord = await prisma.grantType.findFirst({
+      where: { name: grantType }
+    });
+    if (!grantTypeRecord) {
+      grantTypeRecord = await prisma.grantType.create({
+        data: { name: grantType }
+      });
+    }
 
-      // Ensure the directory exists
-      await mkdir(folder ? folder.path : UPLOAD_DIR, { recursive: true });
+    // Create main folder for this upload
+    const mainFolderPath = join(UPLOAD_DIR, title);
+    await mkdir(mainFolderPath, { recursive: true });
 
-      // Save the file
-      await writeFile(filePath, buffer);
-      console.log('[Upload API] File saved to:', filePath);
-
-      // Create file record in database
-      const savedFile = await prisma.file.create({
-        data: {
-          name: fileName,
-          path: filePath,
-          type: file.type,
-          size: file.size,
-          status: 'online',
-          localHash: generateFileHash(fileName, file.size, Date.now()),
-          folder: folder ? {
-            connect: {
-              id: folder.id
-            }
-          } : undefined,
-          user: {
-            connect: {
-              id: session.user.id
-            }
-          },
-          fiscalYear: folder?.fiscalYear ? {
-            connect: {
-              id: folder.fiscalYear.id
-            }
-          } : undefined,
-          source: folder?.source ? {
-            connect: {
-              id: folder.source.id
-            }
-          } : undefined,
-          grantType: folder?.grantType ? {
-            connect: {
-              id: folder.grantType.id
-            }
-          } : undefined
+    const mainFolder = await prisma.folder.create({
+      data: {
+        name: title,
+        path: mainFolderPath,
+        user: {
+          connect: {
+            id: session.user.id
+          }
         },
-      });
+        fiscalYear: {
+          connect: {
+            id: fiscalYearRecord.id
+          }
+        },
+        source: {
+          connect: {
+            id: sourceRecord.id
+          }
+        },
+        grantType: {
+          connect: {
+            id: grantTypeRecord.id
+          }
+        }
+      }
+    });
 
-      console.log('[Upload API] File record created:', savedFile.id);
-
-      // Create notification
-      await notifyFileUpdate(session.user.id, fileName, 'uploaded');
-      savedFiles.push(savedFile);
+    // Save files for each section
+    const allSavedFiles = [];
+    
+    if (a4Files.length > 0) {
+      const savedFiles = await saveSectionFiles(
+        a4Files,
+        'A4',
+        {
+          fiscalYearId: fiscalYearRecord.id,
+          sourceId: sourceRecord.id,
+          grantTypeId: grantTypeRecord.id,
+          remarks
+        },
+        session.user.id,
+        mainFolder
+      );
+      allSavedFiles.push(...savedFiles);
     }
 
-    console.log('[Upload API] Upload completed successfully');
+    if (nepaliFiles.length > 0) {
+      const savedFiles = await saveSectionFiles(
+        nepaliFiles,
+        'Nepali',
+        {
+          fiscalYearId: fiscalYearRecord.id,
+          sourceId: sourceRecord.id,
+          grantTypeId: grantTypeRecord.id,
+          remarks
+        },
+        session.user.id,
+        mainFolder
+      );
+      allSavedFiles.push(...savedFiles);
+    }
+
+    if (extraFiles.length > 0) {
+      const savedFiles = await saveSectionFiles(
+        extraFiles,
+        'Extra',
+        {
+          fiscalYearId: fiscalYearRecord.id,
+          sourceId: sourceRecord.id,
+          grantTypeId: grantTypeRecord.id,
+          remarks
+        },
+        session.user.id,
+        mainFolder
+      );
+      allSavedFiles.push(...savedFiles);
+    }
+
+    if (otherFiles.length > 0) {
+      const savedFiles = await saveSectionFiles(
+        otherFiles,
+        'Other',
+        {
+          fiscalYearId: fiscalYearRecord.id,
+          sourceId: sourceRecord.id,
+          grantTypeId: grantTypeRecord.id,
+          remarks
+        },
+        session.user.id,
+        mainFolder
+      );
+      allSavedFiles.push(...savedFiles);
+    }
+
+    if (allSavedFiles.length === 0) {
+      console.error('[Upload API] No files were successfully processed');
+      return NextResponse.json({ error: 'Failed to upload any files' }, { status: 500 });
+    }
+
+    console.log('[Upload API] Upload completed successfully:', {
+      totalFiles: allSavedFiles.length
+    });
+
     return NextResponse.json({
       message: 'Files uploaded successfully',
-      files: savedFiles
+      files: allSavedFiles
     });
 
   } catch (error) {

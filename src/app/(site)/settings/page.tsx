@@ -42,7 +42,7 @@ export default function SettingsPage() {
   // Profile Settings
   const [profileSettings, setProfileSettings] = useState<ProfileSettings>({
     fullName: session?.user?.name || '',
-    username: session?.user?.email?.split('@')[0] || '',
+    username: session?.user?.username || session?.user?.email?.split('@')[0] || '',
     email: session?.user?.email || '',
     profilePicture: session?.user?.profilePicture || '',
   });
@@ -96,7 +96,7 @@ export default function SettingsPage() {
         fullName: session.user.name || '',
         email: session.user.email || '',
         profilePicture: session.user.profilePicture || '',
-        username: session.user.email?.split('@')[0] || '',
+        username: session.user.username || session.user.email?.split('@')[0] || '',
       }));
     }
   }, [session]);
@@ -106,6 +106,7 @@ export default function SettingsPage() {
     console.log('[Settings Debug] Current session:', {
       user: session?.user,
       profilePicture: session?.user?.profilePicture,
+      username: session?.user?.username,
     });
   }, [session]);
 
@@ -178,6 +179,7 @@ export default function SettingsPage() {
             name: profileSettings.fullName,
             email: profileSettings.email,
             profilePicture: profileSettings.profilePicture,
+            username: profileSettings.username,
             notificationPreferences: notificationSettings,
           }),
         });
@@ -197,18 +199,16 @@ export default function SettingsPage() {
         console.log('[Settings Debug] Fetched updated user:', updatedUser);
 
         // Update session with the fresh user data
-        const updatedSession = {
+        await updateSession({
           ...session,
           user: {
             ...session.user,
             name: updatedUser.name,
             email: updatedUser.email,
             profilePicture: updatedUser.profilePicture,
+            username: updatedUser.username,
           }
-        };
-
-        console.log('[Settings Debug] Updating session with:', updatedSession);
-        await updateSession(updatedSession);
+        });
 
         // Update local state with the fresh data
         setProfileSettings(prev => ({
@@ -216,12 +216,13 @@ export default function SettingsPage() {
           fullName: updatedUser.name,
           email: updatedUser.email,
           profilePicture: updatedUser.profilePicture,
+          username: updatedUser.username,
         }));
 
         toast.success('Settings updated successfully');
 
         // Force a complete refresh of the application
-        window.location.href = '/settings';
+        router.refresh();
       } else {
         console.log('[Settings Debug] No user session found');
       }
@@ -581,14 +582,17 @@ export default function SettingsPage() {
                 />
               </div>
               {/* Save Button */}
-              <div className="mt-6 flex justify-end">
-                <Button
-                  variant="primary"
-                  onClick={handleSaveSettings}
-                  isLoading={isSaving}
-                >
-                  Save Changes
-                </Button>
+              <div className="mt-6 flex flex-col space-y-2">
+                <p className="text-sm text-dark-300 italic">Note: Some changes may require you to log in again to take effect.</p>
+                <div className="flex justify-end">
+                  <Button
+                    variant="primary"
+                    onClick={handleSaveSettings}
+                    isLoading={isSaving}
+                  >
+                    Save Changes
+                  </Button>
+                </div>
               </div>
             </div>
           </Card>

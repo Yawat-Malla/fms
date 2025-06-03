@@ -61,7 +61,7 @@ export async function PATCH(
     const body = await request.json();
     console.log('[API Debug] Update data:', body);
 
-    const { name, email, profilePicture, role, active, notificationPreferences } = body;
+    const { name, email, profilePicture, role, active, notificationPreferences, username } = body;
 
     // Build update data
     const updateData: any = {};
@@ -71,6 +71,7 @@ export async function PATCH(
     if (email !== undefined) updateData.email = email;
     if (profilePicture !== undefined) updateData.profilePicture = profilePicture;
     if (notificationPreferences !== undefined) updateData.notificationPreferences = notificationPreferences;
+    if (username !== undefined) updateData.username = username;
 
     // Only admin can update role and active
     if (currentUser.role === 'admin') {
@@ -94,6 +95,7 @@ export async function PATCH(
         createdAt: true,
         profilePicture: true,
         notificationPreferences: true,
+        username: true,
       },
     });
 

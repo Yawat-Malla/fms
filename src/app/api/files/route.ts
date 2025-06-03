@@ -20,7 +20,8 @@ export async function GET(request: Request) {
       isDeleted: false,
       user: {
         id: session.user.id
-      }
+      },
+      folderId: null // Only get files that don't belong to any folder
     };
 
     // Add filters if they exist
