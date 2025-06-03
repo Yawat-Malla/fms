@@ -1,26 +1,135 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@layer utilities {
+  /* Custom scrollbar styles */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: theme('colors.dark.800');
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: theme('colors.dark.600');
+    border-radius: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: theme('colors.dark.500');
+  }
+
+  /* For Firefox */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: theme('colors.dark.600') theme('colors.dark.800');
   }
 }
 
+:root {
+  --foreground-rgb: 194, 194, 197; /* dark.100 for text */
+  --background-rgb: 26, 27, 30; /* dark.800 for background */
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-rgb));
+  /* iOS-like font rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+@layer base {
+  /* Improve default font rendering */
+  html {
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    text-rendering: optimizeLegibility;
+    touch-action: manipulation;
+  }
+
+  /* Disable iOS tap highlight */
+  a, button {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number'] {
+    -webkit-appearance: none;
+    margin: 0;
+    -moz-appearance: textfield !important;
+  }
+}
+
+@layer components {
+  /* iOS-style button effect */
+  .ios-btn {
+    @apply transform transition-all duration-200 active:scale-95;
+  }
+  
+  /* Page transition animations */
+  .page-transition-enter {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  
+  .page-transition-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 300ms, transform 300ms;
+  }
+  
+  /* Card hover animation */
+  .card-hover {
+    @apply transition-all duration-200 hover:translate-y-[-4px] hover:shadow-lg;
+  }
+
+  /* Pulse animation for actions */
+  .btn-pulse {
+    @apply relative overflow-hidden;
+  }
+
+  .btn-pulse::after {
+    @apply absolute inset-0 opacity-0;
+    content: '';
+    background: radial-gradient(circle, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 60%);
+    transform: scale(0);
+    transition: transform 0.5s, opacity 0.5s;
+  }
+
+  .btn-pulse:active::after {
+    @apply opacity-100;
+    transform: scale(2);
+    transition: 0s;
+  }
+}
+
+/* File type icons */
+.file-icon {
+  @apply flex items-center justify-center w-10 h-10 rounded;
+}
+
+.file-icon-doc {
+  @apply bg-blue-100/10 text-blue-400;
+}
+
+.file-icon-pdf {
+  @apply bg-red-100/10 text-red-400;
+}
+
+.file-icon-xls {
+  @apply bg-green-100/10 text-green-400;
+}
+
+/* Custom bounce animation for loading dots */
+.animate-bounce {
+  animation: bounce 0.8s infinite alternate;
+}
+
+@keyframes bounce {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0.6); opacity: 0.7; }
 }
