@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import Card from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
 import { toast } from 'react-hot-toast';
 import { format } from 'date-fns';
 import dynamic from 'next/dynamic';

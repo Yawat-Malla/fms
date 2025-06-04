@@ -3,13 +3,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import Card from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
 import { useApp } from '@/contexts/AppContext';
 import { toast } from 'react-hot-toast';
 import { useSession } from 'next-auth/react';
-import Avatar from '@/components/ui/Avatar';
-import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
+import { Avatar } from '@/components/ui/Avatar';
+import { ConfirmationDialog } from '@/components/ui/ConfirmationDialog';
+import Modal from '@/components/ui/Modal';
+import Switch from '@/components/ui/Switch';
 
 interface ProfileSettings {
   fullName: string;
@@ -30,6 +32,9 @@ interface AdminSettings {
   siteLogo: string;
   enabledModules: string[];
   maintenanceMode: boolean;
+  maxFileSize: number;
+  allowedFileTypes: string[];
+  retentionPeriod: number;
 }
 
 export default function SettingsPage() {
@@ -60,6 +65,9 @@ export default function SettingsPage() {
     siteLogo: '/logo.png',
     enabledModules: ['files', 'users', 'reports'],
     maintenanceMode: false,
+    maxFileSize: 10,
+    allowedFileTypes: ['pdf', 'doc', 'docx', 'xls', 'xlsx'],
+    retentionPeriod: 30,
   });
 
   // Admin Settings State Management
@@ -86,6 +94,14 @@ export default function SettingsPage() {
     onConfirm: () => {},
     variant: 'danger'
   });
+
+  // Delete Account Modal
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+
+  // Clear Data Modal
+  const [showClearDataModal, setShowClearDataModal] = useState(false);
+  const [isClearingData, setIsClearingData] = useState(false);
 
   // Update useEffect to sync with session changes
   useEffect(() => {
@@ -123,6 +139,9 @@ export default function SettingsPage() {
               siteLogo: settings.siteLogo || '/logo.png',
               enabledModules: settings.enabledModules || ['files', 'users', 'reports'],
               maintenanceMode: settings.maintenanceMode || false,
+              maxFileSize: settings.maxFileSize || 10,
+              allowedFileTypes: settings.allowedFileTypes || ['pdf', 'doc', 'docx', 'xls', 'xlsx'],
+              retentionPeriod: settings.retentionPeriod || 30,
             });
           }
         } catch (error) {
@@ -353,29 +372,24 @@ export default function SettingsPage() {
   const handleDeleteAccount = async () => {
     if (!session?.user?.id) return;
 
-    setConfirmDialog({
-      isOpen: true,
-      title: 'Delete Account',
-      message: 'Are you absolutely sure you want to delete your account? This will permanently delete all your data and cannot be undone.',
-      onConfirm: async () => {
-        try {
-          const response = await fetch(`/api/users/${session.user.id}/danger`, {
-            method: 'DELETE',
-          });
+    setIsDeletingAccount(true);
+    try {
+      const response = await fetch(`/api/users/${session.user.id}/danger`, {
+        method: 'DELETE',
+      });
 
-          if (!response.ok) {
-            throw new Error('Failed to delete account');
-          }
+      if (!response.ok) {
+        throw new Error('Failed to delete account');
+      }
 
       toast.success('Account deleted successfully');
-          router.push('/auth/signin');
-        } catch (error) {
-          console.error('Error deleting account:', error);
-          toast.error('Failed to delete account');
+      router.push('/auth/signin');
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      toast.error('Failed to delete account');
+    } finally {
+      setIsDeletingAccount(false);
     }
-      },
-      variant: 'danger'
-    });
   };
 
   const handleResetSettings = async () => {
@@ -461,6 +475,9 @@ export default function SettingsPage() {
       formData.append('siteName', adminSettings.siteName);
       formData.append('maintenanceMode', String(adminSettings.maintenanceMode));
       formData.append('enabledModules', JSON.stringify(adminSettings.enabledModules));
+      formData.append('maxFileSize', String(adminSettings.maxFileSize));
+      formData.append('allowedFileTypes', JSON.stringify(adminSettings.allowedFileTypes));
+      formData.append('retentionPeriod', String(adminSettings.retentionPeriod));
 
       const fileInput = document.querySelector('#site-logo') as HTMLInputElement;
       if (fileInput?.files?.[0]) {
@@ -489,13 +506,13 @@ export default function SettingsPage() {
   return (
     <div className="max-w-6xl">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-dark-100">Settings</h1>
-        <p className="mt-1 text-sm text-dark-300">Manage your account settings and preferences</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-dark-100">Settings</h1>
+        <p className="mt-1 text-sm text-gray-600 dark:text-dark-300">Manage your account settings and preferences</p>
       </div>
 
       {/* Settings Navigation */}
       <div className="mb-6">
-        <nav className="flex space-x-4 border-b border-dark-700">
+        <nav className="flex space-x-4 border-b border-gray-200 dark:border-dark-700">
           {['profile', 'preferences', 'notifications', 'admin', 'danger'].map((tab) => (
             <button
               key={tab}
@@ -512,10 +529,10 @@ export default function SettingsPage() {
         <div className="space-y-6">
         {/* Profile Settings */}
         {activeTab === 'profile' && (
-          <Card>
+          <Card className="bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700">
             <div className="space-y-4">
-              <h2 className="text-2xl font-semibold text-dark-100 mb-2">Profile Settings</h2>
-              <p className="text-dark-300 mb-4">Update your personal information and profile picture</p>
+              <h2 className="text-2xl font-semibold text-gray-900 dark:text-dark-100">Profile Settings</h2>
+              <p className="text-gray-600 dark:text-dark-300 mb-4">Update your personal information and profile picture</p>
               {/* Profile Picture */}
               <div className="flex items-center space-x-6">
                 <div className="relative h-24 w-24">
@@ -536,7 +553,7 @@ export default function SettingsPage() {
                   />
                   <label
                     htmlFor="profile-picture"
-                    className="cursor-pointer inline-flex items-center px-4 py-2 border border-dark-600 rounded-md shadow-sm text-sm font-medium text-dark-100 hover:bg-dark-700"
+                    className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 dark:border-dark-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-dark-100 hover:bg-gray-50 dark:hover:bg-dark-700"
                   >
                     Change Photo
                   </label>
@@ -544,7 +561,7 @@ export default function SettingsPage() {
               </div>
               {/* Full Name */}
               <div>
-                <label htmlFor="full-name" className="block text-sm font-medium text-dark-200">
+                <label htmlFor="full-name" className="block text-sm font-medium text-gray-700 dark:text-dark-200">
                   Full Name
                 </label>
                 <input
@@ -552,12 +569,12 @@ export default function SettingsPage() {
                   id="full-name"
                   value={profileSettings.fullName}
                   onChange={(e) => setProfileSettings(prev => ({ ...prev, fullName: e.target.value }))}
-                  className="mt-1 block w-full rounded-md border-dark-600 bg-dark-700 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                  className="mt-1 block w-full rounded-md border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-gray-900 dark:text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
                 />
               </div>
               {/* Username */}
           <div>
-                <label htmlFor="username" className="block text-sm font-medium text-dark-200">
+                <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-dark-200">
                   Username
             </label>
               <input
@@ -565,12 +582,12 @@ export default function SettingsPage() {
                   id="username"
                   value={profileSettings.username}
                   onChange={(e) => setProfileSettings(prev => ({ ...prev, username: e.target.value }))}
-                  className="mt-1 block w-full rounded-md border-dark-600 bg-dark-700 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                  className="mt-1 block w-full rounded-md border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-gray-900 dark:text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
                 />
               </div>
               {/* Email */}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-dark-200">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-dark-200">
                   Email
                 </label>
                 <input
@@ -578,12 +595,12 @@ export default function SettingsPage() {
                   id="email"
                   value={profileSettings.email}
                   onChange={(e) => setProfileSettings(prev => ({ ...prev, email: e.target.value }))}
-                  className="mt-1 block w-full rounded-md border-dark-600 bg-dark-700 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                  className="mt-1 block w-full rounded-md border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-gray-900 dark:text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
                 />
               </div>
               {/* Save Button */}
               <div className="mt-6 flex flex-col space-y-2">
-                <p className="text-sm text-dark-300 italic">Note: Some changes may require you to log in again to take effect.</p>
+                <p className="text-sm text-gray-500 dark:text-dark-300 italic">Note: Some changes may require you to log in again to take effect.</p>
                 <div className="flex justify-end">
                   <Button
                     variant="primary"
@@ -602,13 +619,13 @@ export default function SettingsPage() {
         {activeTab === 'preferences' && (
           <Card>
             <div className="space-y-4">
-              <h2 className="text-2xl font-semibold text-dark-100 mb-2">General Preferences</h2>
-              <p className="text-dark-300 mb-4">Customize your application preferences</p>
+              <h2 className="text-2xl font-semibold text-dark-100 dark:text-dark-100 mb-2">General Preferences</h2>
+              <p className="text-dark-300 dark:text-dark-300 mb-4">Customize your application preferences</p>
               {/* Theme Toggle */}
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-medium text-dark-200">Dark Mode</h3>
-                  <p className="text-xs text-dark-400">Switch between light and dark mode</p>
+                  <h3 className="text-sm font-medium text-dark-200 dark:text-dark-200">Theme</h3>
+                  <p className="text-xs text-dark-400 dark:text-dark-400">Switch between light and dark mode</p>
                 </div>
                 <button
                   type="button"
@@ -619,7 +636,7 @@ export default function SettingsPage() {
                   aria-checked={theme === 'dark'}
                   onClick={toggleTheme}
                 >
-                  <span className="sr-only">Dark Mode</span>
+                  <span className="sr-only">Theme Mode</span>
                   <span
                     className={`${
                       theme === 'dark' ? 'translate-x-5' : 'translate-x-0'
@@ -628,19 +645,19 @@ export default function SettingsPage() {
                 </button>
               </div>
               {/* Language Selection */}
-            <div>
-              <label htmlFor="language" className="block text-sm font-medium text-dark-200">
+              <div>
+                <label htmlFor="language" className="block text-sm font-medium text-dark-200 dark:text-dark-200">
                   Language
-              </label>
-              <select
-                id="language"
-                value={language}
-                onChange={(e) => setLanguage(e.target.value as 'en' | 'ne')}
-                  className="mt-1 block w-full rounded-md border-dark-600 bg-dark-700 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-              >
+                </label>
+                <select
+                  id="language"
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value as 'en' | 'ne')}
+                  className="mt-1 block w-full rounded-md border-dark-600 bg-light-200 dark:bg-dark-700 text-dark-900 dark:text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                >
                   <option value="en">English</option>
                   <option value="ne">नेपाली</option>
-              </select>
+                </select>
               </div>
             </div>
           </Card>
@@ -648,180 +665,111 @@ export default function SettingsPage() {
 
         {/* Notification Settings */}
         {activeTab === 'notifications' && (
-          <Card>
+          <Card className="bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700">
             <div className="space-y-6">
-              <h3 className="text-lg font-medium text-dark-100">Notification Preferences</h3>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-dark-100">Notification Preferences</h3>
               
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                    <label className="text-dark-100">File Updates</label>
-                    <p className="text-sm text-dark-300">Get notified when files are updated</p>
-                    </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="sr-only peer"
-                      checked={notificationSettings.fileUpdates}
-                      onChange={(e) => setNotificationSettings(prev => ({
-                        ...prev,
-                        fileUpdates: e.target.checked
-                      }))}
-                    />
-                    <div className="w-11 h-6 bg-dark-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-dark-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
-                  </label>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="text-gray-900 dark:text-dark-100">File Updates</label>
+                    <p className="text-sm text-gray-500 dark:text-dark-300">Get notified when files are updated</p>
                   </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                    <label className="text-dark-100">Security Alerts</label>
-                    <p className="text-sm text-dark-300">Get notified about security-related events</p>
-                    </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="sr-only peer"
-                      checked={notificationSettings.securityAlerts}
-                      onChange={(e) => setNotificationSettings(prev => ({
-                        ...prev,
-                        securityAlerts: e.target.checked
-                      }))}
-                    />
-                    <div className="w-11 h-6 bg-dark-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-dark-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
-                  </label>
+                  <Switch
+                    checked={notificationSettings.fileUpdates}
+                    onChange={(e) => setNotificationSettings(prev => ({
+                      ...prev,
+                      fileUpdates: e.target.checked
+                    }))}
+                  />
                 </div>
 
-              <div className="flex items-center justify-between">
-          <div>
-                    <label className="text-dark-100">System Updates</label>
-                    <p className="text-sm text-dark-300">Get notified about system updates and maintenance</p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="text-gray-900 dark:text-dark-100">Security Alerts</label>
+                    <p className="text-sm text-gray-500 dark:text-dark-300">Get notified about security-related events</p>
+                  </div>
+                  <Switch
+                    checked={notificationSettings.securityAlerts}
+                    onChange={(e) => setNotificationSettings(prev => ({
+                      ...prev,
+                      securityAlerts: e.target.checked
+                    }))}
+                  />
                 </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-            <input
-                  type="checkbox"
-                      className="sr-only peer"
-                      checked={notificationSettings.systemUpdates}
-                  onChange={(e) => setNotificationSettings(prev => ({
-                    ...prev,
-                        systemUpdates: e.target.checked
-                  }))}
-                    />
-                    <div className="w-11 h-6 bg-dark-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-dark-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
-                  </label>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="text-gray-900 dark:text-dark-100">System Updates</label>
+                    <p className="text-sm text-gray-500 dark:text-dark-300">Get notified about system updates and maintenance</p>
+                  </div>
+                  <Switch
+                    checked={notificationSettings.systemUpdates}
+                    onChange={(e) => setNotificationSettings(prev => ({
+                      ...prev,
+                      systemUpdates: e.target.checked
+                    }))}
+                  />
                 </div>
-          </div>
-        </div>
-      </Card>
+              </div>
+            </div>
+          </Card>
         )}
 
         {/* Admin Settings */}
-        {activeTab === 'admin' && session?.user?.role === 'admin' && (
-          <Card>
+        {activeTab === 'admin' && (
+          <Card className="bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700">
             <div className="space-y-4">
-              <h2 className="text-2xl font-semibold text-dark-100 mb-2">Admin Settings</h2>
-              <p className="text-dark-300 mb-4">Manage system-wide settings and configurations</p>
+              <h2 className="text-2xl font-semibold text-gray-900 dark:text-dark-100">Admin Settings</h2>
+              <p className="text-gray-600 dark:text-dark-300 mb-4">Manage system-wide settings and configurations</p>
               
-              {/* Site Configuration */}
-              <div>
-                <h3 className="text-sm font-medium text-dark-200 mb-4">Site Configuration</h3>
+              {/* System Settings */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-dark-100">System Settings</h3>
                 <div className="space-y-4">
-          <div>
-                    <label htmlFor="site-name" className="block text-sm font-medium text-dark-200">
-                      Site Name
-            </label>
+                  {/* File Upload Settings */}
+                  <div>
+                    <label htmlFor="maxFileSize" className="block text-sm font-medium text-gray-700 dark:text-dark-200">
+                      Maximum File Size (MB)
+                    </label>
+                    <input
+                      type="number"
+                      id="maxFileSize"
+                      value={adminSettings.maxFileSize}
+                      onChange={(e) => setAdminSettings(prev => ({ ...prev, maxFileSize: Number(e.target.value) }))}
+                      className="mt-1 block w-full rounded-md border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-gray-900 dark:text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                    />
+                  </div>
+
+                  {/* Allowed File Types */}
+                  <div>
+                    <label htmlFor="allowedFileTypes" className="block text-sm font-medium text-gray-700 dark:text-dark-200">
+                      Allowed File Types
+                    </label>
                     <input
                       type="text"
-                      id="site-name"
-                      value={adminSettings.siteName}
-                      onChange={(e) => setAdminSettings(prev => ({
-                        ...prev,
-                        siteName: e.target.value,
-                      }))}
-              className="mt-1 block w-full rounded-md border-dark-600 bg-dark-700 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                      id="allowedFileTypes"
+                      value={adminSettings.allowedFileTypes.join(', ')}
+                      onChange={(e) => setAdminSettings(prev => ({ ...prev, allowedFileTypes: e.target.value.split(',').map(type => type.trim()) }))}
+                      className="mt-1 block w-full rounded-md border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-gray-900 dark:text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                      placeholder="pdf, doc, docx, xls, xlsx"
                     />
-          </div>
-          <div>
-                    <label htmlFor="site-logo" className="block text-sm font-medium text-dark-200">
-                      Site Logo
-            </label>
-                    <div className="mt-1 flex items-center space-x-4">
-                      <img
-                        src={adminSettings.siteLogo}
-                        alt="Site Logo"
-                        className="h-12 w-12 rounded-md object-contain bg-dark-800"
-                      />
+                  </div>
+
+                  {/* Retention Period */}
+                  <div>
+                    <label htmlFor="retentionPeriod" className="block text-sm font-medium text-gray-700 dark:text-dark-200">
+                      File Retention Period (days)
+                    </label>
                     <input
-                      type="file"
-                      id="site-logo"
-                      accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (event) => {
-                              setAdminSettings(prev => ({
-                                ...prev,
-                                siteLogo: event.target?.result as string,
-                              }));
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        }}
-                      className="mt-1 block w-full text-sm text-dark-400
-                        file:mr-4 file:py-2 file:px-4
-                        file:rounded-md file:border-0
-                        file:text-sm file:font-medium
-                        file:bg-dark-700 file:text-dark-100
-                        hover:file:bg-dark-600"
+                      type="number"
+                      id="retentionPeriod"
+                      value={adminSettings.retentionPeriod}
+                      onChange={(e) => setAdminSettings(prev => ({ ...prev, retentionPeriod: Number(e.target.value) }))}
+                      className="mt-1 block w-full rounded-md border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-gray-900 dark:text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
                     />
                   </div>
                 </div>
-              </div>
-              </div>
-
-              {/* Feature Toggles */}
-              <div>
-                <h3 className="text-sm font-medium text-dark-200 mb-4">Feature Toggles</h3>
-                <div className="space-y-4">
-                  {adminModules.map((module) => (
-                    <div key={module.id} className="flex items-center justify-between">
-                      <div>
-                        <label className="text-sm text-dark-100">{module.label}</label>
-                        <p className="text-xs text-dark-400">Enable/disable {module.id} module</p>
-                      </div>
-                      <input
-                        type="checkbox"
-                        checked={adminSettings.enabledModules.includes(module.id)}
-                        onChange={(e) => {
-                          setAdminSettings(prev => ({
-                            ...prev,
-                            enabledModules: e.target.checked
-                              ? [...prev.enabledModules, module.id]
-                              : prev.enabledModules.filter(m => m !== module.id),
-                          }));
-                        }}
-                        className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-dark-600 rounded"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Maintenance Mode */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-medium text-dark-200">Maintenance Mode</h3>
-                  <p className="text-xs text-dark-400">Put the site in maintenance mode</p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={adminSettings.maintenanceMode}
-                  onChange={(e) => setAdminSettings(prev => ({
-                    ...prev,
-                    maintenanceMode: e.target.checked,
-                  }))}
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-dark-600 rounded"
-                />
               </div>
 
               {/* Save Button */}
@@ -829,9 +777,9 @@ export default function SettingsPage() {
                 <Button
                   variant="primary"
                   onClick={handleAdminSettingsSave}
-                  isLoading={isLoadingAdminSettings}
+                  isLoading={isSaving}
                 >
-                  Save Admin Settings
+                  Save Changes
                 </Button>
               </div>
             </div>
@@ -840,55 +788,105 @@ export default function SettingsPage() {
 
         {/* Danger Zone */}
         {activeTab === 'danger' && (
-          <Card className="border border-red-500">
+          <Card className="bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700">
             <div className="space-y-4">
-              <h2 className="text-2xl font-semibold text-red-500 mb-2">Danger Zone</h2>
-              <p className="text-dark-300 mb-4">Irreversible and destructive actions</p>
+              <h2 className="text-2xl font-semibold text-gray-900 dark:text-dark-100">Danger Zone</h2>
+              <p className="text-gray-600 dark:text-dark-300 mb-4">Irreversible and destructive actions</p>
               
               {/* Delete Account */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-medium text-red-500">Delete Account</h3>
-                  <p className="text-xs text-dark-400">Permanently delete your account and all data</p>
+              <div className="border border-red-200 dark:border-red-900/50 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-dark-100">Delete Account</h3>
+                    <p className="text-sm text-gray-500 dark:text-dark-300">
+                      Permanently delete your account and all associated data
+                    </p>
+                  </div>
+                  <Button
+                    variant="danger"
+                    onClick={() => setShowDeleteAccountModal(true)}
+                  >
+                    Delete Account
+                  </Button>
                 </div>
-                <Button
-                  variant="danger"
-                  onClick={handleDeleteAccount}
-                >
-                  Delete Account
-                </Button>
-          </div>
+              </div>
 
-              {/* Reset Settings */}
-              <div className="flex items-center justify-between">
-          <div>
-                  <h3 className="text-sm font-medium text-red-500">Reset Settings</h3>
-                  <p className="text-xs text-dark-400">Reset all settings to default values</p>
+              {/* Clear All Data */}
+              <div className="border border-red-200 dark:border-red-900/50 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-dark-100">Clear All Data</h3>
+                    <p className="text-sm text-gray-500 dark:text-dark-300">
+                      Delete all your uploaded files and associated data
+                    </p>
+                  </div>
+                  <Button
+                    variant="danger"
+                    onClick={() => setShowClearDataModal(true)}
+                  >
+                    Clear Data
+                  </Button>
                 </div>
-                <Button
-                  variant="danger"
-                  onClick={handleResetSettings}
-                >
-                  Reset Settings
-                </Button>
-          </div>
-
-              {/* Wipe Data */}
-              <div className="flex items-center justify-between">
-          <div>
-                  <h3 className="text-sm font-medium text-red-500">Wipe Data</h3>
-                  <p className="text-xs text-dark-400">Delete all your data from the system</p>
-                </div>
-                <Button
-                  variant="danger"
-                  onClick={handleWipeData}
-                >
-                  Wipe Data
-                </Button>
-          </div>
-        </div>
-      </Card>
+              </div>
+            </div>
+          </Card>
         )}
+
+        {/* Delete Account Modal */}
+        <Modal
+          isOpen={showDeleteAccountModal}
+          onClose={() => setShowDeleteAccountModal(false)}
+          title="Delete Account"
+        >
+          <div className="space-y-4">
+            <p className="text-gray-600 dark:text-dark-300">
+              Are you sure you want to delete your account? This action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowDeleteAccountModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                onClick={handleDeleteAccount}
+                isLoading={isDeletingAccount}
+              >
+                Delete Account
+              </Button>
+            </div>
+          </div>
+        </Modal>
+
+        {/* Clear Data Modal */}
+        <Modal
+          isOpen={showClearDataModal}
+          onClose={() => setShowClearDataModal(false)}
+          title="Clear All Data"
+        >
+          <div className="space-y-4">
+            <p className="text-gray-600 dark:text-dark-300">
+              Are you sure you want to delete all your data? This action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowClearDataModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                onClick={handleWipeData}
+                isLoading={isClearingData}
+              >
+                Clear Data
+              </Button>
+            </div>
+          </div>
+        </Modal>
       </div>
 
       {/* Save Button */}

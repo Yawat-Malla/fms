@@ -1,46 +1,51 @@
-import { useState, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
+import { HTMLAttributes } from 'react';
+import { twMerge } from 'tailwind-merge';
+import Image from 'next/image';
 
-interface AvatarProps {
-  name?: string | null;
-  imageUrl?: string | null;
+interface AvatarProps extends HTMLAttributes<HTMLDivElement> {
+  imageUrl?: string;
+  name: string;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
 }
 
-export default function Avatar({ name, imageUrl, size = 'md', className = '' }: AvatarProps) {
-  // Get initials from name
-  const initials = name && typeof name === 'string'
-    ? name.split(' ').map(n => n[0]).join('').toUpperCase()
-    : '?';
-
-  // Base classes for the avatar container
-  const baseClasses = 'rounded-full flex items-center justify-center bg-dark-600 text-dark-100';
-  
-  // Size classes
+export function Avatar({ imageUrl, name, size = 'md', className = '', ...props }: AvatarProps) {
   const sizeClasses = {
-    sm: 'w-8 h-8 text-sm',
-    md: 'w-10 h-10 text-base',
-    lg: 'w-12 h-12 text-lg'
+    sm: 'h-8 w-8 text-sm',
+    md: 'h-10 w-10 text-base',
+    lg: 'h-12 w-12 text-lg',
   };
 
-  // If we have an image URL, show the image
-  if (imageUrl) {
-    return (
-      <div className={`${baseClasses} ${sizeClasses[size]} ${className} overflow-hidden`}>
-        <img
-          src={imageUrl}
-          alt={name || 'Avatar'}
-          className="w-full h-full object-cover"
-        />
-      </div>
-    );
-  }
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
-  // Otherwise show initials
   return (
-    <div className={`${baseClasses} ${sizeClasses[size]} ${className}`}>
-      <span>{initials}</span>
+    <div
+      className={twMerge(
+        'relative flex items-center justify-center rounded-full overflow-hidden',
+        'bg-primary-100 dark:bg-primary-900',
+        'text-primary-600 dark:text-primary-300',
+        sizeClasses[size],
+        className
+      )}
+      {...props}
+    >
+      {imageUrl ? (
+        <Image
+          src={imageUrl}
+          alt={name}
+          fill
+          className="object-cover"
+        />
+      ) : (
+        <span className="font-medium">{getInitials(name)}</span>
+      )}
     </div>
   );
 } 

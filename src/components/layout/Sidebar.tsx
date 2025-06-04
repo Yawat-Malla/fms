@@ -9,7 +9,7 @@ import { ReactElement } from 'react';
 import { signOut, useSession } from 'next-auth/react';
 import { toast } from 'react-hot-toast';
 import Image from 'next/image';
-import Avatar from '@/components/ui/Avatar';
+import { Avatar } from '@/components/ui/Avatar';
 
 // Define interfaces for navigation items
 interface NavigationItem {
@@ -71,6 +71,39 @@ const generateFiscalYears = (): Decade[] => {
   
   return decades;
 };
+
+// Add static lists for sources and grant types
+const sourceFilters = [
+  { id: 'federal', name: 'Federal Government', icon: (
+    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+  ) },
+  { id: 'provincial', name: 'Provincial Government', icon: (
+    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+  ) },
+  { id: 'local', name: 'Local Municipality', icon: (
+    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+  ) },
+  { id: 'other', name: 'Other', icon: (
+    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+  ) },
+];
+const grantTypeFilters = [
+  { id: 'current', name: 'Current Expenditure', icon: (
+    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+  ) },
+  { id: 'capital', name: 'Capital Expenditure', icon: (
+    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+  ) },
+  { id: 'supplementary', name: 'Supplementary Grant', icon: (
+    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+  ) },
+  { id: 'special', name: 'Special Grant', icon: (
+    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
+  ) },
+  { id: 'other', name: 'Other Grant', icon: (
+    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+  ) },
+];
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -484,17 +517,17 @@ export default function Sidebar() {
   // Render loading state while not mounted
   if (!mounted) {
     return (
-      <div className="flex flex-col h-full bg-dark-800 border-r border-dark-700">
-        <div className="flex-shrink-0 flex items-center px-6 py-5 border-b border-dark-700">
-          <div className="h-10 w-10 rounded-full bg-dark-600 animate-pulse"></div>
+      <div className="flex flex-col h-full bg-white dark:bg-dark-800 border-r border-gray-200 dark:border-dark-700">
+        <div className="flex-shrink-0 flex items-center px-6 py-5 border-b border-gray-200 dark:border-dark-700">
+          <div className="h-10 w-10 rounded-full bg-gray-200 dark:bg-dark-600 animate-pulse"></div>
           <div className="ml-4 space-y-2">
-            <div className="h-4 w-24 bg-dark-600 rounded animate-pulse"></div>
-            <div className="h-3 w-32 bg-dark-600 rounded animate-pulse"></div>
+            <div className="h-4 w-24 bg-gray-200 dark:bg-dark-600 rounded animate-pulse"></div>
+            <div className="h-3 w-32 bg-gray-200 dark:bg-dark-600 rounded animate-pulse"></div>
           </div>
         </div>
         <nav className="flex-1 px-2 py-4 space-y-1">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="h-10 bg-dark-600 rounded animate-pulse mb-2"></div>
+            <div key={i} className="h-10 bg-gray-200 dark:bg-dark-600 rounded animate-pulse mb-2"></div>
           ))}
         </nav>
       </div>
@@ -502,226 +535,554 @@ export default function Sidebar() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-dark-800 border-r border-dark-700">
-      {/* User profile section */}
-      <div className="flex-shrink-0 flex items-center px-6 py-5 border-b border-dark-700">
-        {mounted && (
+    <div className="flex h-screen">
+      {/* Sidebar */}
+      <div className="flex flex-col w-64 bg-white dark:bg-dark-800 border-r border-gray-200 dark:border-dark-700">
+        {/* User Profile */}
+        <div className="p-4 border-b border-gray-200 dark:border-dark-700">
+          <div className="flex items-center space-x-3">
           <Avatar 
-            imageUrl={session?.user?.profilePicture || undefined}
-            name={session?.user?.name || ''}
-            size="md"
-            className="flex-shrink-0"
-          />
-        )}
-        <div className="flex flex-col ml-4 min-w-0">
-          <span className="text-sm font-medium text-dark-100 truncate">
-            {session?.user?.name || 'Loading...'}
-          </span>
-          <span className="text-xs text-dark-300 truncate">
-            {session?.user?.email || 'Loading...'}
-          </span>
+              imageUrl={session?.user?.profilePicture}
+              name={session?.user?.name || 'User'}
+              size="sm"
+            />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-900 dark:text-dark-100 truncate">
+                {session?.user?.name || 'User'}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-dark-300 truncate">
+                {session?.user?.email || 'user@example.com'}
+              </p>
+            </div>
         </div>
       </div>
 
-      {/* Main navigation */}
-      <nav className="flex-1 overflow-y-auto px-2 py-4 space-y-1 scrollbar-thin scrollbar-thumb-dark-600 scrollbar-track-dark-800">
-        {navigation.map((item) => (
-          <div key={item.name}>
-            {item.children ? (
-              <>
-                <motion.button
-                  type="button"
-                  onClick={() => toggleSubmenu(item.name)}
-                  whileHover={{ scale: 1.02 }}
-                  className={
-                    isActive(item.href)
-                      ? 'bg-dark-700 text-dark-100 group w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-200'
-                      : 'text-dark-300 hover:bg-dark-700 hover:text-dark-100 group w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-200'
-                  }
-                >
-                  {item.icon}
-                  {item.name}
-                  <motion.svg
-                    animate={{ rotate: expandedMenus[item.name] ? 90 : 0 }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 24 }}
-                    className="ml-auto h-4 w-4 text-dark-400 transition-transform duration-300 ease-in-out"
-                    xmlns="http://www.w3.org/2000/svg"
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto">
+          <div className="px-2 py-4 space-y-1">
+            {/* Home */}
+            <Link
+              href="/"
+              className={`flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                isActive('/')
+                  ? 'bg-primary-500/10 text-primary-500 dark:bg-primary-500/10 dark:text-primary-500'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-dark-300 dark:hover:bg-dark-700/50 dark:hover:text-dark-100'
+              }`}
+            >
+              <svg
+                className="w-5 h-5 mr-3"
                     fill="none"
+                stroke="currentColor"
                     viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                />
+              </svg>
+              {t('sidebar.home')}
+            </Link>
+
+            {/* Files Section */}
+            <div>
+              <button
+                onClick={() => toggleSubmenu('Files')}
+                className={`w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md ${
+                  isActive('/files')
+                    ? 'bg-primary-500/10 text-primary-500 dark:bg-primary-500/10 dark:text-primary-500'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-dark-300 dark:hover:bg-dark-700/50 dark:hover:text-dark-100'
+                }`}
+              >
+                <div className="flex items-center">
+                  <svg
+                    className="w-5 h-5 mr-3"
+                    fill="none"
                     stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
+                      strokeWidth="2"
+                      d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
                     />
-                  </motion.svg>
-                </motion.button>
-                <AnimatePresence initial={false}>
-                  {expandedMenus[item.name] && item.children && (
+                  </svg>
+                  {t('sidebar.files')}
+                </div>
+                <svg
+                  className={`w-4 h-4 transition-transform ${
+                    expandedMenus['Files'] ? 'rotate-180' : ''
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+
+              {/* Files Submenu */}
+              <AnimatePresence>
+                {expandedMenus['Files'] && (
                     <motion.div
-                      initial={{ opacity: 0, y: -8, scale: 0.98 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -8, scale: 0.98 }}
-                      transition={{ duration: 0.25, ease: 'easeInOut' }}
-                      className="mt-1 space-y-1 pl-10"
-                    >
-                      {item.children.map((subItem) => (
-                        <div key={subItem.name} className="py-0.5">
-                          {subItem.children ? (
-                            <>
-                              <motion.button
-                                type="button"
-                                onClick={() => toggleSubSubmenu(subItem.name)}
-                                whileHover={{ scale: 1.02 }}
-                                className={
-                                  pathname === subItem.href
-                                    ? 'bg-dark-700 text-dark-100 group w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-200'
-                                    : 'text-dark-300 hover:bg-dark-700 hover:text-dark-100 group w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-200'
-                                }
-                              >
-                                {subItem.icon}
-                                {subItem.name}
-                                <motion.svg
-                                  animate={{ rotate: expandedSubmenus[subItem.name] ? 90 : 0 }}
-                                  transition={{ type: 'spring', stiffness: 300, damping: 24 }}
-                                  className="ml-auto h-4 w-4 text-dark-400 transition-transform duration-300 ease-in-out"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M9 5l7 7-7 7"
-                                  />
-                                </motion.svg>
-                              </motion.button>
-                              <AnimatePresence initial={false}>
-                                {expandedSubmenus[subItem.name] && subItem.children && (
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="pl-4 mt-1 space-y-1">
+                      {/* All Files */}
+                      <Link
+                        href="/files"
+                        className={`flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                          isActive('/files') && !selectedFiscalYear && !selectedSource && !selectedGrantType
+                            ? 'bg-primary-500/10 text-primary-500 dark:bg-primary-500/10 dark:text-primary-500'
+                            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-dark-300 dark:hover:bg-dark-700/50 dark:hover:text-dark-100'
+                        }`}
+                      >
+                        Files
+                      </Link>
+
+                      {/* By Fiscal Year */}
+                      <div>
+                        <button
+                          onClick={() => toggleSubSubmenu('By Fiscal Year')}
+                          className={`w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md ${
+                            selectedFiscalYear
+                              ? 'bg-primary-500/10 text-primary-500 dark:bg-primary-500/10 dark:text-primary-500'
+                              : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-dark-300 dark:hover:bg-dark-700/50 dark:hover:text-dark-100'
+                          }`}
+                        >
+                          <div className="flex items-center">
+                            <svg
+                              className="w-5 h-5 mr-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                              />
+                            </svg>
+                            <span className="ml-2">By Fiscal Year</span>
+                          </div>
+                          <svg
+                            className={`w-4 h-4 transition-transform ${
+                              expandedSubmenus['By Fiscal Year'] ? 'rotate-180' : ''
+                            }`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M19 9l-7 7-7-7"
+                            />
+                          </svg>
+                        </button>
+
+                        {/* Fiscal Years Submenu */}
+                        <AnimatePresence>
+                          {expandedSubmenus['By Fiscal Year'] && (
                                   <motion.div
-                                    initial={{ opacity: 0, y: -8, scale: 0.98 }}
-                                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                                    exit={{ opacity: 0, y: -8, scale: 0.98 }}
-                                    transition={{ duration: 0.22, ease: 'easeInOut' }}
-                                    className="mt-1 space-y-1 pl-8"
-                                  >
-                                    {subItem.children.map((subSubItem) => (
-                                      subSubItem.children ? (
-                                        <div key={subSubItem.name} className="py-0.5">
-                                          <motion.button
-                                            type="button"
-                                            onClick={() => toggleDecade(subSubItem.name)}
-                                            whileHover={{ scale: 1.02 }}
-                                            className={
-                                              pathname === subSubItem.href
-                                                ? 'bg-dark-700 text-dark-100 group w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-200'
-                                                : 'text-dark-300 hover:bg-dark-700 hover:text-dark-100 group w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-200'
-                                            }
-                                          >
-                                            {subSubItem.icon}
-                                            {subSubItem.name}
-                                            <motion.svg
-                                              animate={{ rotate: expandedDecades[subSubItem.name] ? 90 : 0 }}
-                                              transition={{ type: 'spring', stiffness: 300, damping: 24 }}
-                                              className="ml-auto h-4 w-4 text-dark-400 transition-transform duration-300 ease-in-out"
-                                              xmlns="http://www.w3.org/2000/svg"
-                                              fill="none"
-                                              viewBox="0 0 24 24"
-                                              stroke="currentColor"
-                                            >
-                                              <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth={2}
-                                                d="M9 5l7 7-7 7"
-                                              />
-                                            </motion.svg>
-                                          </motion.button>
-                                          <AnimatePresence initial={false}>
-                                            {expandedDecades[subSubItem.name] && subSubItem.children && (
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="pl-4 mt-1 space-y-1">
+                                {generateFiscalYears().map((decade) => (
+                                  <div key={decade.name}>
+                                    <button
+                                      onClick={() => toggleDecade(decade.name)}
+                                      className={`w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md ${
+                                        expandedDecades[decade.name]
+                                          ? 'bg-gray-100 text-gray-900 dark:bg-dark-700/50 dark:text-dark-100'
+                                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-dark-300 dark:hover:bg-dark-700/50 dark:hover:text-dark-100'
+                                      }`}
+                                    >
+                                      <span className="flex items-center">
+                                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                        {decade.name}
+                                      </span>
+                                      <svg
+                                        className={`w-4 h-4 transition-transform ${
+                                          expandedDecades[decade.name] ? 'rotate-180' : ''
+                                        }`}
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth="2"
+                                          d="M19 9l-7 7-7-7"
+                                        />
+                                      </svg>
+                                    </button>
+
+                                    {/* Years Submenu */}
+                                    <AnimatePresence>
+                                      {expandedDecades[decade.name] && (
                                               <motion.div
-                                                initial={{ opacity: 0, y: -8, scale: 0.98 }}
-                                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                                exit={{ opacity: 0, y: -8, scale: 0.98 }}
-                                                transition={{ duration: 0.18, ease: 'easeInOut' }}
-                                                className="mt-1 space-y-1 pl-6"
-                                              >
-                                                {subSubItem.children.map((year: NavigationItem) => (
-                                                  <motion.div
+                                          initial={{ height: 0, opacity: 0 }}
+                                          animate={{ height: 'auto', opacity: 1 }}
+                                          exit={{ height: 0, opacity: 0 }}
+                                          transition={{ duration: 0.2 }}
+                                          className="overflow-hidden"
+                                        >
+                                          <div className="pl-4 mt-1 space-y-1">
+                                            {decade.years.map((year) => (
+                                              <Link
                                                     key={year.name}
-                                                    whileHover={{ scale: 1.02 }}
-                                                    className="rounded-md"
-                                                  >
-                                                    <button
+                                                href={year.href}
                                                       onClick={() => handleFilterClick(year.href)}
-                                                      className="w-full text-dark-300 hover:bg-dark-700 hover:text-dark-100 group flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-200"
-                                                    >
-                                                      {year.icon}
+                                                className={`flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                                                  isFiscalYearSelected(year.name)
+                                                    ? 'bg-primary-500/10 text-primary-500 dark:bg-primary-500/10 dark:text-primary-500'
+                                                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-dark-300 dark:hover:bg-dark-700/50 dark:hover:text-dark-100'
+                                                }`}
+                                              >
+                                                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                      </svg>
                                                       {year.name}
-                                                    </button>
-                                                  </motion.div>
+                                              </Link>
                                                 ))}
+                                          </div>
                                               </motion.div>
                                             )}
                                           </AnimatePresence>
                                         </div>
-                                      ) : (
-                                        <motion.div key={subSubItem.name} whileHover={{ scale: 1.02 }} className="rounded-md">
-                                          {renderNavigationItem(subSubItem)}
-                                        </motion.div>
-                                      )
                                     ))}
+                              </div>
                                   </motion.div>
                                 )}
                               </AnimatePresence>
-                            </>
-                          ) : (
-                            <motion.div whileHover={{ scale: 1.02 }} className="rounded-md">
-                              {renderNavigationItem(subItem)}
+                      </div>
+
+                      {/* By Source */}
+                      <div>
+                        <button
+                          onClick={() => toggleSubSubmenu('By Source')}
+                          className={`w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md ${
+                            selectedSource
+                              ? 'bg-primary-500/10 text-primary-500 dark:bg-primary-500/10 dark:text-primary-500'
+                              : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-dark-300 dark:hover:bg-dark-700/50 dark:hover:text-dark-100'
+                          }`}
+                        >
+                          <div className="flex items-center">
+                            <svg
+                              className="w-5 h-5 mr-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                              />
+                            </svg>
+                            <span className="ml-2">By Source</span>
+                          </div>
+                          <svg
+                            className={`w-4 h-4 transition-transform ${
+                              expandedSubmenus['By Source'] ? 'rotate-180' : ''
+                            }`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M19 9l-7 7-7-7"
+                            />
+                          </svg>
+                        </button>
+
+                        {/* Sources Submenu */}
+                        <AnimatePresence>
+                          {expandedSubmenus['By Source'] && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="pl-4 mt-1 space-y-1">
+                                {sourceFilters.map((source) => (
+                                  <Link
+                                    key={source.id}
+                                    href={`/files?source=${encodeURIComponent(source.name)}`}
+                                    className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-dark-300 dark:hover:bg-dark-700/50 dark:hover:text-dark-100"
+                                  >
+                                    {source.icon}
+                                    {source.name}
+                                  </Link>
+                                ))}
+                              </div>
                             </motion.div>
                           )}
+                        </AnimatePresence>
                         </div>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </>
-            ) : (
-              <motion.div whileHover={{ scale: 1.02 }} className="rounded-md">
-                {renderNavigationItem(item)}
+
+                      {/* By Grant Type */}
+                      <div>
+                        <button
+                          onClick={() => toggleSubSubmenu('By Grant Type')}
+                          className={`w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md ${
+                            selectedGrantType
+                              ? 'bg-primary-500/10 text-primary-500 dark:bg-primary-500/10 dark:text-primary-500'
+                              : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-dark-300 dark:hover:bg-dark-700/50 dark:hover:text-dark-100'
+                          }`}
+                        >
+                          <div className="flex items-center">
+                            <svg
+                              className="w-5 h-5 mr-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                            <span className="ml-2">By Grant Type</span>
+                          </div>
+                          <svg
+                            className={`w-4 h-4 transition-transform ${
+                              expandedSubmenus['By Grant Type'] ? 'rotate-180' : ''
+                            }`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M19 9l-7 7-7-7"
+                            />
+                          </svg>
+                        </button>
+
+                        {/* Grant Types Submenu */}
+                        <AnimatePresence>
+                          {expandedSubmenus['By Grant Type'] && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="pl-4 mt-1 space-y-1">
+                                {grantTypeFilters.map((type) => (
+                                  <Link
+                                    key={type.id}
+                                    href={`/files?grant-type=${encodeURIComponent(type.name)}`}
+                                    className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-dark-300 dark:hover:bg-dark-700/50 dark:hover:text-dark-100"
+                                  >
+                                    {type.icon}
+                                    {type.name}
+                                  </Link>
+                                ))}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    </div>
               </motion.div>
             )}
+              </AnimatePresence>
           </div>
-        ))}
+
+            {/* Upload */}
+            <Link
+              href="/upload"
+              className={`flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                isActive('/upload')
+                  ? 'bg-primary-500/10 text-primary-500 dark:bg-primary-500/10 dark:text-primary-500'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-dark-300 dark:hover:bg-dark-700/50 dark:hover:text-dark-100'
+              }`}
+            >
+              <svg
+                className="w-5 h-5 mr-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                />
+              </svg>
+              {t('sidebar.upload')}
+            </Link>
+
+            {/* Users */}
+            <Link
+              href="/users"
+              className={`flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                isActive('/users')
+                  ? 'bg-primary-500/10 text-primary-500 dark:bg-primary-500/10 dark:text-primary-500'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-dark-300 dark:hover:bg-dark-700/50 dark:hover:text-dark-100'
+              }`}
+            >
+              <svg
+                className="w-5 h-5 mr-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                />
+              </svg>
+              {t('sidebar.users')}
+            </Link>
+
+            {/* Bin */}
+            <Link
+              href="/bin"
+              className={`flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                isActive('/bin')
+                  ? 'bg-primary-500/10 text-primary-500 dark:bg-primary-500/10 dark:text-primary-500'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-dark-300 dark:hover:bg-dark-700/50 dark:hover:text-dark-100'
+              }`}
+            >
+              <svg
+                className="w-5 h-5 mr-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
+              {t('sidebar.bin')}
+            </Link>
+
+            {/* Reports */}
+            <Link
+              href="/reports"
+              className={`flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                isActive('/reports')
+                  ? 'bg-primary-500/10 text-primary-500 dark:bg-primary-500/10 dark:text-primary-500'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-dark-300 dark:hover:bg-dark-700/50 dark:hover:text-dark-100'
+              }`}
+            >
+              <svg
+                className="w-5 h-5 mr-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              {t('sidebar.reports')}
+            </Link>
+
+            {/* Settings */}
+            <Link
+              href="/settings"
+              className={`flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                isActive('/settings')
+                  ? 'bg-primary-500/10 text-primary-500 dark:bg-primary-500/10 dark:text-primary-500'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-dark-300 dark:hover:bg-dark-700/50 dark:hover:text-dark-100'
+              }`}
+            >
+              <svg
+                className="w-5 h-5 mr-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+              {t('sidebar.settings')}
+            </Link>
+          </div>
       </nav>
 
-      {/* Logout button */}
-      <div className="px-2 py-4 border-t border-dark-700">
-        <motion.button
-          whileHover={{ scale: 1.02 }}
+        {/* Logout Button */}
+        <div className="p-4 border-t border-gray-200 dark:border-dark-700">
+          <button
           onClick={handleLogout}
           disabled={isLoggingOut}
-          className="w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-md text-dark-300 hover:bg-dark-700 hover:text-dark-100 transition-all duration-200"
+            className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors disabled:opacity-50 dark:text-dark-100 dark:bg-dark-700 dark:hover:bg-dark-600"
         >
+            {isLoggingOut ? (
+              <div className="w-5 h-5 border-2 border-gray-700 border-t-transparent rounded-full animate-spin dark:border-dark-100" />
+            ) : (
+              <>
           <svg
-            className="w-5 h-5 mr-3"
+                  className="w-5 h-5 mr-2"
             fill="none"
-            viewBox="0 0 24 24"
             stroke="currentColor"
+                  viewBox="0 0 24 24"
           >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
-              strokeWidth={2}
+                    strokeWidth="2"
               d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
             />
           </svg>
-          {isLoggingOut ? t('common.loading') : t('sidebar.logout')}
-        </motion.button>
+                {t('sidebar.logout')}
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { HTMLAttributes } from 'react';
+import { twMerge } from 'tailwind-merge';
 
 export interface Column<T> {
   key: string;
@@ -8,7 +9,7 @@ export interface Column<T> {
   className?: string;
 }
 
-interface TableProps<T> {
+interface TableProps<T> extends HTMLAttributes<HTMLTableElement> {
   data: T[];
   columns: Column<T>[];
   loading?: boolean;
@@ -18,7 +19,23 @@ interface TableProps<T> {
   className?: string;
 }
 
-export default function Table<T extends Record<string, any>>({
+interface TableHeaderProps extends HTMLAttributes<HTMLTableSectionElement> {
+  className?: string;
+}
+
+interface TableBodyProps extends HTMLAttributes<HTMLTableSectionElement> {
+  className?: string;
+}
+
+interface TableRowProps extends HTMLAttributes<HTMLTableRowElement> {
+  className?: string;
+}
+
+interface TableCellProps extends HTMLAttributes<HTMLTableCellElement> {
+  className?: string;
+}
+
+export function Table<T extends Record<string, any>>({
   data,
   columns,
   loading = false,
@@ -26,6 +43,7 @@ export default function Table<T extends Record<string, any>>({
   rowKey = 'id',
   onRowClick,
   className = '',
+  ...props
 }: TableProps<T>) {
   // Function to get row key
   const getRowKey = (record: T, index: number): string => {
@@ -50,42 +68,48 @@ export default function Table<T extends Record<string, any>>({
   return (
     <div className={`overflow-hidden border border-dark-600 rounded-lg ${className}`}>
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-dark-600">
-          <thead className="bg-dark-800">
+        <table
+          className={twMerge(
+            'min-w-full divide-y divide-dark-600 dark:divide-dark-700',
+            className
+          )}
+          {...props}
+        >
+          <TableHeader>
             <tr>
               {columns.map((column) => (
-                <th
+                <TableHeaderCell
                   key={column.key}
                   scope="col"
                   className={`py-3.5 px-4 text-left text-xs font-medium text-dark-300 uppercase tracking-wider ${column.className || ''}`}
                 >
                   {column.title}
-                </th>
+                </TableHeaderCell>
               ))}
             </tr>
-          </thead>
-          <tbody className="divide-y divide-dark-600 bg-dark-700">
+          </TableHeader>
+          <TableBody>
             {loading ? (
               // Loading state - show skeleton rows
               Array.from({ length: 5 }).map((_, index) => (
-                <tr key={index} className="animate-pulse">
+                <TableRow key={index} className="animate-pulse">
                   {columns.map((column) => (
-                    <td key={column.key} className="whitespace-nowrap py-4 px-4">
+                    <TableCell key={column.key} className="whitespace-nowrap py-4 px-4">
                       <div className="h-4 bg-dark-600 rounded w-full"></div>
-                    </td>
+                    </TableCell>
                   ))}
-                </tr>
+                </TableRow>
               ))
             ) : (
               // Data rows
               data.map((record, index) => (
-                <tr
+                <TableRow
                   key={getRowKey(record, index)}
                   className={`${onRowClick ? 'hover:bg-dark-600 cursor-pointer' : ''}`}
                   onClick={onRowClick ? () => onRowClick(record) : undefined}
                 >
                   {columns.map((column) => (
-                    <td
+                    <TableCell
                       key={column.key}
                       className={`whitespace-nowrap py-4 px-4 text-sm text-dark-200 ${column.className || ''}`}
                     >
@@ -94,14 +118,74 @@ export default function Table<T extends Record<string, any>>({
                         : column.dataIndex
                         ? record[column.dataIndex]
                         : null}
-                    </td>
+                    </TableCell>
                   ))}
-                </tr>
+                </TableRow>
               ))
             )}
-          </tbody>
+          </TableBody>
         </table>
       </div>
     </div>
+  );
+}
+
+export function TableHeader({ className = '', ...props }: TableHeaderProps) {
+  return (
+    <thead
+      className={twMerge(
+        'bg-light-100 dark:bg-dark-800',
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
+export function TableBody({ className = '', ...props }: TableBodyProps) {
+  return (
+    <tbody
+      className={twMerge(
+        'divide-y divide-dark-600 dark:divide-dark-700 bg-light-50 dark:bg-dark-900',
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
+export function TableRow({ className = '', ...props }: TableRowProps) {
+  return (
+    <tr
+      className={twMerge(
+        'hover:bg-light-100 dark:hover:bg-dark-800',
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
+export function TableCell({ className = '', ...props }: TableCellProps) {
+  return (
+    <td
+      className={twMerge(
+        'whitespace-nowrap px-6 py-4 text-sm text-dark-900 dark:text-dark-100',
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
+export function TableHeaderCell({ className = '', ...props }: TableCellProps) {
+  return (
+    <th
+      className={twMerge(
+        'px-6 py-3 text-left text-xs font-medium text-dark-900 dark:text-dark-100 uppercase tracking-wider',
+        className
+      )}
+      {...props}
+    />
   );
 }

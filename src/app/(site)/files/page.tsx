@@ -3,13 +3,14 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
-import Card from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
 import { IFile } from '@/types/index';
 import FileRow from '@/components/files/FileRow';
 import { format } from 'date-fns';
 import { toast } from 'react-hot-toast';
 import { generateFiscalYears } from '@/utils/fiscalYears';
+import { AnimatePresence, motion } from 'framer-motion';
 
 export default function FilesPage() {
   const { data: session, status } = useSession();
@@ -301,7 +302,7 @@ export default function FilesPage() {
     return (
       <Card
         key={file.id}
-        className="cursor-pointer h-full hover:scale-105 hover:shadow-dark-md"
+        className="cursor-pointer h-full hover:scale-105 hover:shadow-dark-md p-6"
         onClick={() => handleSelectFile(file)}
       >
         <div className="flex flex-col h-full">
@@ -422,261 +423,265 @@ export default function FilesPage() {
   };
 
   return (
-    <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-dark-100">{getFilterDescription()}</h1>
-        <p className="mt-1 text-dark-300">
-          {filteredFiles.length} {filteredFiles.length === 1 ? 'file' : 'files'} found
-        </p>
-      </div>
-
-      {/* Only show file creation cards when no filters are active */}
-      {!selectedFiscalYear && !selectedSource && !selectedGrantType && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Card className="bg-dark-700 border border-dark-600 hover:bg-dark-600 transition-colors cursor-pointer">
-            <div className="flex flex-col items-center justify-center py-4">
-              <div className="w-12 h-12 bg-primary-500/10 text-primary-500 rounded-lg flex items-center justify-center mb-3">
-                <svg className="h-6 w-6" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M10 5V15M5 10H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <h3 className="text-dark-100 font-medium text-lg">New document</h3>
-            </div>
-          </Card>
-          
-          <Card className="bg-dark-700 border border-dark-600 hover:bg-dark-600 transition-colors cursor-pointer">
-            <div className="flex flex-col items-center justify-center py-4">
-              <div className="w-12 h-12 bg-primary-500/10 text-primary-500 rounded-lg flex items-center justify-center mb-3">
-                <svg className="h-6 w-6" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M5 15H15M5 10H15M5 5H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <h3 className="text-dark-100 font-medium text-lg">New file</h3>
-            </div>
-          </Card>
-          
-          <Card className="bg-dark-700 border border-dark-600 hover:bg-dark-600 transition-colors cursor-pointer">
-            <div className="flex flex-col items-center justify-center py-4">
-              <div className="w-12 h-12 bg-primary-500/10 text-primary-500 rounded-lg flex items-center justify-center mb-3">
-                <svg className="h-6 w-6" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M13 5H5C3.89543 5 3 5.89543 3 7V15C3 16.1046 3.89543 17 5 17H15C16.1046 17 17 16.1046 17 15V9M13 5L17 9M13 5V9H17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <h3 className="text-dark-100 font-medium text-lg">New folder</h3>
-            </div>
-          </Card>
-        </div>
-      )}
-
-      {/* Only show recently modified section when no filters are active */}
-      {!selectedFiscalYear && !selectedSource && !selectedGrantType && (
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-medium text-dark-100">Recently modified</h2>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => {
-                clearFilters();
-                setActiveTab('view-all');
-                window.history.pushState({}, '', '/files');
-                window.dispatchEvent(new Event('urlchange'));
-              }}
-              rightIcon={
-                <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M8 5L13 10L8 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              }
-            >
-              View all
-            </Button>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {recentFiles.map(file => renderFileCard(file))}
-          </div>
-        </div>
-      )}
-
-      {/* All files section */}
-      <div>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-medium text-dark-100">
-            {selectedFiscalYear || selectedSource || selectedGrantType ? 'Filtered Results' : 'All Files'}
-          </h2>
-          <div className="flex items-center space-x-2">
-            {/* View toggle */}
-            <div className="flex items-center bg-dark-700 border border-dark-600 rounded-md p-1">
-              <button 
-                className={viewType === 'grid' ? 'p-1 rounded bg-dark-600 text-dark-100' : 'p-1 rounded text-dark-400'}
-                onClick={() => setViewType('grid')}
-              >
-                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M3 5C3 3.89543 3.89543 3 5 3H7C8.10457 3 9 3.89543 9 5V7C9 8.10457 8.10457 9 7 9H5C3.89543 9 3 8.10457 3 7V5Z" stroke="currentColor" strokeWidth="1.5" />
-                  <path d="M11 5C11 3.89543 11.8954 3 13 3H15C16.1046 3 17 3.89543 17 5V7C17 8.10457 16.1046 9 15 9H13C11.8954 9 11 8.10457 11 7V5Z" stroke="currentColor" strokeWidth="1.5" />
-                  <path d="M3 13C3 11.8954 3.89543 11 5 11H7C8.10457 11 9 11.8954 9 13V15C9 16.1046 8.10457 17 7 17H5C3.89543 17 3 16.1046 3 15V13Z" stroke="currentColor" strokeWidth="1.5" />
-                  <path d="M11 13C11 11.8954 11.8954 11 13 11H15C16.1046 11 17 11.8954 17 13V15C17 16.1046 16.1046 17 15 17H13C11.8954 17 11 16.1046 11 15V13Z" stroke="currentColor" strokeWidth="1.5" />
-                </svg>
-              </button>
-              <button 
-                className={viewType === 'list' ? 'p-1 rounded bg-dark-600 text-dark-100' : 'p-1 rounded text-dark-400'}
-                onClick={() => setViewType('list')}
-              >
-                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M5 5H15M5 10H15M5 15H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Filters button */}
-            <Button 
-              variant="secondary" 
-              size="sm"
-              leftIcon={
-                <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M5 10H15M3 5H17M7 15H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              }
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              Filters
-            </Button>
-          </div>
+    <div className="min-h-screen bg-gray-50 dark:bg-dark-900">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-dark-100">{getFilterDescription()}</h1>
+          <p className="mt-1 text-gray-600 dark:text-dark-300">
+            {filteredFiles.length} {filteredFiles.length === 1 ? 'file' : 'files'} found
+          </p>
         </div>
 
-        {/* Filter panel */}
-        {showFilters && (
-          <div className="mb-6 p-4 bg-dark-700 rounded-lg border border-dark-600">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Fiscal Year Filter */}
-              <div>
-                <label className="block text-sm font-medium text-dark-200 mb-2">Fiscal Year</label>
-                <select
-                  value={selectedFiscalYear || ''}
-                  onChange={(e) => handleFilterChange('fiscalYear', e.target.value || null)}
-                  className="w-full bg-dark-600 border border-dark-500 rounded-md py-2 px-3 text-sm"
-                >
-                  <option value="">All Fiscal Years</option>
-                  {fiscalYearOptions.map((year) => (
-                    <option key={year.id} value={year.id}>{year.name}</option>
-                  ))}
-                </select>
+        {/* Only show file creation cards when no filters are active */}
+        {!selectedFiscalYear && !selectedSource && !selectedGrantType && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <Card className="bg-white dark:bg-dark-700 border border-gray-200 dark:border-dark-600 hover:bg-gray-50 dark:hover:bg-dark-600 transition-colors cursor-pointer p-6">
+              <div className="flex flex-col items-center justify-center py-4">
+                <div className="w-12 h-12 bg-primary-500/10 text-primary-500 rounded-lg flex items-center justify-center mb-3">
+                  <svg className="h-6 w-6" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 5V15M5 10H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                <h3 className="text-gray-900 dark:text-dark-100 font-medium text-lg">New document</h3>
               </div>
-
-              {/* Source Filter */}
-              <div>
-                <label className="block text-sm font-medium text-dark-200 mb-2">Source</label>
-                <select
-                  value={selectedSource || ''}
-                  onChange={(e) => handleFilterChange('source', e.target.value || null)}
-                  className="w-full bg-dark-600 border border-dark-500 rounded-md py-2 px-3 text-sm"
-                >
-                  <option value="">All Sources</option>
-                  {sourceFilters.map((source) => (
-                    <option key={source.id} value={source.id}>{source.name}</option>
-                  ))}
-                </select>
+            </Card>
+            
+            <Card className="bg-white dark:bg-dark-700 border border-gray-200 dark:border-dark-600 hover:bg-gray-50 dark:hover:bg-dark-600 transition-colors cursor-pointer p-6">
+              <div className="flex flex-col items-center justify-center py-4">
+                <div className="w-12 h-12 bg-primary-500/10 text-primary-500 rounded-lg flex items-center justify-center mb-3">
+                  <svg className="h-6 w-6" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 15H15M5 10H15M5 5H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                <h3 className="text-gray-900 dark:text-dark-100 font-medium text-lg">New file</h3>
               </div>
-
-              {/* Grant Type Filter */}
-              <div>
-                <label className="block text-sm font-medium text-dark-200 mb-2">Grant Type</label>
-                <select
-                  value={selectedGrantType || ''}
-                  onChange={(e) => handleFilterChange('grantType', e.target.value || null)}
-                  className="w-full bg-dark-600 border border-dark-500 rounded-md py-2 px-3 text-sm"
-                >
-                  <option value="">All Grant Types</option>
-                  {filterOptions.grantTypes.map((type) => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </select>
+            </Card>
+            
+            <Card className="bg-white dark:bg-dark-700 border border-gray-200 dark:border-dark-600 hover:bg-gray-50 dark:hover:bg-dark-600 transition-colors cursor-pointer p-6">
+              <div className="flex flex-col items-center justify-center py-4">
+                <div className="w-12 h-12 bg-primary-500/10 text-primary-500 rounded-lg flex items-center justify-center mb-3">
+                  <svg className="h-6 w-6" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M13 5H5C3.89543 5 3 5.89543 3 7V15C3 16.1046 3.89543 17 5 17H15C16.1046 17 17 16.1046 17 15V9M13 5L17 9M13 5V9H17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                <h3 className="text-gray-900 dark:text-dark-100 font-medium text-lg">New folder</h3>
               </div>
-            </div>
+            </Card>
           </div>
         )}
 
-        {/* File filter tabs */}
-        <div className="border-b border-dark-600 mb-4">
-          <nav className="-mb-px flex space-x-6" aria-label="Tabs">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => handleTabChange(tab.id)}
-                className={
-                  activeTab === tab.id
-                    ? 'whitespace-nowrap border-b-2 py-3 px-1 text-sm font-medium border-primary-500 text-primary-500'
-                    : 'whitespace-nowrap border-b-2 py-3 px-1 text-sm font-medium border-transparent text-dark-400 hover:border-dark-500 hover:text-dark-200'
+        {/* Only show recently modified section when no filters are active */}
+        {!selectedFiscalYear && !selectedSource && !selectedGrantType && (
+          <div className="mb-8">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-medium text-gray-900 dark:text-dark-100">Recently modified</h2>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => {
+                  clearFilters();
+                  setActiveTab('view-all');
+                  window.history.pushState({}, '', '/files');
+                  window.dispatchEvent(new Event('urlchange'));
+                }}
+                rightIcon={
+                  <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 5L13 10L8 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
                 }
               >
-                {tab.name}
-              </button>
-            ))}
-          </nav>
-        </div>
-
-        {/* Files display (grid or list) */}
-        {isLoading ? (
-          <div className="flex justify-center items-center py-20">
-            <svg className="animate-spin h-8 w-8 text-primary-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          </div>
-        ) : filteredFiles.length === 0 ? (
-          renderEmptyState()
-        ) : viewType === 'grid' ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filteredFiles.map((file) => renderFileCard(file))}
-          </div>
-        ) : (
-          <div className="bg-dark-700 border border-dark-600 rounded-lg overflow-visible">
-            <table className="min-w-full divide-y divide-dark-600">
-              <thead className="bg-dark-800">
-                <tr>
-                  <th scope="col" className="px-4 py-3 w-12">
-                    <div className="flex items-center">
-                      <input
-                        id="select-all"
-                        type="checkbox"
-                        className="h-4 w-4 text-primary-600 border-dark-400 rounded focus:ring-primary-500 focus:ring-offset-dark-800"
-                        checked={selectedFiles.length === filteredFiles.length && filteredFiles.length > 0}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedFiles(filteredFiles);
-                          } else {
-                            setSelectedFiles([]);
-                          }
-                        }}
-                      />
-                    </div>
-                  </th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
-                    File name
-                  </th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
-                    Uploaded by
-                  </th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
-                    Last modified
-                  </th>
-                  <th scope="col" className="px-4 py-3 w-12">
-                    <span className="sr-only">Actions</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-dark-600">
-                {filteredFiles.map((file) => (
-                  <FileRow
-                    key={file.id}
-                    file={file}
-                    onSelect={handleSelectFile}
-                    onDelete={handleDeleteFile}
-                  />
-                ))}
-              </tbody>
-            </table>
+                View all
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {recentFiles.map(file => renderFileCard(file))}
+            </div>
           </div>
         )}
+
+        {/* All files section */}
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-medium text-gray-900 dark:text-dark-100">
+              {selectedFiscalYear || selectedSource || selectedGrantType ? 'Filtered Results' : 'All Files'}
+            </h2>
+            <div className="flex items-center space-x-2">
+              {/* View toggle */}
+              <div className="flex items-center bg-white dark:bg-dark-700 border border-gray-200 dark:border-dark-600 rounded-md p-1">
+                <button 
+                  className={viewType === 'grid' ? 'p-1 rounded bg-gray-100 dark:bg-dark-600 text-gray-900 dark:text-dark-100' : 'p-1 rounded text-gray-500 dark:text-dark-400'}
+                  onClick={() => setViewType('grid')}
+                >
+                  <svg className="h-5 w-5" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 5C3 3.89543 3.89543 3 5 3H7C8.10457 3 9 3.89543 9 5V7C9 8.10457 8.10457 9 7 9H5C3.89543 9 3 8.10457 3 7V5Z" stroke="currentColor" strokeWidth="1.5" />
+                    <path d="M11 5C11 3.89543 11.8954 3 13 3H15C16.1046 3 17 3.89543 17 5V7C17 8.10457 16.1046 9 15 9H13C11.8954 9 11 8.10457 11 7V5Z" stroke="currentColor" strokeWidth="1.5" />
+                    <path d="M3 13C3 11.8954 3.89543 11 5 11H7C8.10457 11 9 11.8954 9 13V15C9 16.1046 8.10457 17 7 17H5C3.89543 17 3 16.1046 3 15V13Z" stroke="currentColor" strokeWidth="1.5" />
+                    <path d="M11 13C11 11.8954 11.8954 11 13 11H15C16.1046 11 17 11.8954 17 13V15C17 16.1046 16.1046 17 15 17H13C11.8954 17 11 16.1046 11 15V13Z" stroke="currentColor" strokeWidth="1.5" />
+                  </svg>
+                </button>
+                <button 
+                  className={viewType === 'list' ? 'p-1 rounded bg-gray-100 dark:bg-dark-600 text-gray-900 dark:text-dark-100' : 'p-1 rounded text-gray-500 dark:text-dark-400'}
+                  onClick={() => setViewType('list')}
+                >
+                  <svg className="h-5 w-5" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 5H15M5 10H15M5 15H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Filters button */}
+              <Button 
+                variant="secondary" 
+                size="sm"
+                leftIcon={
+                  <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 10H15M3 5H17M7 15H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                }
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                Filters
+              </Button>
+            </div>
+          </div>
+
+          {/* Filter panel */}
+          {showFilters && (
+            <div className="mb-6 p-4 bg-white dark:bg-dark-700 rounded-lg border border-gray-200 dark:border-dark-600">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Fiscal Year Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-dark-200 mb-2">Fiscal Year</label>
+                  <select
+                    value={selectedFiscalYear || ''}
+                    onChange={(e) => handleFilterChange('fiscalYear', e.target.value || null)}
+                    className="w-full bg-white dark:bg-dark-600 border border-gray-200 dark:border-dark-500 rounded-md py-2 px-3 text-sm text-gray-900 dark:text-dark-100"
+                  >
+                    <option value="">All Fiscal Years</option>
+                    {fiscalYearOptions.map((year) => (
+                      <option key={year.id} value={year.id}>{year.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Source Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-dark-200 mb-2">Source</label>
+                  <select
+                    value={selectedSource || ''}
+                    onChange={(e) => handleFilterChange('source', e.target.value || null)}
+                    className="w-full bg-white dark:bg-dark-600 border border-gray-200 dark:border-dark-500 rounded-md py-2 px-3 text-sm text-gray-900 dark:text-dark-100"
+                  >
+                    <option value="">All Sources</option>
+                    {sourceFilters.map((source) => (
+                      <option key={source.id} value={source.id}>{source.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Grant Type Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-dark-200 mb-2">Grant Type</label>
+                  <select
+                    value={selectedGrantType || ''}
+                    onChange={(e) => handleFilterChange('grantType', e.target.value || null)}
+                    className="w-full bg-white dark:bg-dark-600 border border-gray-200 dark:border-dark-500 rounded-md py-2 px-3 text-sm text-gray-900 dark:text-dark-100"
+                  >
+                    <option value="">All Grant Types</option>
+                    {filterOptions.grantTypes.map((type) => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* File filter tabs */}
+          <div className="border-b border-gray-200 dark:border-dark-600 mb-4">
+            <nav className="-mb-px flex space-x-6" aria-label="Tabs">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabChange(tab.id)}
+                  className={
+                    activeTab === tab.id
+                      ? 'whitespace-nowrap border-b-2 py-3 px-1 text-sm font-medium border-primary-500 text-primary-500'
+                      : 'whitespace-nowrap border-b-2 py-3 px-1 text-sm font-medium border-transparent text-gray-500 dark:text-dark-400 hover:border-gray-300 dark:hover:border-dark-500 hover:text-gray-700 dark:hover:text-dark-200'
+                  }
+                >
+                  {tab.name}
+                </button>
+              ))}
+            </nav>
+          </div>
+
+          {/* Files display (grid or list) */}
+          {isLoading ? (
+            <div className="flex justify-center items-center py-20">
+              <svg className="animate-spin h-8 w-8 text-primary-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </div>
+          ) : filteredFiles.length === 0 ? (
+            renderEmptyState()
+          ) : viewType === 'grid' ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {filteredFiles.map((file) => renderFileCard(file))}
+            </div>
+          ) : (
+            <div className="bg-white dark:bg-dark-700 border border-gray-200 dark:border-dark-600 rounded-lg overflow-visible">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-dark-600">
+                <thead className="bg-gray-50 dark:bg-dark-800">
+                  <tr>
+                    <th scope="col" className="px-4 py-3 w-12">
+                      <div className="flex items-center">
+                        <input
+                          id="select-all"
+                          type="checkbox"
+                          className="h-4 w-4 text-primary-600 border-gray-300 dark:border-dark-400 rounded focus:ring-primary-500 focus:ring-offset-white dark:focus:ring-offset-dark-800"
+                          checked={selectedFiles.length === filteredFiles.length && filteredFiles.length > 0}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedFiles(filteredFiles);
+                            } else {
+                              setSelectedFiles([]);
+                            }
+                          }}
+                        />
+                      </div>
+                    </th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-dark-300 uppercase tracking-wider">
+                      File name
+                    </th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-dark-300 uppercase tracking-wider">
+                      Uploaded by
+                    </th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-dark-300 uppercase tracking-wider">
+                      Last modified
+                    </th>
+                    <th scope="col" className="px-4 py-3 w-12">
+                      <span className="sr-only">Actions</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-dark-600">
+                  {filteredFiles.map((file) => (
+                    <FileRow
+                      key={file.id}
+                      file={file}
+                      onSelect={handleSelectFile}
+                      onDelete={handleDeleteFile}
+                      isSelected={selectedFiles.some((f) => f.id === file.id)}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -39,7 +39,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en" className={inter.variable}>
-      <body>
+      <body className="bg-light-100 dark:bg-dark-900 text-dark-900 dark:text-dark-100 min-h-screen">
         <SettingsProvider>
           <Providers session={session}>
             <TextSettingsProvider>
@@ -47,7 +47,16 @@ export default async function RootLayout({
                 <DynamicTitle />
                 <DynamicFavicon />
                 {children}
-                <Toaster position="top-right" />
+                <Toaster 
+                  position="top-right"
+                  toastOptions={{
+                    className: 'bg-light-100 dark:bg-dark-800 text-dark-900 dark:text-dark-100',
+                    style: {
+                      background: 'var(--toast-bg)',
+                      color: 'var(--toast-color)',
+                    },
+                  }}
+                />
               </AppProvider>
             </TextSettingsProvider>
           </Providers>

@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Card from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
 import { toast } from 'react-hot-toast';
 import { format } from 'date-fns';
 import { useSession } from 'next-auth/react';
@@ -213,18 +213,18 @@ export default function ReportsPage() {
   return (
     <>
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-dark-100">Reports</h1>
-        <p className="mt-1 text-dark-300">Generate and download various system reports</p>
+        <h1 className="text-2xl font-semibold text-gray-900 dark:text-dark-100">Reports</h1>
+        <p className="mt-1 text-gray-600 dark:text-dark-300">Generate and download various system reports</p>
       </div>
 
       {/* Report Generator Card */}
-      <Card className="mb-6">
-        <h2 className="text-lg font-medium text-dark-100 mb-4">Generate Report</h2>
+      <Card className="mb-6 bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700">
+        <h2 className="text-lg font-medium text-gray-900 dark:text-dark-100 mb-4">Generate Report</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Report Type Selector */}
           <div>
-            <label className="block text-sm font-medium text-dark-200 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-dark-200 mb-2">
               Report Type <span className="text-red-500">*</span>
             </label>
             <div className="space-y-2">
@@ -234,12 +234,12 @@ export default function ReportsPage() {
                     id={type.id}
                     name="report-type"
                     type="radio"
-                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-dark-500 bg-dark-700"
+                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 dark:border-dark-500 bg-white dark:bg-dark-700"
                     checked={selectedReportType === type.id}
                     onChange={() => setSelectedReportType(type.id)}
                     required
                   />
-                  <label htmlFor={type.id} className="ml-3 block text-sm text-dark-100">
+                  <label htmlFor={type.id} className="ml-3 block text-sm text-gray-900 dark:text-dark-100">
                     {type.name}
                   </label>
                 </div>
@@ -250,12 +250,12 @@ export default function ReportsPage() {
           {/* Report Options */}
           <div>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-dark-200 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-dark-200 mb-2">
                 Date Range
               </label>
               <div className="flex space-x-4">
                 <div className="w-1/2">
-                  <label htmlFor="start-date" className="block text-xs text-dark-300 mb-1">
+                  <label htmlFor="start-date" className="block text-xs text-gray-500 dark:text-dark-300 mb-1">
                     Start Date
                   </label>
                   <input
@@ -263,11 +263,11 @@ export default function ReportsPage() {
                     id="start-date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="block w-full rounded-md border-dark-600 bg-dark-800 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                    className="block w-full rounded-md border-gray-200 dark:border-dark-600 bg-white dark:bg-dark-800 text-gray-900 dark:text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
                   />
                 </div>
                 <div className="w-1/2">
-                  <label htmlFor="end-date" className="block text-xs text-dark-300 mb-1">
+                  <label htmlFor="end-date" className="block text-xs text-gray-500 dark:text-dark-300 mb-1">
                     End Date
                   </label>
                   <input
@@ -275,7 +275,7 @@ export default function ReportsPage() {
                     id="end-date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="block w-full rounded-md border-dark-600 bg-dark-800 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                    className="block w-full rounded-md border-gray-200 dark:border-dark-600 bg-white dark:bg-dark-800 text-gray-900 dark:text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
                   />
                 </div>
               </div>
@@ -283,14 +283,14 @@ export default function ReportsPage() {
 
             {/* Fiscal Year */}
             <div className="mb-4">
-              <label htmlFor="fiscal-year" className="block text-sm font-medium text-dark-200 mb-2">
+              <label htmlFor="fiscal-year" className="block text-sm font-medium text-gray-700 dark:text-dark-200 mb-2">
                 Fiscal Year
               </label>
               <select
                 id="fiscal-year"
                 value={selectedFiscalYear}
                 onChange={(e) => setSelectedFiscalYear(e.target.value)}
-                className="block w-full rounded-md border-dark-600 bg-dark-800 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                className="block w-full rounded-md border-gray-200 dark:border-dark-600 bg-white dark:bg-dark-800 text-gray-900 dark:text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
               >
                 <option value="">All Fiscal Years</option>
                 <option value="2080/81">2080/81</option>
@@ -301,14 +301,14 @@ export default function ReportsPage() {
 
             {/* Source */}
             <div className="mb-4">
-              <label htmlFor="source" className="block text-sm font-medium text-dark-200 mb-2">
+              <label htmlFor="source" className="block text-sm font-medium text-gray-700 dark:text-dark-200 mb-2">
                 Source
               </label>
               <select
                 id="source"
                 value={selectedSource}
                 onChange={(e) => setSelectedSource(e.target.value)}
-                className="block w-full rounded-md border-dark-600 bg-dark-800 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                className="block w-full rounded-md border-gray-200 dark:border-dark-600 bg-white dark:bg-dark-800 text-gray-900 dark:text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
               >
                 <option value="">All Sources</option>
                 <option value="Federal Government">Federal Government</option>
@@ -319,8 +319,9 @@ export default function ReportsPage() {
             </div>
 
             {/* Format */}
-              <label className="block text-sm font-medium text-dark-200 mb-2">
-              Format <span className="text-red-500">*</span>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-dark-200 mb-2">
+                Format <span className="text-red-500">*</span>
               </label>
               <div className="flex space-x-4">
                 <div className="flex items-center">
@@ -330,9 +331,9 @@ export default function ReportsPage() {
                     type="radio"
                     checked={selectedFormat === 'pdf'}
                     onChange={() => setSelectedFormat('pdf')}
-                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-dark-500 bg-dark-700"
+                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 dark:border-dark-500 bg-white dark:bg-dark-700"
                   />
-                  <label htmlFor="format-pdf" className="ml-3 block text-sm text-dark-100">
+                  <label htmlFor="format-pdf" className="ml-3 block text-sm text-gray-900 dark:text-dark-100">
                     PDF
                   </label>
                 </div>
@@ -343,11 +344,12 @@ export default function ReportsPage() {
                     type="radio"
                     checked={selectedFormat === 'excel'}
                     onChange={() => setSelectedFormat('excel')}
-                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-dark-500 bg-dark-700"
+                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 dark:border-dark-500 bg-white dark:bg-dark-700"
                   />
-                  <label htmlFor="format-excel" className="ml-3 block text-sm text-dark-100">
+                  <label htmlFor="format-excel" className="ml-3 block text-sm text-gray-900 dark:text-dark-100">
                     Excel
                   </label>
+                </div>
               </div>
             </div>
           </div>
@@ -370,9 +372,9 @@ export default function ReportsPage() {
       </Card>
 
       {/* Recent Reports Card */}
-      <Card className="mb-6">
+      <Card className="mb-6 bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-medium text-dark-100">Recent Reports</h2>
+          <h2 className="text-lg font-medium text-gray-900 dark:text-dark-100">Recent Reports</h2>
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -401,84 +403,84 @@ export default function ReportsPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-dark-600">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-dark-600">
             <thead>
               <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-dark-300 uppercase tracking-wider">
                   Name
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-dark-300 uppercase tracking-wider">
                   Type
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-dark-300 uppercase tracking-wider">
                   Generated By
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-dark-300 uppercase tracking-wider">
                   Generated On
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-dark-300 uppercase tracking-wider">
                   Format
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-dark-300 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-dark-700 divide-y divide-dark-600">
+            <tbody className="bg-white dark:bg-dark-700 divide-y divide-gray-200 dark:divide-dark-600">
               {loading ? (
                 Array(3).fill(0).map((_, index) => (
                   <tr key={index} className="animate-pulse">
                     <td className="px-6 py-4">
-                      <div className="h-4 bg-dark-600 rounded w-3/4"></div>
+                      <div className="h-4 bg-gray-200 dark:bg-dark-600 rounded w-3/4"></div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="h-4 bg-dark-600 rounded w-1/2"></div>
+                      <div className="h-4 bg-gray-200 dark:bg-dark-600 rounded w-1/2"></div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="h-4 bg-dark-600 rounded w-1/2"></div>
-                </td>
+                      <div className="h-4 bg-gray-200 dark:bg-dark-600 rounded w-1/2"></div>
+                    </td>
                     <td className="px-6 py-4">
-                      <div className="h-4 bg-dark-600 rounded w-1/4"></div>
-                </td>
+                      <div className="h-4 bg-gray-200 dark:bg-dark-600 rounded w-1/4"></div>
+                    </td>
                     <td className="px-6 py-4">
-                      <div className="h-4 bg-dark-600 rounded w-1/4"></div>
-                </td>
+                      <div className="h-4 bg-gray-200 dark:bg-dark-600 rounded w-1/4"></div>
+                    </td>
                     <td className="px-6 py-4">
-                      <div className="h-8 bg-dark-600 rounded w-20"></div>
-                </td>
+                      <div className="h-8 bg-gray-200 dark:bg-dark-600 rounded w-20"></div>
+                    </td>
                   </tr>
                 ))
               ) : reports.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-4 text-center text-dark-300">
+                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500 dark:text-dark-300">
                     No reports generated yet
-                </td>
-              </tr>
+                  </td>
+                </tr>
               ) : (
                 reports.map((report) => (
-                  <tr key={report.id} className="hover:bg-dark-600 transition-colors">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-dark-100">
+                  <tr key={report.id} className="hover:bg-gray-50 dark:hover:bg-dark-600 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-dark-100">
                       {report.name}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-dark-300">
                       {report.type}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-dark-300">
                       {report.user.name}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-dark-300">
                       {format(new Date(report.createdAt), 'MMM d, yyyy h:mm a')}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-dark-300">
                       <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
                         report.fileFormat === 'pdf' 
-                          ? 'bg-red-100/10 text-red-400' 
-                          : 'bg-green-100/10 text-green-400'
+                          ? 'bg-red-100 text-red-800 dark:bg-red-100/10 dark:text-red-400' 
+                          : 'bg-green-100 text-green-800 dark:bg-green-100/10 dark:text-green-400'
                       }`}>
                         {report.fileFormat.toUpperCase()}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-dark-300">
                       <div className="flex gap-2">
                         <Button
                           size="sm"
@@ -496,60 +498,12 @@ export default function ReportsPage() {
                           Delete
                         </Button>
                       </div>
-                </td>
-              </tr>
+                    </td>
+                  </tr>
                 ))
               )}
             </tbody>
           </table>
-        </div>
-      </Card>
-
-      {/* Report Templates Card */}
-      <Card>
-        <h2 className="text-lg font-medium text-dark-100 mb-4">Report Templates</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card interactive className="card-hover">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 h-10 w-10 bg-primary-100/10 text-primary-400 rounded-md flex items-center justify-center">
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <h4 className="text-sm font-medium text-dark-100">Monthly Files Summary</h4>
-                <p className="text-xs text-dark-300">Files by Year, Month-to-Month</p>
-              </div>
-            </div>
-          </Card>
-
-          <Card interactive className="card-hover">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 h-10 w-10 bg-blue-100/10 text-blue-400 rounded-md flex items-center justify-center">
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <h4 className="text-sm font-medium text-dark-100">Quarterly Source Analysis</h4>
-                <p className="text-xs text-dark-300">Files by Source, Quarterly</p>
-              </div>
-            </div>
-          </Card>
-
-          <Card interactive className="card-hover">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 h-10 w-10 bg-yellow-100/10 text-yellow-400 rounded-md flex items-center justify-center">
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <h4 className="text-sm font-medium text-dark-100">Grant Type Distribution</h4>
-                <p className="text-xs text-dark-300">Files by Grant Type, All Time</p>
-              </div>
-            </div>
-          </Card>
         </div>
       </Card>
     </>

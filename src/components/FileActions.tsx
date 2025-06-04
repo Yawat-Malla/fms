@@ -49,8 +49,8 @@ const FileActions: React.FC<FileActionsProps> = ({
   };
 
   const handleOpen = () => {
-    if (item.type === 'folder') {
-      router.push(`/dashboard?folder=${item.id}`);
+    if (isFolder) {
+      onOpen();
     } else {
       setShowViewer(true);
     }
