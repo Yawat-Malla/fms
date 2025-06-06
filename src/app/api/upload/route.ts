@@ -32,6 +32,19 @@ async function saveSectionFiles(
 
   // Create section subfolder path
   const sectionDir = join(parentFolder.path, sectionName);
+  
+  // Check if a folder with the same name already exists in this parent folder (including deleted ones)
+  const existingSectionFolder = await prisma.folder.findFirst({
+    where: {
+      name: sectionName,
+      parentId: parentFolder.id,
+    },
+  });
+
+  if (existingSectionFolder) {
+    throw new Error(`A folder named "${sectionName}" already exists in this location (including in the bin). Please use a different name.`);
+  }
+
   await mkdir(sectionDir, { recursive: true });
 
   // Create a folder record for this section
@@ -157,7 +170,11 @@ export async function POST(request: Request) {
     });
     if (!fiscalYearRecord) {
       fiscalYearRecord = await prisma.fiscalYear.create({
-        data: { name: fiscalYear }
+        data: {
+          name: fiscalYear,
+          startDate: new Date('2022-04-14'), // TODO: Replace with correct start date
+          endDate: new Date('2023-04-13'),   // TODO: Replace with correct end date
+        }
       });
     }
 
@@ -183,6 +200,22 @@ export async function POST(request: Request) {
 
     // Create main folder for this upload
     const mainFolderPath = join(UPLOAD_DIR, title);
+    
+    // Check if a folder with the same name already exists at the root level (including deleted ones)
+    const existingFolder = await prisma.folder.findFirst({
+      where: {
+        name: title,
+        parentId: null,
+      },
+    });
+
+    if (existingFolder) {
+      return NextResponse.json(
+        { error: 'A folder with this name already exists (including in the bin). Please use a different name.' },
+        { status: 409 }
+      );
+    }
+
     await mkdir(mainFolderPath, { recursive: true });
 
     const mainFolder = await prisma.folder.create({

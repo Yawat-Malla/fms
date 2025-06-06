@@ -117,20 +117,47 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { name, parentId, path, createdBy } = body;
 
-    const folder = await prisma.folder.create({
-      data: {
+    // Check if a folder with the same name already exists at the same level
+    const existingFolder = await prisma.folder.findFirst({
+      where: {
         name,
         parentId: parentId || null,
-        path: path || '/',
-        createdBy: createdBy || null,
-      },
-      include: {
-        files: true,
-        subfolders: true,
+        isDeleted: false,
       },
     });
 
-    return NextResponse.json(folder);
+    if (existingFolder) {
+      return NextResponse.json(
+        { error: 'A folder with this name already exists in this location' },
+        { status: 409 }
+      );
+    }
+
+    try {
+      const folder = await prisma.folder.create({
+        data: {
+          name,
+          parentId: parentId || null,
+          path: path || '/',
+          createdBy: createdBy || null,
+        },
+        include: {
+          files: true,
+          subfolders: true,
+        },
+      });
+
+      return NextResponse.json(folder);
+    } catch (error: any) {
+      // Check if the error is due to a unique constraint violation
+      if (error.code === 'P2002' && error.meta?.target?.includes('name')) {
+        return NextResponse.json(
+          { error: 'A folder with this name already exists in this location' },
+          { status: 409 }
+        );
+      }
+      throw error; // Re-throw other errors
+    }
   } catch (error) {
     console.error('Error creating folder:', error);
     return NextResponse.json(

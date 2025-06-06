@@ -54,41 +54,6 @@ export default function FilesPage() {
     { id: 'other', name: 'Other' },
   ];
 
-  // Fetch files when URL parameters or session changes
-  useEffect(() => {
-    const fetchFiles = async () => {
-      try {
-        setIsLoading(true);
-        
-        // Don't fetch if not authenticated
-        if (!session?.user?.email) return;
-
-        // Build the query URL with current filters
-        const queryParams = new URLSearchParams();
-        if (selectedFiscalYear) queryParams.append('fiscal-year', selectedFiscalYear);
-        if (selectedSource) queryParams.append('source', selectedSource);
-        if (selectedGrantType) queryParams.append('grant-type', selectedGrantType);
-
-        const response = await fetch(`/api/files?${queryParams.toString()}`);
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch files');
-        }
-
-        const data = await response.json();
-        setFiles(data.files);
-        setFilterOptions(data.filterOptions);
-      } catch (error) {
-        console.error('Error fetching files:', error);
-        toast.error('Failed to load files');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchFiles();
-  }, [session, selectedFiscalYear, selectedSource, selectedGrantType]);
-
   // Filter files based on current URL parameters and active tab
   const filteredFiles = files.filter((file) => {
     // Get current URL parameters for filtering
@@ -96,23 +61,48 @@ export default function FilesPage() {
     const currentSource = searchParams.get('source');
     const currentGrantType = searchParams.get('grant-type');
 
+    console.log('Filtering file:', {
+      fileName: file.name,
+      fileSource: file.source?.name,
+      currentSource,
+      selectedSource,
+      activeTab
+    });
+
     // First apply the URL parameter filters
     if (currentFiscalYear) {
-      const normalizedFileFiscalYear = file.fiscalYear?.replace('FY ', '');
+      const normalizedFileFiscalYear = file.fiscalYear?.name?.replace('FY ', '');
       if (normalizedFileFiscalYear !== currentFiscalYear) return false;
     }
 
-    if (currentSource && file.source !== currentSource) {
-      return false;
+    // Fix source filtering
+    if (currentSource) {
+      console.log('Checking source match:', {
+        fileSource: file.source?.name,
+        currentSource
+      });
+      if (file.source?.name !== currentSource) return false;
     }
 
-    if (currentGrantType && file.grantType !== currentGrantType) {
-      return false;
+    // Fix grant type filtering
+    if (currentGrantType) {
+      if (file.grantType?.name !== currentGrantType) return false;
     }
 
     // Then apply the tab filters
     const type = file.type.toLowerCase();
     switch (activeTab) {
+      case 'by-source':
+        // If we're in the by-source tab, only show files matching the selected source
+        if (selectedSource && file.source?.name !== selectedSource) {
+          console.log('Filtering out file due to source mismatch:', {
+            fileName: file.name,
+            fileSource: file.source?.name,
+            selectedSource
+          });
+          return false;
+        }
+        return true;
       case 'documents':
         return [
           'doc', 'docx', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -134,10 +124,59 @@ export default function FilesPage() {
     }
   });
 
+  // Add log for filtered files count
+  console.log('Filtered files count:', filteredFiles.length);
+
   // Recently modified files (last 3)
   const recentFiles = [...files]
     .sort((a, b) => new Date(b.lastModifiedAt).getTime() - new Date(a.lastModifiedAt).getTime())
     .slice(0, 3);
+
+  // Fetch files when URL parameters or session changes
+  useEffect(() => {
+    const fetchFiles = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Don't fetch if not authenticated
+        if (!session?.user?.email) return;
+
+        // Build the query URL with current filters
+        const queryParams = new URLSearchParams();
+        if (selectedFiscalYear) queryParams.append('fiscal-year', selectedFiscalYear);
+        if (selectedSource) queryParams.append('source', selectedSource);
+        if (selectedGrantType) queryParams.append('grant-type', selectedGrantType);
+
+        console.log('Fetching files with params:', {
+          selectedFiscalYear,
+          selectedSource,
+          selectedGrantType,
+          queryString: queryParams.toString()
+        });
+
+        const response = await fetch(`/api/files?${queryParams.toString()}`);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch files');
+        }
+
+        const data = await response.json();
+        console.log('Received files:', {
+          count: data.files.length,
+          sources: data.files.map(f => f.source?.name)
+        });
+        setFiles(data.files);
+        setFilterOptions(data.filterOptions);
+      } catch (error) {
+        console.error('Error fetching files:', error);
+        toast.error('Failed to load files');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchFiles();
+  }, [session, selectedFiscalYear, selectedSource, selectedGrantType]);
 
   // Handle file selection
   const handleSelectFile = (file: IFile) => {
@@ -406,6 +445,12 @@ export default function FilesPage() {
     setActiveTab(tabId);
     if (tabId === 'view-all') {
       clearFilters();
+    } else if (tabId === 'by-source') {
+      setSelectedFiscalYear(null);
+      setSelectedGrantType(null);
+      // Do not clear selectedSource so user can pick
+    } else {
+      setSelectedSource(null);
     }
   };
 
@@ -419,6 +464,12 @@ export default function FilesPage() {
     if (source) return `Files from ${source}`;
     if (grantType) return `${grantType} Files`;
     return 'All Files';
+  };
+
+  // Handle source selection
+  const handleSourceChange = (source: string | null) => {
+    console.log('Source changed:', source);
+    setSelectedSource(source);
   };
 
   return (
@@ -469,7 +520,7 @@ export default function FilesPage() {
       )}
 
       {/* Only show recently modified section when no filters are active */}
-      {!selectedFiscalYear && !selectedSource && !selectedGrantType && (
+      {!selectedFiscalYear && !selectedSource && !selectedGrantType && activeTab === 'view-all' && (
         <div className="mb-8">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-medium text-dark-100">Recently modified</h2>
@@ -613,6 +664,23 @@ export default function FilesPage() {
             ))}
           </nav>
         </div>
+
+        {/* By Source tab dropdown */}
+        {activeTab === 'by-source' && (
+          <div className="mb-6 flex items-center space-x-4">
+            <label className="block text-sm font-medium text-dark-200">Select Source:</label>
+            <select
+              value={selectedSource || ''}
+              onChange={e => handleSourceChange(e.target.value || null)}
+              className="bg-dark-600 border border-dark-500 rounded-md py-2 px-3 text-sm"
+            >
+              <option value="">All Sources</option>
+              {filterOptions.sources.map((source) => (
+                <option key={source} value={source}>{source}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {/* Files display (grid or list) */}
         {isLoading ? (

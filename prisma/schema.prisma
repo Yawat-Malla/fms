@@ -15,9 +15,8 @@ datasource db {
 
 enum UserRole {
   admin
-  data_entry
+  editor
   viewer
-  auditor
 }
 
 enum FileStatus {
@@ -163,6 +162,8 @@ model Folder {
   fiscalYear     FiscalYear? @relation(fields: [fiscalYearId], references: [id])
   sourceId       Int?
   source         Source?     @relation(fields: [sourceId], references: [id])
+
+  @@unique([name, parentId, isDeleted])
 }
 
 model SystemSettings {

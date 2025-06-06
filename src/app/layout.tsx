@@ -27,6 +27,14 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: settings?.siteName || 'File Management System',
     description: "A modern file management system for government offices",
+    icons: {
+      icon: settings?.siteLogo || '/favicon.ico',
+      shortcut: settings?.siteLogo || '/favicon.ico',
+      apple: settings?.siteLogo || '/apple-touch-icon.png',
+    },
+    manifest: '/site.webmanifest',
+    themeColor: '#1a1a1a',
+    viewport: 'width=device-width, initial-scale=1',
   };
 }
 
@@ -36,6 +44,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const session = await getServerSession(authOptions);
+  const settings = await prisma.systemSettings.findFirst();
 
   return (
     <html lang="en" className={inter.variable}>

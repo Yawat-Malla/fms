@@ -238,19 +238,16 @@ const UsersPageContent = dynamic(() => Promise.resolve(({ session, status }: { s
           case 'admin':
             colorClass = 'bg-purple-500/10 text-purple-400';
             break;
-          case 'data_entry':
+          case 'editor':
             colorClass = 'bg-blue-500/10 text-blue-400';
             break;
           case 'viewer':
             colorClass = 'bg-green-500/10 text-green-400';
             break;
-          case 'auditor':
-            colorClass = 'bg-amber-500/10 text-amber-400';
-            break;
         }
         return (
           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClass}`}>
-            {record.role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+            {record.role.charAt(0).toUpperCase() + record.role.slice(1)}
           </span>
         );
       },
@@ -517,9 +514,8 @@ const UsersPageContent = dynamic(() => Promise.resolve(({ session, status }: { s
                   >
                     <option value="">Select role</option>
                     <option value="admin">Admin</option>
-                    <option value="data_entry">Data Entry</option>
+                    <option value="editor">Editor</option>
                     <option value="viewer">Viewer</option>
-                    <option value="auditor">Auditor</option>
                   </select>
                 </div>
 
@@ -657,9 +653,8 @@ const UsersPageContent = dynamic(() => Promise.resolve(({ session, status }: { s
                   >
                     <option value="">Select role</option>
                     <option value="admin">Admin</option>
-                    <option value="data_entry">Data Entry</option>
+                    <option value="editor">Editor</option>
                     <option value="viewer">Viewer</option>
-                    <option value="auditor">Auditor</option>
                   </select>
                 </div>
 
@@ -689,7 +684,7 @@ interface UserRecord {
   id: number;
   name: string | null;
   email: string;
-  role: 'admin' | 'data_entry' | 'viewer' | 'auditor';
+  role: 'admin' | 'editor' | 'viewer';
   lastLogin: string | null;
   active: boolean;
   createdAt: string;
@@ -710,6 +705,15 @@ const UsersPage = () => {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="text-dark-300">Please sign in to view this page</div>
+      </div>
+    );
+  }
+
+  // Add role check for admin access
+  if (session?.user?.role !== 'admin') {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-dark-300">You do not have permission to access this page</div>
       </div>
     );
   }

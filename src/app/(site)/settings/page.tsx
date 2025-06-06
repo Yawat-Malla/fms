@@ -496,7 +496,7 @@ export default function SettingsPage() {
       {/* Settings Navigation */}
       <div className="mb-6">
         <nav className="flex space-x-4 border-b border-dark-700">
-          {['profile', 'preferences', 'notifications', 'admin', 'danger'].map((tab) => (
+          {['profile', 'preferences', 'admin', 'danger'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -598,120 +598,99 @@ export default function SettingsPage() {
           </Card>
         )}
 
-        {/* General Preferences */}
+        {/* Preferences & Notifications */}
         {activeTab === 'preferences' && (
           <Card>
-            <div className="space-y-4">
-              <h2 className="text-2xl font-semibold text-dark-100 mb-2">General Preferences</h2>
-              <p className="text-dark-300 mb-4">Customize your application preferences</p>
-              {/* Theme Toggle */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-medium text-dark-200">Dark Mode</h3>
-                  <p className="text-xs text-dark-400">Switch between light and dark mode</p>
-                </div>
-                <button
-                  type="button"
-                  className={`relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 ${
-                    theme === 'dark' ? 'bg-primary-600' : 'bg-gray-200'
-                  }`}
-                  role="switch"
-                  aria-checked={theme === 'dark'}
-                  onClick={toggleTheme}
-                >
-                  <span className="sr-only">Dark Mode</span>
-                  <span
-                    className={`${
-                      theme === 'dark' ? 'translate-x-5' : 'translate-x-0'
-                    } pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200`}
-                  />
-                </button>
-              </div>
-              {/* Language Selection */}
-            <div>
-              <label htmlFor="language" className="block text-sm font-medium text-dark-200">
-                  Language
-              </label>
-              <select
-                id="language"
-                value={language}
-                onChange={(e) => setLanguage(e.target.value as 'en' | 'ne')}
-                  className="mt-1 block w-full rounded-md border-dark-600 bg-dark-700 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-              >
-                  <option value="en">English</option>
-                  <option value="ne">नेपाली</option>
-              </select>
-              </div>
-            </div>
-          </Card>
-        )}
-
-        {/* Notification Settings */}
-        {activeTab === 'notifications' && (
-          <Card>
             <div className="space-y-6">
-              <h3 className="text-lg font-medium text-dark-100">Notification Preferences</h3>
-              
+              <h2 className="text-2xl font-semibold text-dark-100 mb-2">Preferences & Notifications</h2>
+              <p className="text-dark-300 mb-4">Customize your application preferences and notification settings</p>
+
+              {/* Theme & Language Preferences */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium text-dark-100">General Preferences</h3>
+                
+                {/* Language Selector */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="text-dark-100">Language</label>
+                    <p className="text-sm text-dark-300">Select your preferred language</p>
+                  </div>
+                  <select
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value)}
+                    className="block w-40 rounded-md border-dark-600 bg-dark-700 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                  >
+                    <option value="en">English</option>
+                    <option value="ne">नेपाली</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Notification Preferences */}
+              <div className="space-y-4 pt-6 border-t border-dark-700">
+                <h3 className="text-lg font-medium text-dark-100">Notification Preferences</h3>
+                
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                    <label className="text-dark-100">File Updates</label>
-                    <p className="text-sm text-dark-300">Get notified when files are updated</p>
+                      <label className="text-dark-100">File Updates</label>
+                      <p className="text-sm text-dark-300">Get notified when files are updated</p>
                     </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="sr-only peer"
-                      checked={notificationSettings.fileUpdates}
-                      onChange={(e) => setNotificationSettings(prev => ({
-                        ...prev,
-                        fileUpdates: e.target.checked
-                      }))}
-                    />
-                    <div className="w-11 h-6 bg-dark-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-dark-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
-                  </label>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="sr-only peer"
+                        checked={notificationSettings.fileUpdates}
+                        onChange={(e) => setNotificationSettings(prev => ({
+                          ...prev,
+                          fileUpdates: e.target.checked
+                        }))}
+                      />
+                      <div className="w-11 h-6 bg-dark-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-dark-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
+                    </label>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div>
-                    <label className="text-dark-100">Security Alerts</label>
-                    <p className="text-sm text-dark-300">Get notified about security-related events</p>
+                      <label className="text-dark-100">Security Alerts</label>
+                      <p className="text-sm text-dark-300">Get notified about security-related events</p>
                     </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="sr-only peer"
-                      checked={notificationSettings.securityAlerts}
-                      onChange={(e) => setNotificationSettings(prev => ({
-                        ...prev,
-                        securityAlerts: e.target.checked
-                      }))}
-                    />
-                    <div className="w-11 h-6 bg-dark-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-dark-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
-                  </label>
-                </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="sr-only peer"
+                        checked={notificationSettings.securityAlerts}
+                        onChange={(e) => setNotificationSettings(prev => ({
+                          ...prev,
+                          securityAlerts: e.target.checked
+                        }))}
+                      />
+                      <div className="w-11 h-6 bg-dark-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-dark-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
+                    </label>
+                  </div>
 
-              <div className="flex items-center justify-between">
-          <div>
-                    <label className="text-dark-100">System Updates</label>
-                    <p className="text-sm text-dark-300">Get notified about system updates and maintenance</p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="text-dark-100">System Updates</label>
+                      <p className="text-sm text-dark-300">Get notified about system updates and maintenance</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="sr-only peer"
+                        checked={notificationSettings.systemUpdates}
+                        onChange={(e) => setNotificationSettings(prev => ({
+                          ...prev,
+                          systemUpdates: e.target.checked
+                        }))}
+                      />
+                      <div className="w-11 h-6 bg-dark-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-dark-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
+                    </label>
+                  </div>
                 </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-            <input
-                  type="checkbox"
-                      className="sr-only peer"
-                      checked={notificationSettings.systemUpdates}
-                  onChange={(e) => setNotificationSettings(prev => ({
-                    ...prev,
-                        systemUpdates: e.target.checked
-                  }))}
-                    />
-                    <div className="w-11 h-6 bg-dark-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-dark-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
-                  </label>
-                </div>
-          </div>
-        </div>
-      </Card>
+              </div>
+            </div>
+          </Card>
         )}
 
         {/* Admin Settings */}

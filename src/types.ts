@@ -90,7 +90,7 @@ export interface SyncLog {
 export interface Report {
   id: string;
   name: string;
-  type: 'file_count' | 'missing_uploads' | 'recently_updated' | 'custom';
+  type: 'file_count' | 'missing_uploads' | 'custom';
   createdAt: string;
   createdBy: string;
   parameters: {

@@ -38,7 +38,7 @@ export async function POST(req: Request) {
     }
 
     // Validate report type
-    const validReportTypes = ['file_count', 'missing_uploads', 'recently_updated', 'custom'] as const;
+    const validReportTypes = ['file_count', 'missing_uploads', 'custom'] as const;
     if (!validReportTypes.includes(type)) {
       return NextResponse.json(
         { error: 'Invalid report type' },
@@ -70,9 +70,6 @@ export async function POST(req: Request) {
         break;
       case 'missing_uploads':
         reportData = await generateMissingUploadsReport(parameters);
-        break;
-      case 'recently_updated':
-        reportData = await generateRecentlyUpdatedReport(parameters);
         break;
       case 'custom':
         reportData = await generateCustomReport(parameters);
@@ -182,61 +179,32 @@ async function generateFileCountReport(parameters: any) {
 async function generateMissingUploadsReport(parameters: any) {
   const { fiscalYear, source, grantType } = parameters;
 
-  // Get all expected file patterns
-  const expectedPatterns = await prisma.filePattern.findMany({
+  // Get all folders with their files, subfolders, and metadata
+  const folders = await prisma.folder.findMany({
     where: {
-      fiscalYear: fiscalYear ? { name: fiscalYear } : undefined,
-      source: source ? { name: source } : undefined,
-      grantType: grantType ? { name: grantType } : undefined,
-    },
-  });
-
-  // Get actual uploaded files
-  const uploadedFiles = await prisma.file.findMany({
-    where: {
-      fiscalYear: fiscalYear ? { name: fiscalYear } : undefined,
-      source: source ? { name: source } : undefined,
-      grantType: grantType ? { name: grantType } : undefined,
-      isDeleted: false,
-    },
-  });
-
-  // Find missing files
-  const missingFiles = expectedPatterns.filter(pattern => {
-    return !uploadedFiles.some(file => 
-      file.name.match(pattern.pattern) &&
-      file.fiscalYear?.name === pattern.fiscalYear?.name &&
-      file.source?.name === pattern.source?.name &&
-      file.grantType?.name === pattern.grantType?.name
-    );
-  });
-
-  return {
-    title: 'Missing Uploads Report',
-    parameters,
-    summary: {
-      totalExpected: expectedPatterns.length,
-      totalUploaded: uploadedFiles.length,
-      totalMissing: missingFiles.length,
-    },
-    details: missingFiles,
-  };
-}
-
-async function generateRecentlyUpdatedReport(parameters: any) {
-  const { days = 30, fiscalYear, source, grantType } = parameters;
-
-  const files = await prisma.file.findMany({
-    where: {
-      lastModifiedAt: {
-        gte: new Date(Date.now() - days * 24 * 60 * 60 * 1000),
-      },
       fiscalYear: fiscalYear ? { name: fiscalYear } : undefined,
       source: source ? { name: source } : undefined,
       grantType: grantType ? { name: grantType } : undefined,
       isDeleted: false,
     },
     include: {
+      files: {
+        where: {
+          isDeleted: false,
+        },
+      },
+      subfolders: {
+        where: {
+          isDeleted: false,
+        },
+        include: {
+          files: {
+            where: {
+              isDeleted: false,
+            },
+          },
+        },
+      },
       fiscalYear: true,
       source: true,
       grantType: true,
@@ -247,30 +215,117 @@ async function generateRecentlyUpdatedReport(parameters: any) {
         },
       },
     },
-    orderBy: {
-      lastModifiedAt: 'desc',
-    },
   });
 
+  // Find folders with no files (including subfolders)
+  const foldersWithNoFiles = folders.filter(folder => {
+    // Check if the folder itself has files
+    if (folder.files.length > 0) {
+      return false;
+    }
+
+    // Check if any subfolder has files
+    const hasFilesInSubfolders = folder.subfolders.some(subfolder => subfolder.files.length > 0);
+    if (hasFilesInSubfolders) {
+      return false;
+    }
+
+    return true;
+  });
+
+  // Format the details with all metadata fields
+  const formattedDetails = foldersWithNoFiles.map(folder => ({
+    name: folder.name,
+    fiscalYear: folder.fiscalYear?.name || 'N/A',
+    source: folder.source?.name || 'N/A',
+    grantType: folder.grantType?.name || 'N/A',
+    createdAt: format(new Date(folder.createdAt), 'yyyy-MM-dd'),
+    createdBy: folder.user?.name || 'N/A',
+    subfolders: folder.subfolders.length,
+  }));
+
   return {
-    title: 'Recently Updated Files Report',
+    title: 'Empty Folders Report',
     parameters,
     summary: {
-      totalFiles: files.length,
-      byUser: groupBy(files, 'user.name'),
-      byFiscalYear: groupBy(files, 'fiscalYear.name'),
+      totalFolders: folders.length,
+      emptyFolders: foldersWithNoFiles.length,
+      byFiscalYear: groupBy(foldersWithNoFiles, 'fiscalYear.name'),
+      bySource: groupBy(foldersWithNoFiles, 'source.name'),
+      byGrantType: groupBy(foldersWithNoFiles, 'grantType.name'),
     },
-    details: files,
+    details: formattedDetails,
   };
 }
 
 async function generateCustomReport(parameters: any) {
-  // Implement custom report logic based on parameters
+  const { startDate, endDate, fiscalYear, source, grantType } = parameters;
+
+  // Get all files matching the criteria
+  const files = await prisma.file.findMany({
+    where: {
+      uploadedAt: {
+        gte: startDate ? new Date(startDate) : undefined,
+        lte: endDate ? new Date(endDate) : undefined,
+      },
+      fiscalYear: fiscalYear ? { name: fiscalYear } : undefined,
+      source: source ? { name: source } : undefined,
+      grantType: grantType ? { name: grantType } : undefined,
+      isDeleted: false,
+    },
+    include: {
+      fiscalYear: true,
+      source: true,
+      grantType: true,
+      folder: {
+        include: {
+          user: {
+            select: {
+              name: true,
+              email: true,
+            },
+          },
+          subfolders: {
+            where: {
+              isDeleted: false,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  // Format the details with all metadata fields
+  const formattedDetails = files.map(file => ({
+    name: file.name || 'N/A',
+    fiscalYear: file.fiscalYear?.name || 'N/A',
+    source: file.source?.name || 'N/A',
+    grantType: file.grantType?.name || 'N/A',
+    createdAt: format(new Date(file.uploadedAt), 'yyyy-MM-dd'),
+    createdBy: file.folder?.user?.name || 'N/A',
+    subfolders: file.folder?.subfolders?.length || 0,
+  }));
+
   return {
     title: 'Custom Report',
     parameters,
-    // Add custom implementation
+    summary: {
+      totalFiles: files.length,
+      byFiscalYear: groupBy(files, 'fiscalYear.name'),
+      bySource: groupBy(files, 'source.name'),
+      byGrantType: groupBy(files, 'grantType.name'),
+    },
+    details: formattedDetails,
   };
+}
+
+// Helper function to format file size
+function formatFileSize(bytes: number): string {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
 async function generateExcelReport(data: any, filePath: string) {
@@ -348,137 +403,118 @@ async function generatePDFReport(data: any, filePath: string) {
       };
 
       // Add title
-      doc.setFont(undefined, 'bold');
-      addText(data.title, margin, 16);
+      doc.setFont('helvetica', 'bold');
+      addText(data.title || 'Report', margin, 16);
       yPos += 15;
 
       // Add parameters section
-      doc.setFont(undefined, 'bold');
-      addText('Parameters:', margin, 12);
-      yPos += 10;
-      doc.setFont(undefined, 'normal');
-      Object.entries(data.parameters).forEach(([key, value]) => {
-        if (value) {
-          yPos += addText(`${key}: ${value}`, margin + 5, 10) * lineHeight;
-        }
-      });
-      yPos += 10;
+      if (data.parameters) {
+        doc.setFont('helvetica', 'bold');
+        addText('Parameters:', margin, 12);
+        yPos += 10;
+        doc.setFont('helvetica', 'normal');
+        Object.entries(data.parameters || {}).forEach(([key, value]) => {
+          if (value) {
+            yPos += addText(`${key}: ${value}`, margin + 5, 10) * lineHeight;
+          }
+        });
+        yPos += 10;
+      }
 
       // Add summary section
-      doc.setFont(undefined, 'bold');
-      addText('Summary:', margin, 12);
-      yPos += 10;
-      doc.setFont(undefined, 'normal');
-      Object.entries(data.summary).forEach(([key, value]) => {
-        if (typeof value === 'object') {
-          yPos += addText(key, margin + 5, 10) * lineHeight;
-          Object.entries(value).forEach(([subKey, subValue]) => {
-            yPos += addText(`${subKey}: ${subValue}`, margin + 10, 10) * lineHeight;
-          });
-        } else {
-          yPos += addText(`${key}: ${value}`, margin + 5, 10) * lineHeight;
-        }
-      });
-      yPos += 10;
+      if (data.summary) {
+        doc.setFont('helvetica', 'bold');
+        addText('Summary:', margin, 12);
+        yPos += 10;
+        doc.setFont('helvetica', 'normal');
+        Object.entries(data.summary || {}).forEach(([key, value]) => {
+          if (typeof value === 'object' && value !== null) {
+            yPos += addText(key, margin + 5, 10) * lineHeight;
+            Object.entries(value).forEach(([subKey, subValue]) => {
+              if (subValue !== null && subValue !== undefined) {
+                yPos += addText(`${subKey}: ${subValue}`, margin + 10, 10) * lineHeight;
+              }
+            });
+          } else if (value !== null && value !== undefined) {
+            yPos += addText(`${key}: ${value}`, margin + 5, 10) * lineHeight;
+          }
+        });
+        yPos += 10;
+      }
 
       // Add details if available
       if (data.details?.length > 0) {
-        doc.setFont(undefined, 'bold');
+        doc.setFont('helvetica', 'bold');
         addText('Details:', margin, 12);
         yPos += 10;
 
-        // Filter and rename relevant columns
-        const relevantColumns = {
-          'name': 'Name',
-          'fiscalYear.name': 'Fiscal Year',
-          'source.name': 'Source',
-          'grantType.name': 'Grant Type',
-          'uploadedAt': 'Upload Date',
-          'user.name': 'Uploaded By'
-        };
+        // Define columns for the report
+        const columns = [
+          { header: 'Name', key: 'name', width: 30 },
+          { header: 'Fiscal Year', key: 'fiscalYear', width: 20 },
+          { header: 'Source', key: 'source', width: 20 },
+          { header: 'Grant Type', key: 'grantType', width: 20 },
+          { header: 'Created Date', key: 'createdAt', width: 20 },
+          { header: 'Created By', key: 'createdBy', width: 25 },
+          { header: 'Subfolders', key: 'subfolders', width: 15 },
+        ];
 
-        // Extract only relevant data
-        const filteredDetails = data.details.map(item => {
-          const filtered: any = {};
-          Object.entries(relevantColumns).forEach(([key, label]) => {
-            // Handle nested properties
-            const value = key.split('.').reduce((obj, k) => obj?.[k], item);
-            if (value) {
-              filtered[label] = key.includes('At') ? 
-                format(new Date(value), 'yyyy-MM-dd') : 
-                value;
-            }
-          });
-          return filtered;
+        // Calculate column widths
+        const totalWidth = columns.reduce((sum, col) => sum + col.width, 0);
+        const scaleFactor = contentWidth / totalWidth;
+        const finalColumnWidths = columns.map(col => col.width * scaleFactor);
+
+        // Draw table header
+        doc.setFillColor(240, 240, 240);
+        doc.rect(margin, yPos - 5, contentWidth, 8, 'F');
+        doc.setTextColor(0, 0, 0);
+        
+        let xPos = margin;
+        columns.forEach((col, index) => {
+          doc.setFont('helvetica', 'bold');
+          addText(col.header, xPos, 10, finalColumnWidths[index]);
+          xPos += finalColumnWidths[index];
         });
+        yPos += 8;
 
-        if (filteredDetails.length > 0) {
-          const headers = Object.values(relevantColumns);
-          const columnWidths = headers.map(header => {
-            const maxContentLength = Math.max(
-              header.length,
-              ...filteredDetails.map(row => String(row[header] || '').length)
-            );
-            return Math.min(Math.max(maxContentLength * 4, 25), 40);
-          });
-
-          // Normalize column widths to fit page
-          const totalWidth = columnWidths.reduce((sum, width) => sum + width, 0);
-          const scaleFactor = contentWidth / totalWidth;
-          const finalColumnWidths = columnWidths.map(width => width * scaleFactor);
-
-          // Draw table header
-          doc.setFillColor(240, 240, 240);
-          doc.rect(margin, yPos - 5, contentWidth, 8, 'F');
-          doc.setTextColor(0, 0, 0);
-          
-          let xPos = margin;
-          headers.forEach((header, index) => {
-            doc.setFont(undefined, 'bold');
-            addText(header, xPos, 10, finalColumnWidths[index]);
-            xPos += finalColumnWidths[index];
-          });
-          yPos += 8;
-
-          // Draw table rows
-          doc.setFont(undefined, 'normal');
-          filteredDetails.forEach((row, rowIndex) => {
-            if (yPos > pageHeight - margin) {
-              doc.addPage();
-              yPos = margin;
-              
-              // Redraw header on new page
-              doc.setFillColor(240, 240, 240);
-              doc.rect(margin, yPos - 5, contentWidth, 8, 'F');
-              xPos = margin;
-              headers.forEach((header, index) => {
-                doc.setFont(undefined, 'bold');
-                addText(header, xPos, 10, finalColumnWidths[index]);
-                xPos += finalColumnWidths[index];
-              });
-              yPos += 8;
-              doc.setFont(undefined, 'normal');
-            }
-
-            // Draw row background (alternating)
-            if (rowIndex % 2 === 0) {
-              doc.setFillColor(250, 250, 250);
-              doc.rect(margin, yPos - 5, contentWidth, 8, 'F');
-            }
-
+        // Draw table rows
+        doc.setFont('helvetica', 'normal');
+        data.details.forEach((row: any, rowIndex: number) => {
+          if (yPos > pageHeight - margin) {
+            doc.addPage();
+            yPos = margin;
+            
+            // Redraw header on new page
+            doc.setFillColor(240, 240, 240);
+            doc.rect(margin, yPos - 5, contentWidth, 8, 'F');
             xPos = margin;
-            headers.forEach((header, index) => {
-              const value = row[header] || '';
-              addText(String(value), xPos, 9, finalColumnWidths[index]);
+            columns.forEach((col, index) => {
+              doc.setFont('helvetica', 'bold');
+              addText(col.header, xPos, 10, finalColumnWidths[index]);
               xPos += finalColumnWidths[index];
             });
             yPos += 8;
-          });
+            doc.setFont('helvetica', 'normal');
+          }
 
-          // Draw table border
-          doc.setDrawColor(200, 200, 200);
-          doc.rect(margin, yPos - (filteredDetails.length * 8) - 5, contentWidth, (filteredDetails.length * 8) + 5);
-        }
+          // Draw row background (alternating)
+          if (rowIndex % 2 === 0) {
+            doc.setFillColor(250, 250, 250);
+            doc.rect(margin, yPos - 5, contentWidth, 8, 'F');
+          }
+
+          xPos = margin;
+          columns.forEach((col, index) => {
+            const value = row[col.key] ?? 'N/A';
+            addText(String(value), xPos, 9, finalColumnWidths[index]);
+            xPos += finalColumnWidths[index];
+          });
+          yPos += 8;
+        });
+
+        // Draw table border
+        doc.setDrawColor(200, 200, 200);
+        doc.rect(margin, yPos - (data.details.length * 8) - 5, contentWidth, (data.details.length * 8) + 5);
       }
 
       // Save the PDF

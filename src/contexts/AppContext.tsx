@@ -78,20 +78,29 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [theme, mounted]);
 
-  // Update language in localStorage when language changes
+  // Update language in localStorage and document lang attribute when language changes
   useEffect(() => {
     if (!mounted) return;
+    
     localStorage.setItem('language', language);
+    document.documentElement.lang = language;
+    
+    // Force a refresh of the page to ensure all components re-render with new language
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('languageChange'));
+    }
   }, [language, mounted]);
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   };
 
-  // Translation function
+  // Helper function to get nested translation value
   const t = (key: string): string => {
-    const result = getNestedTranslation(translations[language], key);
-    return result;
+    if (!mounted) return key;
+    
+    const translation = getNestedTranslation(translations[language], key);
+    return translation || key;
   };
 
   return (

@@ -6,6 +6,7 @@ import Button from '@/components/ui/Button';
 import { toast } from 'react-hot-toast';
 import { format } from 'date-fns';
 import { useSession } from 'next-auth/react';
+import { generateFiscalYears } from '@/utils/fiscalYears';
 
 interface Report {
   id: number;
@@ -33,13 +34,18 @@ export default function ReportsPage() {
   const [selectedGrantType, setSelectedGrantType] = useState('');
   const [loading, setLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [fiscalYears, setFiscalYears] = useState<{ id: string; name: string; }[]>([]);
 
   const reportTypes = [
     { id: 'file_count', name: 'Files by Year' },
     { id: 'missing_uploads', name: 'Missing Uploads' },
-    { id: 'recently_updated', name: 'Recently Updated Files' },
     { id: 'custom', name: 'Custom Report' },
   ] as const;
+
+  // Initialize fiscal years
+  useEffect(() => {
+    setFiscalYears(generateFiscalYears());
+  }, []);
 
   // Fetch reports on mount
   useEffect(() => {
@@ -263,7 +269,10 @@ export default function ReportsPage() {
                     id="start-date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="block w-full rounded-md border-dark-600 bg-dark-800 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                    disabled={selectedReportType !== 'custom'}
+                    className={`block w-full rounded-md border-dark-600 bg-dark-800 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm ${
+                      selectedReportType !== 'custom' ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
                   />
                 </div>
                 <div className="w-1/2">
@@ -275,7 +284,10 @@ export default function ReportsPage() {
                     id="end-date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="block w-full rounded-md border-dark-600 bg-dark-800 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                    disabled={selectedReportType !== 'custom'}
+                    className={`block w-full rounded-md border-dark-600 bg-dark-800 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm ${
+                      selectedReportType !== 'custom' ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
                   />
                 </div>
               </div>
@@ -290,12 +302,17 @@ export default function ReportsPage() {
                 id="fiscal-year"
                 value={selectedFiscalYear}
                 onChange={(e) => setSelectedFiscalYear(e.target.value)}
-                className="block w-full rounded-md border-dark-600 bg-dark-800 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                disabled={selectedReportType !== 'custom'}
+                className={`block w-full rounded-md border-dark-600 bg-dark-800 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm ${
+                  selectedReportType !== 'custom' ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
               >
                 <option value="">All Fiscal Years</option>
-                <option value="2080/81">2080/81</option>
-                <option value="2079/80">2079/80</option>
-                <option value="2078/79">2078/79</option>
+                {fiscalYears.map((year) => (
+                  <option key={year.id} value={year.name}>
+                    {year.name}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -308,7 +325,10 @@ export default function ReportsPage() {
                 id="source"
                 value={selectedSource}
                 onChange={(e) => setSelectedSource(e.target.value)}
-                className="block w-full rounded-md border-dark-600 bg-dark-800 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                disabled={selectedReportType !== 'custom'}
+                className={`block w-full rounded-md border-dark-600 bg-dark-800 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm ${
+                  selectedReportType !== 'custom' ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
               >
                 <option value="">All Sources</option>
                 <option value="Federal Government">Federal Government</option>
@@ -318,11 +338,35 @@ export default function ReportsPage() {
               </select>
             </div>
 
-            {/* Format */}
-              <label className="block text-sm font-medium text-dark-200 mb-2">
-              Format <span className="text-red-500">*</span>
+            {/* Grant Type */}
+            <div className="mb-4">
+              <label htmlFor="grant-type" className="block text-sm font-medium text-dark-200 mb-2">
+                Grant Type
               </label>
-              <div className="flex space-x-4">
+              <select
+                id="grant-type"
+                value={selectedGrantType}
+                onChange={(e) => setSelectedGrantType(e.target.value)}
+                disabled={selectedReportType !== 'custom'}
+                className={`block w-full rounded-md border-dark-600 bg-dark-800 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm ${
+                  selectedReportType !== 'custom' ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                <option value="">All Grant Types</option>
+                <option value="Current Expenditure">Current Expenditure</option>
+                <option value="Capital Expenditure">Capital Expenditure</option>
+                <option value="Supplementary Grant">Supplementary Grant</option>
+                <option value="Special Grant">Special Grant</option>
+                <option value="Other Grant">Other Grant</option>
+              </select>
+            </div>
+
+            {/* Format */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-dark-200 mb-2">
+                Format <span className="text-red-500">*</span>
+              </label>
+              <div className="space-y-2">
                 <div className="flex items-center">
                   <input
                     id="format-pdf"
@@ -348,6 +392,7 @@ export default function ReportsPage() {
                   <label htmlFor="format-excel" className="ml-3 block text-sm text-dark-100">
                     Excel
                   </label>
+                </div>
               </div>
             </div>
           </div>
@@ -424,7 +469,7 @@ export default function ReportsPage() {
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-dark-700 divide-y divide-dark-600">
+            <tbody>
               {loading ? (
                 Array(3).fill(0).map((_, index) => (
                   <tr key={index} className="animate-pulse">
@@ -436,49 +481,49 @@ export default function ReportsPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="h-4 bg-dark-600 rounded w-1/2"></div>
-                </td>
+                    </td>
                     <td className="px-6 py-4">
                       <div className="h-4 bg-dark-600 rounded w-1/4"></div>
-                </td>
+                    </td>
                     <td className="px-6 py-4">
                       <div className="h-4 bg-dark-600 rounded w-1/4"></div>
-                </td>
+                    </td>
                     <td className="px-6 py-4">
                       <div className="h-8 bg-dark-600 rounded w-20"></div>
-                </td>
+                    </td>
                   </tr>
                 ))
               ) : reports.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-4 text-center text-dark-300">
                     No reports generated yet
-                </td>
-              </tr>
+                  </td>
+                </tr>
               ) : (
                 reports.map((report) => (
                   <tr key={report.id} className="hover:bg-dark-600 transition-colors">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-dark-100">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-dark-100">
                       {report.name}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
                       {report.type}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
                       {report.user.name}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
                       {format(new Date(report.createdAt), 'MMM d, yyyy h:mm a')}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
                       <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
                         report.fileFormat === 'pdf' 
                           ? 'bg-red-100/10 text-red-400' 
                           : 'bg-green-100/10 text-green-400'
                       }`}>
                         {report.fileFormat.toUpperCase()}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
                       <div className="flex gap-2">
                         <Button
                           size="sm"
@@ -496,60 +541,12 @@ export default function ReportsPage() {
                           Delete
                         </Button>
                       </div>
-                </td>
-              </tr>
+                    </td>
+                  </tr>
                 ))
               )}
             </tbody>
           </table>
-        </div>
-      </Card>
-
-      {/* Report Templates Card */}
-      <Card>
-        <h2 className="text-lg font-medium text-dark-100 mb-4">Report Templates</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card interactive className="card-hover">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 h-10 w-10 bg-primary-100/10 text-primary-400 rounded-md flex items-center justify-center">
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <h4 className="text-sm font-medium text-dark-100">Monthly Files Summary</h4>
-                <p className="text-xs text-dark-300">Files by Year, Month-to-Month</p>
-              </div>
-            </div>
-          </Card>
-
-          <Card interactive className="card-hover">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 h-10 w-10 bg-blue-100/10 text-blue-400 rounded-md flex items-center justify-center">
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <h4 className="text-sm font-medium text-dark-100">Quarterly Source Analysis</h4>
-                <p className="text-xs text-dark-300">Files by Source, Quarterly</p>
-              </div>
-            </div>
-          </Card>
-
-          <Card interactive className="card-hover">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 h-10 w-10 bg-yellow-100/10 text-yellow-400 rounded-md flex items-center justify-center">
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <h4 className="text-sm font-medium text-dark-100">Grant Type Distribution</h4>
-                <p className="text-xs text-dark-300">Files by Grant Type, All Time</p>
-              </div>
-            </div>
-          </Card>
         </div>
       </Card>
     </>
