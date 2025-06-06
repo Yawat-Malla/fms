@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import Image from 'next/image';
 
 interface AvatarProps {
   name?: string | null;
@@ -9,6 +10,8 @@ interface AvatarProps {
 }
 
 export default function Avatar({ name, imageUrl, size = 'md', className = '' }: AvatarProps) {
+  const [imageError, setImageError] = useState(false);
+  
   // Get initials from name
   const initials = name && typeof name === 'string'
     ? name.split(' ').map(n => n[0]).join('').toUpperCase()
@@ -24,14 +27,22 @@ export default function Avatar({ name, imageUrl, size = 'md', className = '' }: 
     lg: 'w-12 h-12 text-lg'
   };
 
-  // If we have an image URL, show the image
-  if (imageUrl) {
+  // Reset image error state when imageUrl changes
+  useEffect(() => {
+    setImageError(false);
+  }, [imageUrl]);
+
+  // If we have an image URL and no error, show the image
+  if (imageUrl && !imageError) {
     return (
-      <div className={`${baseClasses} ${sizeClasses[size]} ${className} overflow-hidden`}>
-        <img
+      <div className={`${baseClasses} ${sizeClasses[size]} ${className} overflow-hidden relative`}>
+        <Image
           src={imageUrl}
           alt={name || 'Avatar'}
-          className="w-full h-full object-cover"
+          fill
+          className="object-cover"
+          onError={() => setImageError(true)}
+          unoptimized
         />
       </div>
     );

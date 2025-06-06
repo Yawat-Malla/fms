@@ -39,7 +39,7 @@ export interface GrantType {
 // User type
 export interface User {
   id: string;
-  name: string;
+  name?: string | null;
   email: string;
   role: 'admin' | 'data_entry' | 'viewer' | 'auditor';
   createdAt: string;

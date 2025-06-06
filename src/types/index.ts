@@ -47,12 +47,24 @@ export interface IFile {
   uploadedAt: Date | string;
   lastModifiedAt: Date | string;
   uploadedBy: string;
-  fiscalYear?: string | null;
-  source?: string | null;
-  grantType?: string | null;
+  fiscalYear?: {
+    id: string;
+    name: string;
+  } | null;
+  source?: {
+    id: string;
+    name: string;
+  } | null;
+  grantType?: {
+    id: string;
+    name: string;
+  } | null;
   fiscalYearId?: string | null;
   sourceId?: string | null;
   grantTypeId?: string | null;
+  user?: {
+    name: string;
+  };
 }
 
 // User type

@@ -2,20 +2,22 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
+    domains: ['localhost'],
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: '**',
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '3000',
+        pathname: '/uploads/**',
       },
     ],
-    unoptimized: true,
   },
   // Configure static file serving
   async rewrites() {
     return [
       {
         source: '/uploads/:path*',
-        destination: '/api/uploads/:path*',
+        destination: '/uploads/:path*',
       },
     ];
   },
@@ -27,6 +29,10 @@ const nextConfig = {
   },
   webpack: (config) => {
     config.externals = [...config.externals, 'bcrypt'];
+    config.module.rules.push({
+      test: /\.(png|jpg|gif|svg|eot|ttf|woff|woff2)$/,
+      type: 'asset/resource',
+    });
     return config;
   },
 };

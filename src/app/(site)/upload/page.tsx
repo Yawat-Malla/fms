@@ -269,14 +269,10 @@ const UploadPage = () => {
                               Fiscal Year <span className="text-primary-500">*</span>
                             </label>
                             <SearchableSelect
-                              id="fiscalYear"
-                              name="fiscalYear"
                               options={fiscalYears}
                               value={fiscalYear ? { value: fiscalYear, label: fiscalYear } : null}
                               onChange={(option) => setFiscalYear(option.value)}
                               placeholder="Select Fiscal Year"
-                              required
-                              disabled={isSubmitting}
                             />
                           </div>
                           <div className="space-y-2">

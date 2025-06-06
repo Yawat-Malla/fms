@@ -163,7 +163,7 @@ export default function FilesPage() {
         const data = await response.json();
         console.log('Received files:', {
           count: data.files.length,
-          sources: data.files.map(f => f.source?.name)
+          sources: data.files.map((f: IFile) => f.source?.name)
         });
         setFiles(data.files);
         setFilterOptions(data.filterOptions);

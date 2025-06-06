@@ -155,15 +155,23 @@ const UsersPageContent = dynamic(() => Promise.resolve(({ session, status }: { s
   useEffect(() => {
     const fetchUsers = async () => {
       try {
+        console.log('[Users Page] Fetching users...');
         const response = await fetch('/api/users');
+        
         if (!response.ok) {
-          throw new Error('Failed to fetch users');
+          const errorData = await response.json();
+          console.error('[Users Page] API Error:', errorData);
+          throw new Error(errorData.error || 'Failed to fetch users');
         }
+        
         const data = await response.json();
+        console.log('[Users Page] Users fetched successfully:', {
+          count: data.users.length
+        });
         setUsers(data.users);
       } catch (error) {
-        console.error('Error fetching users:', error);
-        toast.error('Failed to load users');
+        console.error('[Users Page] Error fetching users:', error);
+        toast.error(error instanceof Error ? error.message : 'Failed to load users');
       } finally {
         setIsLoading(false);
       }

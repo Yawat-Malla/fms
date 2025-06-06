@@ -42,7 +42,7 @@ export default function SettingsPage() {
   // Profile Settings
   const [profileSettings, setProfileSettings] = useState<ProfileSettings>({
     fullName: session?.user?.name || '',
-    username: session?.user?.username || session?.user?.email?.split('@')[0] || '',
+    username: session?.user?.email?.split('@')[0] || '',
     email: session?.user?.email || '',
     profilePicture: session?.user?.profilePicture || '',
   });
@@ -96,7 +96,7 @@ export default function SettingsPage() {
         fullName: session.user.name || '',
         email: session.user.email || '',
         profilePicture: session.user.profilePicture || '',
-        username: session.user.username || session.user.email?.split('@')[0] || '',
+        username: session.user.email?.split('@')[0] || '',
       }));
     }
   }, [session]);
@@ -106,7 +106,7 @@ export default function SettingsPage() {
     console.log('[Settings Debug] Current session:', {
       user: session?.user,
       profilePicture: session?.user?.profilePicture,
-      username: session?.user?.username,
+      username: session?.user?.email?.split('@')[0] || '',
     });
   }, [session]);
 
@@ -496,7 +496,12 @@ export default function SettingsPage() {
       {/* Settings Navigation */}
       <div className="mb-6">
         <nav className="flex space-x-4 border-b border-dark-700">
-          {['profile', 'preferences', 'admin', 'danger'].map((tab) => (
+          {[
+            'profile',
+            'preferences',
+            ...(session?.user?.role === 'admin' ? ['admin'] : []),
+            'danger'
+          ].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -605,20 +610,19 @@ export default function SettingsPage() {
               <h2 className="text-2xl font-semibold text-dark-100 mb-2">Preferences & Notifications</h2>
               <p className="text-dark-300 mb-4">Customize your application preferences and notification settings</p>
 
-              {/* Theme & Language Preferences */}
+              {/* General Preferences */}
               <div className="space-y-4">
                 <h3 className="text-lg font-medium text-dark-100">General Preferences</h3>
-                
-                {/* Language Selector */}
-                <div className="flex items-center justify-between">
-                  <div>
-                    <label className="text-dark-100">Language</label>
-                    <p className="text-sm text-dark-300">Select your preferred language</p>
-                  </div>
+                {/* Language Selection */}
+                <div>
+                  <label htmlFor="language" className="block text-sm font-medium text-dark-200">
+                    Language
+                  </label>
                   <select
+                    id="language"
                     value={language}
-                    onChange={(e) => setLanguage(e.target.value)}
-                    className="block w-40 rounded-md border-dark-600 bg-dark-700 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                    onChange={(e) => setLanguage(e.target.value as 'en' | 'ne')}
+                    className="mt-1 block w-full rounded-md border-dark-600 bg-dark-700 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
                   >
                     <option value="en">English</option>
                     <option value="ne">नेपाली</option>
@@ -627,9 +631,8 @@ export default function SettingsPage() {
               </div>
 
               {/* Notification Preferences */}
-              <div className="space-y-4 pt-6 border-t border-dark-700">
-                <h3 className="text-lg font-medium text-dark-100">Notification Preferences</h3>
-                
+              <div className="border-t border-dark-600 pt-6">
+                <h3 className="text-lg font-medium text-dark-100 mb-4">Notification Preferences</h3>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -694,7 +697,7 @@ export default function SettingsPage() {
         )}
 
         {/* Admin Settings */}
-        {activeTab === 'admin' && session?.user?.role === 'admin' && (
+        {activeTab === 'admin' && session?.user?.role === 'admin' ? (
           <Card>
             <div className="space-y-4">
               <h2 className="text-2xl font-semibold text-dark-100 mb-2">Admin Settings</h2>
@@ -704,10 +707,10 @@ export default function SettingsPage() {
               <div>
                 <h3 className="text-sm font-medium text-dark-200 mb-4">Site Configuration</h3>
                 <div className="space-y-4">
-          <div>
+                  <div>
                     <label htmlFor="site-name" className="block text-sm font-medium text-dark-200">
                       Site Name
-            </label>
+                    </label>
                     <input
                       type="text"
                       id="site-name"
@@ -716,23 +719,23 @@ export default function SettingsPage() {
                         ...prev,
                         siteName: e.target.value,
                       }))}
-              className="mt-1 block w-full rounded-md border-dark-600 bg-dark-700 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                      className="mt-1 block w-full rounded-md border-dark-600 bg-dark-700 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
                     />
-          </div>
-          <div>
+                  </div>
+                  <div>
                     <label htmlFor="site-logo" className="block text-sm font-medium text-dark-200">
                       Site Logo
-            </label>
+                    </label>
                     <div className="mt-1 flex items-center space-x-4">
                       <img
                         src={adminSettings.siteLogo}
                         alt="Site Logo"
                         className="h-12 w-12 rounded-md object-contain bg-dark-800"
                       />
-                    <input
-                      type="file"
-                      id="site-logo"
-                      accept="image/*"
+                      <input
+                        type="file"
+                        id="site-logo"
+                        accept="image/*"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
@@ -746,48 +749,20 @@ export default function SettingsPage() {
                             reader.readAsDataURL(file);
                           }
                         }}
-                      className="mt-1 block w-full text-sm text-dark-400
-                        file:mr-4 file:py-2 file:px-4
-                        file:rounded-md file:border-0
-                        file:text-sm file:font-medium
-                        file:bg-dark-700 file:text-dark-100
-                        hover:file:bg-dark-600"
-                    />
-                  </div>
-                </div>
-              </div>
-              </div>
-
-              {/* Feature Toggles */}
-              <div>
-                <h3 className="text-sm font-medium text-dark-200 mb-4">Feature Toggles</h3>
-                <div className="space-y-4">
-                  {adminModules.map((module) => (
-                    <div key={module.id} className="flex items-center justify-between">
-                      <div>
-                        <label className="text-sm text-dark-100">{module.label}</label>
-                        <p className="text-xs text-dark-400">Enable/disable {module.id} module</p>
-                      </div>
-                      <input
-                        type="checkbox"
-                        checked={adminSettings.enabledModules.includes(module.id)}
-                        onChange={(e) => {
-                          setAdminSettings(prev => ({
-                            ...prev,
-                            enabledModules: e.target.checked
-                              ? [...prev.enabledModules, module.id]
-                              : prev.enabledModules.filter(m => m !== module.id),
-                          }));
-                        }}
-                        className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-dark-600 rounded"
+                        className="mt-1 block w-full text-sm text-dark-400
+                          file:mr-4 file:py-2 file:px-4
+                          file:rounded-md file:border-0
+                          file:text-sm file:font-medium
+                          file:bg-dark-700 file:text-dark-100
+                          hover:file:bg-dark-600"
                       />
                     </div>
-                  ))}
+                  </div>
                 </div>
               </div>
 
               {/* Maintenance Mode */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mt-6">
                 <div>
                   <h3 className="text-sm font-medium text-dark-200">Maintenance Mode</h3>
                   <p className="text-xs text-dark-400">Put the site in maintenance mode</p>
@@ -815,7 +790,14 @@ export default function SettingsPage() {
               </div>
             </div>
           </Card>
-        )}
+        ) : activeTab === 'admin' ? (
+          <Card>
+            <div className="p-6 text-center">
+              <h2 className="text-xl font-semibold text-red-500 mb-2">Access Denied</h2>
+              <p className="text-dark-300">You do not have permission to access the admin settings.</p>
+            </div>
+          </Card>
+        ) : null}
 
         {/* Danger Zone */}
         {activeTab === 'danger' && (

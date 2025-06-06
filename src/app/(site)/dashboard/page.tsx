@@ -113,14 +113,14 @@ const Dashboard = () => {
   }, []);
 
   // Helper to fetch folder by path from backend
-  const fetchFolderByPath = async (pathArr) => {
+  const fetchFolderByPath = async (pathArr: string[]) => {
     if (pathArr.length === 0) return null;
     const res = await fetch(`/api/folders/by-path?path=${encodeURIComponent(pathArr.join('/'))}`);
     if (!res.ok) return null;
     return await res.json();
   };
 
-  const fetchAndSetFolders = async (parentId) => {
+  const fetchAndSetFolders = async (parentId: string | null) => {
     try {
       setLoading(true);
       // Fetch subfolders of the parent
@@ -157,7 +157,7 @@ const Dashboard = () => {
     } else {
       fetchFolderByPath(currentPath).then(folder => {
         if (folder) {
-          fetchAndSetFolders(folder.id);
+          fetchAndSetFolders(folder.id.toString());
         } else {
           setCurrentFolder(null);
           setFolders([]);
@@ -176,7 +176,7 @@ const Dashboard = () => {
     } else {
       const folder = await fetchFolderByPath(currentPath);
       if (folder) {
-        await fetchAndSetFolders(folder.id);
+        await fetchAndSetFolders(folder.id.toString());
       } else {
         setCurrentFolder(null);
         setFolders([]);
@@ -186,7 +186,7 @@ const Dashboard = () => {
   };
 
   // Helper to get current folder by path
-  const getCurrentFolder = (foldersList, pathArr) => {
+  const getCurrentFolder = (foldersList: Folder[], pathArr: string[]) => {
     if (pathArr.length === 0) return null;
     let current = null;
     let list = foldersList;
@@ -228,7 +228,7 @@ const Dashboard = () => {
       setCurrentPath(history[historyIndex + 1]);
     }
   };
-  const handleFolderClick = (folder) => {
+  const handleFolderClick = (folder: Folder) => {
     const newPath = [...currentPath, folder.name];
     setCurrentPath(newPath);
     setHistory([...history.slice(0, historyIndex + 1), newPath]);
@@ -236,7 +236,7 @@ const Dashboard = () => {
     // Store current files before navigation
     setPrevFiles(filesToShow);
   };
-  const handleBreadcrumbClick = (path) => {
+  const handleBreadcrumbClick = (path: string[]) => {
     setCurrentPath(path);
     setHistory([...history.slice(0, historyIndex + 1), path]);
     setHistoryIndex(historyIndex + 1);
@@ -245,10 +245,10 @@ const Dashboard = () => {
   };
 
   // Add handlers for grid view rename
-  const handleGridRename = (item, isFolder) => {
+  const handleGridRename = (item: File | Folder, isFolder: boolean) => {
     setRenamingGridItem({ id: item.id, name: item.name, isFolder });
   };
-  const handleGridRenameSubmit = async (e) => {
+  const handleGridRenameSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!renamingGridItem) return;
     const formData = new FormData(e.currentTarget);

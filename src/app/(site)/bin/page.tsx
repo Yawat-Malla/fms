@@ -16,10 +16,15 @@ const FileIcon = () => (
   </svg>
 );
 
+interface SelectedItem {
+  id: string;
+  type: 'file' | 'folder';
+}
+
 export default function BinPage() {
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'list' | 'grid'>('list');
-  const [selectedItems, setSelectedItems] = useState<{ id: string, type: 'file' | 'folder' }[]>([]);
+  const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
   const [deletedFiles, setDeletedFiles] = useState<any[]>([]);
   const [deletedFolders, setDeletedFolders] = useState<any[]>([]);
   const [selectedType, setSelectedType] = useState<string>('');
@@ -152,8 +157,8 @@ export default function BinPage() {
       setSelectedItems([]);
     } else {
       setSelectedItems([
-        ...filteredFolders.map(f => ({ id: f.id, type: 'folder' })),
-        ...filteredFiles.map(f => ({ id: f.id, type: 'file' })),
+        ...filteredFolders.map(f => ({ id: String(f.id), type: 'folder' as const })),
+        ...filteredFiles.map(f => ({ id: String(f.id), type: 'file' as const })),
       ]);
     }
   };

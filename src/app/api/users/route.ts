@@ -7,18 +7,33 @@ import bcrypt from 'bcryptjs';
 // GET /api/users - Get all users
 export async function GET(req: Request) {
   try {
+    console.log('[Users API] Fetching users...');
+    
     // Check authentication
     const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    console.log('[Users API] Session:', {
+      hasSession: Boolean(session),
+      userId: session?.user?.id,
+      userRole: session?.user?.role
+    });
+
+    if (!session?.user?.id) {
+      console.log('[Users API] No session or user ID found');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get the current user
+    // Get the current user by ID
     const currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email }
+      where: { id: session.user.id }
+    });
+
+    console.log('[Users API] Current user:', {
+      found: Boolean(currentUser),
+      role: currentUser?.role
     });
 
     if (!currentUser || currentUser.role !== 'admin') {
+      console.log('[Users API] User is not admin');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -38,9 +53,13 @@ export async function GET(req: Request) {
       },
     });
 
+    console.log('[Users API] Successfully fetched users:', {
+      count: users.length
+    });
+
     return NextResponse.json({ users });
   } catch (error) {
-    console.error('Error fetching users:', error);
+    console.error('[Users API] Error fetching users:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
