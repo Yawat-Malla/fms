@@ -281,7 +281,7 @@ const DriveTable = ({ folders, files, onFolderClick, onFileClick, onRefresh, cur
                     isFolder
                     onOpen={() => onFolderClick(folder)}
                     onRename={() => handleRename(folder, true)}
-                    onDelete={onRefresh}
+                    onDelete={onRefresh ?? (() => {})}
                   />
                 </td>
               </tr>
@@ -334,7 +334,7 @@ const DriveTable = ({ folders, files, onFolderClick, onFileClick, onRefresh, cur
                     item={file}
                     onOpen={() => onFileClick(file)}
                     onRename={() => handleRename(file, false)}
-                    onDelete={onRefresh}
+                    onDelete={onRefresh ?? (() => {})}
                   />
                 </td>
               </tr>

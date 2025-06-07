@@ -346,7 +346,7 @@ async function generateExcelReport(data: any, filePath: string) {
   // Add summary
   worksheet.addRow(['Summary']);
   Object.entries(data.summary).forEach(([key, value]) => {
-    if (typeof value === 'object') {
+    if (typeof value === 'object' && value !== null) {
       worksheet.addRow([key]);
       Object.entries(value).forEach(([subKey, subValue]) => {
         worksheet.addRow([subKey, subValue]);

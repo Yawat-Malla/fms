@@ -23,18 +23,26 @@ const inter = Inter({
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await prisma.systemSettings.findFirst();
+  const siteName = settings?.siteName || 'File Management System';
+  const siteLogo = settings?.siteLogo || '/favicon.ico';
   
   return {
-    title: settings?.siteName || 'File Management System',
+    title: siteName,
     description: "A modern file management system for government offices",
     icons: {
-      icon: settings?.siteLogo || '/favicon.ico',
-      shortcut: settings?.siteLogo || '/favicon.ico',
-      apple: settings?.siteLogo || '/apple-touch-icon.png',
+      icon: [
+        { url: siteLogo, sizes: 'any' },
+        { url: '/favicon.ico', sizes: 'any' }
+      ],
+      shortcut: siteLogo,
+      apple: siteLogo,
     },
     manifest: '/site.webmanifest',
     themeColor: '#1a1a1a',
     viewport: 'width=device-width, initial-scale=1',
+    other: {
+      'msapplication-TileImage': siteLogo,
+    },
   };
 }
 
@@ -48,6 +56,11 @@ export default async function RootLayout({
 
   return (
     <html lang="en" className={inter.variable}>
+      <head>
+        <link rel="icon" href={settings?.siteLogo || '/favicon.ico'} />
+        <link rel="shortcut icon" href={settings?.siteLogo || '/favicon.ico'} />
+        <link rel="apple-touch-icon" href={settings?.siteLogo || '/apple-touch-icon.png'} />
+      </head>
       <body>
         <SettingsProvider>
           <Providers session={session}>

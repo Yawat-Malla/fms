@@ -50,7 +50,7 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           role: user.role,
           profilePicture: user.profilePicture,
-          username: user.username,
+          username: user.username ?? undefined,
         };
       },
     }),
@@ -63,7 +63,7 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user, trigger, session }) {
       if (user) {
         // Initial sign in
-        token.id = user.id;
+        token.id = typeof user.id === 'string' ? parseInt(user.id, 10) : user.id;
         token.email = user.email;
         token.role = user.role;
         token.name = user.name;
@@ -87,7 +87,7 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user) {
         Object.assign(session.user, {
-          id: token.id,
+          id: typeof token.id === 'string' ? parseInt(token.id, 10) : token.id,
           role: token.role,
           name: token.name,
           email: token.email,

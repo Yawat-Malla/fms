@@ -18,9 +18,9 @@ const mockFiles: IFile[] = Array(20).fill(null).map((_, index) => {
     uploadedAt: now,
     lastModifiedAt: now,
     uploadedBy: 'Test User',
-    fiscalYear: `FY${2023 + (index % 3)}`,
-    source: `Source ${(index % 4) + 1}`,
-    grantType: `Grant Type ${(index % 3) + 1}`,
+    fiscalYear: { id: `${(index % 3) + 1}`, name: `FY${2023 + (index % 3)}` },
+    source: { id: `${(index % 4) + 1}`, name: `Source ${(index % 4) + 1}` },
+    grantType: { id: `${(index % 3) + 1}`, name: `Grant Type ${(index % 3) + 1}` },
     status: index % 2 === 0 ? FileStatus.online : FileStatus.offline,
     fiscalYearId: `${(index % 3) + 1}`,
     sourceId: `${(index % 4) + 1}`,
@@ -48,9 +48,9 @@ export const getFilterOptions = async (): Promise<IFilterOptions> => {
   await new Promise(resolve => setTimeout(resolve, 300));
   
   return {
-    fiscalYears: Array.from(new Set(mockFiles.map(file => file.fiscalYear || ''))).filter(Boolean),
-    sources: Array.from(new Set(mockFiles.map(file => file.source || ''))).filter(Boolean),
-    grantTypes: Array.from(new Set(mockFiles.map(file => file.grantType || ''))).filter(Boolean),
+    fiscalYears: Array.from(new Set(mockFiles.map(file => file.fiscalYear?.name || ''))).filter(Boolean),
+    sources: Array.from(new Set(mockFiles.map(file => file.source?.name || ''))).filter(Boolean),
+    grantTypes: Array.from(new Set(mockFiles.map(file => file.grantType?.name || ''))).filter(Boolean),
     fileTypes: Array.from(new Set(mockFiles.map(file => file.type))),
   };
 };
@@ -82,9 +82,9 @@ export const uploadFile = async (file: File, metadata: FileMetadata): Promise<IF
       uploadedAt: new Date().toISOString(),
       lastModifiedAt: new Date().toISOString(),
       uploadedBy: 'Current User',
-      fiscalYear: metadata.fiscalYear,
-      source: metadata.source,
-      grantType: metadata.grantType,
+      fiscalYear: metadata.fiscalYear ? { id: metadata.fiscalYear, name: metadata.fiscalYear } : undefined,
+      source: metadata.source ? { id: metadata.source, name: metadata.source } : undefined,
+      grantType: metadata.grantType ? { id: metadata.grantType, name: metadata.grantType } : undefined,
       status: FileStatus.online,
       fiscalYearId: metadata.fiscalYearId,
       sourceId: metadata.sourceId,

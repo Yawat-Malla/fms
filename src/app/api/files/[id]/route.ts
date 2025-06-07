@@ -66,7 +66,7 @@ export async function PATCH(
     }
 
     // Check if user is authorized (owner or admin)
-    if (file.user.id !== session.user.id && session.user.role !== 'admin') {
+    if (!file.user || (file.user.id !== session.user.id && session.user.role !== 'admin')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -109,7 +109,7 @@ export async function DELETE(
     }
 
     // Check if user is authorized (owner or admin)
-    if (file.user.id !== session.user.id && session.user.role !== 'admin') {
+    if (!file.user || (file.user.id !== session.user.id && session.user.role !== 'admin')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

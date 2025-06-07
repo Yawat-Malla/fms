@@ -8,16 +8,25 @@ export default function DynamicFavicon() {
 
   useEffect(() => {
     if (settings?.siteLogo) {
-      // Create a new link element for the favicon
-      const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+      // Update all favicon-related links
+      const updateFavicon = (rel: string, href: string) => {
+        const link = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement;
       if (link) {
-        link.href = settings.siteLogo;
+          link.href = href;
       } else {
         const newLink = document.createElement('link');
-        newLink.rel = 'icon';
-        newLink.href = settings.siteLogo;
+          newLink.rel = rel;
+          newLink.href = href;
         document.head.appendChild(newLink);
       }
+      };
+
+      // Update standard favicon
+      updateFavicon('icon', settings.siteLogo);
+      // Update shortcut icon
+      updateFavicon('shortcut icon', settings.siteLogo);
+      // Update apple touch icon
+      updateFavicon('apple-touch-icon', settings.siteLogo);
     }
   }, [settings?.siteLogo]);
 

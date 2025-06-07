@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import Sidebar from './Sidebar';
 import Avatar from '@/components/ui/Avatar';
 import { Bell } from 'lucide-react';
+import SearchResults from '@/components/SearchResults';
+import AvatarDropdown from '@/components/AvatarDropdown';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -25,6 +27,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
   const { data: session } = useSession();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   const handleNotificationClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -48,6 +53,18 @@ export default function MainLayout({ children }: MainLayoutProps) {
       document.removeEventListener('click', handleClickOutside);
     };
   }, [notificationsOpen]);
+
+  // Close search results when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowSearchResults(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const fetchNotifications = async () => {
     try {
@@ -91,7 +108,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   }, [session]);
 
   return (
-    <div className="h-screen flex overflow-hidden bg-dark-800">
+    <div className="h-screen flex overflow-hidden bg-dark-900">
       {/* Sidebar for desktop */}
       <div className={`${sidebarOpen ? 'block' : 'hidden'} md:block md:flex-shrink-0 border-r border-dark-700`}>
         <div className="w-64 h-full">
@@ -128,7 +145,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
           {/* Top navigation/search bar */}
           <div className="flex-1 px-4 flex justify-between">
             <div className="flex-1 flex pt-4">
-              <div className="w-full">
+              <div className="w-full relative" ref={searchRef}>
                 <label htmlFor="search" className="sr-only">Search</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -140,26 +157,38 @@ export default function MainLayout({ children }: MainLayoutProps) {
                     id="search"
                     name="search"
                     className="block w-full bg-dark-700 border border-dark-600 rounded-md py-2 pl-10 pr-3 text-sm placeholder-dark-400 focus:outline-none focus:bg-dark-600 focus:border-dark-500 focus:ring-1 focus:ring-primary-500"
-                    placeholder="Search..."
+                    placeholder="Search files and folders..."
                     type="search"
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setShowSearchResults(true);
+                    }}
+                    onFocus={() => setShowSearchResults(true)}
                   />
                 </div>
+                {showSearchResults && (
+                  <SearchResults
+                    query={searchQuery}
+                    onClose={() => setShowSearchResults(false)}
+                  />
+                )}
               </div>
             </div>
-            <div className="ml-4 flex items-center md:ml-6 space-x-3">
+
+            {/* Right side icons */}
+            <div className="ml-4 flex items-center space-x-4">
+              {/* Notification Bell */}
               <div className="relative">
                 <button
-                  type="button"
-                  className="p-1 rounded-full text-dark-300 hover:text-dark-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-transform duration-150"
                   onClick={handleNotificationClick}
+                  className="p-1 rounded-full text-dark-400 hover:text-dark-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-dark-800 focus:ring-primary-500"
                 >
                   <span className="sr-only">View notifications</span>
-                  <div className="relative">
-                    <Bell className="h-6 w-6" />
-                    {notifications.some(n => !n.read) && (
-                      <span className="absolute -top-1 -right-1 h-3 w-3 bg-primary-500 rounded-full" />
-                    )}
-                  </div>
+                  <Bell className="h-6 w-6" />
+                  {notifications.some(n => !n.read) && (
+                    <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-dark-800" />
+                  )}
                 </button>
 
                 {notificationsOpen && (
@@ -210,23 +239,16 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 )}
               </div>
 
-              {/* Profile dropdown */}
-              <div className="ml-3 relative">
-                <div>
-                  <button
-                    type="button"
-                    className="max-w-xs flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                    id="user-menu-button"
-                  >
-                    <span className="sr-only">Open user menu</span>
-                    <Avatar 
-                      imageUrl={session?.user?.profilePicture} 
-                      name={session?.user?.name} 
-                      size="sm"
-                    />
-                  </button>
-                </div>
-              </div>
+              {/* Avatar Dropdown */}
+              {session?.user && (
+                <AvatarDropdown
+                  user={{
+                    name: session.user.name,
+                    email: session.user.email,
+                    profilePicture: session.user.profilePicture
+                  }}
+                />
+              )}
             </div>
           </div>
         </div>

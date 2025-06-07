@@ -17,7 +17,7 @@ const nextConfig = {
     return [
       {
         source: '/uploads/:path*',
-        destination: '/uploads/:path*',
+        destination: '/api/uploads/:path*',
       },
     ];
   },
@@ -27,6 +27,7 @@ const nextConfig = {
       '/api/uploads/**/*': ['uploads/**/*'],
     },
   },
+  // Configure webpack for file handling
   webpack: (config) => {
     config.externals = [...config.externals, 'bcrypt'];
     config.module.rules.push({
@@ -34,6 +35,20 @@ const nextConfig = {
       type: 'asset/resource',
     });
     return config;
+  },
+  // Configure headers for static files
+  async headers() {
+    return [
+      {
+        source: '/uploads/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+    ];
   },
 };
 

@@ -5,10 +5,10 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useSession } from 'next-auth/react';
-import { Button } from './ui/button';
+import Button from './ui/Button';
 import { Menu, X } from 'lucide-react';
 import { useState } from 'react';
-import NotificationDropdown from './NotificationDropdown';
+import { NotificationDropdown } from './NotificationDropdown';
 
 export default function Header() {
   const pathname = usePathname();
@@ -84,7 +84,7 @@ export default function Header() {
           <div className="flex items-center sm:hidden">
             <Button
               variant="ghost"
-              size="icon"
+              size="sm"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}

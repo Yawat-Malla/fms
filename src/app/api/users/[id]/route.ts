@@ -29,7 +29,7 @@ export async function PATCH(
 
     // Get the current user by ID instead of email
     const currentUser = await prisma.user.findUnique({
-      where: { id: parseInt(session.user.id) }
+      where: { id: session.user.id }
     });
 
     console.log('[API Debug] Current user lookup:', {

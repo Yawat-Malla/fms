@@ -18,10 +18,10 @@ export async function GET(request: Request) {
     }
 
     const pathParts = path.split('/');
-    let currentFolder = null;
+    let currentFolder: any = null;
 
     for (const part of pathParts) {
-      const folder = await prisma.folder.findFirst({
+      const folder: any = await prisma.folder.findFirst({
         where: {
           name: part,
           parentId: currentFolder ? currentFolder.id : null,

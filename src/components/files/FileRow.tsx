@@ -2,15 +2,14 @@
 
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { File } from '@/types';
-import { FileStatus } from '@/types/index';
+import { IFile } from '@/types/index';
 import Avatar from '@/components/ui/Avatar';
 
 interface FileRowProps {
-  file: File;
-  onSelect: (file: File) => void;
-  onDelete: (file: File) => void;
-  onView?: (file: File) => void;
+  file: IFile;
+  onSelect: (file: IFile) => void;
+  onDelete: (file: IFile) => void;
+  onView?: (file: IFile) => void;
 }
 
 export default function FileRow({ file, onSelect, onDelete, onView }: FileRowProps) {

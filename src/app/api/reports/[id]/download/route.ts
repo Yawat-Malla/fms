@@ -5,6 +5,7 @@ import prisma from '@/lib/prisma';
 import fs from 'fs/promises';
 import path from 'path';
 import { format } from 'date-fns';
+import { FileFormat } from '@prisma/client';
 
 export async function GET(
   request: Request,
@@ -45,7 +46,7 @@ export async function GET(
       const headers = new Headers();
       
       // Set appropriate content type
-      if (report.fileFormat === 'PDF') {
+      if (report.fileFormat === FileFormat.pdf) {
         headers.set('Content-Type', 'application/pdf');
       } else {
         headers.set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');

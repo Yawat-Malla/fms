@@ -93,7 +93,7 @@ const DriveGrid = ({ folders, files, onFolderClick, onFileClick, onRefresh }: Dr
                   isFolder
                   onOpen={() => onFolderClick(folder)}
                   onRename={() => handleRename(folder, true)}
-                  onDelete={onRefresh}
+                  onDelete={onRefresh ?? (() => {})}
                 />
               </div>
             </div>
@@ -149,7 +149,7 @@ const DriveGrid = ({ folders, files, onFolderClick, onFileClick, onRefresh }: Dr
                   item={file}
                   onOpen={() => onFileClick(file)}
                   onRename={() => handleRename(file, false)}
-                  onDelete={onRefresh}
+                  onDelete={onRefresh ?? (() => {})}
                 />
               </div>
             </div>
