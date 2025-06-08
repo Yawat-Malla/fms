@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { format } from 'date-fns';
 import FileActions from './FileActions';
 import { getFileOrFolderIcon } from './DriveTable';
+import { TranslatedText } from '@/components/TranslatedText';
 
 interface DriveGridProps {
   folders: any[];
@@ -79,13 +80,23 @@ const DriveGrid = ({ folders, files, onFolderClick, onFileClick, onRefresh }: Dr
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                   </svg>
                 </div>
-                <span className="text-sm font-medium truncate w-full text-center">{folder.name}</span>
+                <span className="text-sm font-medium truncate w-full text-center">
+                  <TranslatedText text={folder.name} />
+                </span>
               </button>
               <div className="text-xs text-dark-300 space-y-1">
-                <div>Fiscal Year: {folder.fiscalYear?.name || '-'}</div>
-                <div>Source: {folder.source?.name || '-'}</div>
-                <div>Grant Type: {folder.grantType?.name || '-'}</div>
-                <div>Created: {format(new Date(folder.createdAt), 'MMM d, yyyy')}</div>
+                <div>
+                  <TranslatedText text="Fiscal Year" />: <TranslatedText text={folder.fiscalYear?.name || '-'} />
+                </div>
+                <div>
+                  <TranslatedText text="Source" />: <TranslatedText text={folder.source?.name || '-'} />
+                </div>
+                <div>
+                  <TranslatedText text="Grant Type" />: <TranslatedText text={folder.grantType?.name || '-'} />
+                </div>
+                <div>
+                  <TranslatedText text="Created" />: {format(new Date(folder.createdAt), 'MMM d, yyyy')}
+                </div>
               </div>
               <div className="flex justify-end">
                 <FileActions
@@ -136,13 +147,23 @@ const DriveGrid = ({ folders, files, onFolderClick, onFileClick, onRefresh }: Dr
                 <div className="w-16 h-16 flex items-center justify-center">
                   {getFileOrFolderIcon(file, false, 'w-12 h-12')}
                 </div>
-                <span className="text-sm font-medium truncate w-full text-center">{file.name}</span>
+                <span className="text-sm font-medium truncate w-full text-center">
+                  <TranslatedText text={file.name} />
+                </span>
               </button>
               <div className="text-xs text-dark-300 space-y-1">
-                <div>Fiscal Year: {file.fiscalYear?.name || '-'}</div>
-                <div>Source: {file.source?.name || '-'}</div>
-                <div>Grant Type: {file.grantType?.name || '-'}</div>
-                <div>Created: {format(new Date(file.uploadedAt), 'MMM d, yyyy')}</div>
+                <div>
+                  <TranslatedText text="Fiscal Year" />: <TranslatedText text={file.fiscalYear?.name || '-'} />
+                </div>
+                <div>
+                  <TranslatedText text="Source" />: <TranslatedText text={file.source?.name || '-'} />
+                </div>
+                <div>
+                  <TranslatedText text="Grant Type" />: <TranslatedText text={file.grantType?.name || '-'} />
+                </div>
+                <div>
+                  <TranslatedText text="Created" />: {format(new Date(file.uploadedAt), 'MMM d, yyyy')}
+                </div>
               </div>
               <div className="flex justify-end">
                 <FileActions

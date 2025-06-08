@@ -1,46 +1,23 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { Language, translations } from '@/translations';
+import { useTranslation } from 'react-i18next';
+import { Language } from '@/translations';
 
 interface AppContextType {
   theme: 'dark' | 'light';
   language: Language;
   toggleTheme: () => void;
   setLanguage: (lang: Language) => void;
-  t: (key: string) => string;
   mounted: boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-// Helper function to get nested translation value
-const getNestedTranslation = (obj: any, path: string): string => {
-  const keys = path.split('.');
-  let result = obj;
-  
-  for (const key of keys) {
-    if (result === undefined) {
-      console.log(`[Translation Debug] Key not found: ${key} in path: ${path}`);
-      return path;
-    }
-    result = result[key];
-  }
-  
-  if (typeof result !== 'string') {
-    console.log(`[Translation Debug] Result is not a string for path: ${path}`, result);
-    return path;
-  }
-  
-  return result;
-};
-
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  // Initialize theme from localStorage or default to system preference
+  const { i18n } = useTranslation();
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [mounted, setMounted] = useState(false);
-
-  // Initialize language from localStorage or default to 'en'
   const [language, setLanguage] = useState<Language>('en');
 
   // Initialize values from localStorage after mount
@@ -59,10 +36,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       document.documentElement.classList.add(systemPrefersDark ? 'dark' : 'light');
     }
     
-    if (savedLanguage) setLanguage(savedLanguage);
+    if (savedLanguage) {
+      setLanguage(savedLanguage);
+      i18n.changeLanguage(savedLanguage);
+    }
     
     setMounted(true);
-  }, []);
+  }, [i18n]);
 
   // Update theme in localStorage and document class when theme changes
   useEffect(() => {
@@ -84,27 +64,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     
     localStorage.setItem('language', language);
     document.documentElement.lang = language;
-    
-    // Force a refresh of the page to ensure all components re-render with new language
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new Event('languageChange'));
-    }
-  }, [language, mounted]);
+    i18n.changeLanguage(language);
+  }, [language, mounted, i18n]);
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   };
 
-  // Helper function to get nested translation value
-  const t = (key: string): string => {
-    if (!mounted) return key;
-    
-    const translation = getNestedTranslation(translations[language], key);
-    return translation || key;
-  };
+  if (!mounted) return null;
 
   return (
-    <AppContext.Provider value={{ theme, language, toggleTheme, setLanguage, t, mounted }}>
+    <AppContext.Provider value={{ theme, language, toggleTheme, setLanguage, mounted }}>
       {children}
     </AppContext.Provider>
   );

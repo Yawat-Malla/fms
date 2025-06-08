@@ -7,11 +7,12 @@ import { useRouter } from 'next/navigation';
 import { useApp } from '@/contexts/AppContext';
 import { toast } from 'react-hot-toast';
 import Avatar from '@/components/ui/Avatar';
+import { useTranslation } from 'react-i18next';
 
 export default function UserMenu() {
   const router = useRouter();
   const { data: session } = useSession();
-  const { t } = useApp();
+  const { t } = useTranslation();
   
   const handleLogout = async () => {
     try {

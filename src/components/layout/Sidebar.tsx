@@ -4,12 +4,12 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useApp } from '@/contexts/AppContext';
 import { ReactElement } from 'react';
 import { signOut, useSession } from 'next-auth/react';
 import { toast } from 'react-hot-toast';
 import Image from 'next/image';
 import Avatar from '@/components/ui/Avatar';
+import { useTranslation } from 'react-i18next';
 
 // Define interfaces for navigation items
 interface NavigationItem {
@@ -75,7 +75,7 @@ const generateFiscalYears = (): Decade[] => {
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { t, language, mounted } = useApp();
+  const { t } = useTranslation();
   const { data: session } = useSession();
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
   const [expandedSubmenus, setExpandedSubmenus] = useState<Record<string, boolean>>({});
@@ -85,40 +85,6 @@ export default function Sidebar() {
   const [selectedSource, setSelectedSource] = useState<string | null>(null);
   const [selectedGrantType, setSelectedGrantType] = useState<string | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
-
-  // Handle language changes
-  useEffect(() => {
-    if (mounted) {
-      const handleLanguageChange = () => {
-        // Force re-render of sidebar items
-        router.refresh();
-      };
-
-      window.addEventListener('languageChange', handleLanguageChange);
-      return () => window.removeEventListener('languageChange', handleLanguageChange);
-    }
-  }, [mounted, router]);
-
-  // Debug logging
-  useEffect(() => {
-    if (mounted) {
-      console.log('[Sidebar Debug] Current language:', language);
-      console.log('[Sidebar Debug] Translation test - Home:', t('sidebar.home'));
-      console.log('[Sidebar Debug] Translation test - Files:', t('sidebar.files'));
-    }
-  }, [language, t, mounted]);
-
-  // Debug logging for session data
-  useEffect(() => {
-    if (mounted) {
-      console.log('[Sidebar Debug] Session data:', {
-        user: session?.user,
-        name: session?.user?.name,
-        email: session?.user?.email,
-        profilePicture: session?.user?.profilePicture,
-      });
-    }
-  }, [session, mounted]);
 
   // Toggle submenu expansion
   const toggleSubmenu = (name: string) => {
@@ -494,31 +460,11 @@ export default function Sidebar() {
     },
   ];
 
-  // Render loading state while not mounted
-  if (!mounted) {
-    return (
-      <div className="flex flex-col h-full bg-dark-800 border-r border-dark-700">
-        <div className="flex-shrink-0 flex items-center px-6 py-5 border-b border-dark-700">
-          <div className="h-10 w-10 rounded-full bg-dark-600 animate-pulse"></div>
-          <div className="ml-4 space-y-2">
-            <div className="h-4 w-24 bg-dark-600 rounded animate-pulse"></div>
-            <div className="h-3 w-32 bg-dark-600 rounded animate-pulse"></div>
-          </div>
-        </div>
-        <nav className="flex-1 px-2 py-4 space-y-1">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="h-10 bg-dark-600 rounded animate-pulse mb-2"></div>
-          ))}
-        </nav>
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col h-full bg-dark-800 border-r border-dark-700">
       {/* User profile section */}
       <div className="flex-shrink-0 flex items-center px-6 py-5 border-b border-dark-700">
-        {mounted && (
+        {session && (
           <Avatar 
             imageUrl={session?.user?.profilePicture || undefined}
             name={session?.user?.name || ''}

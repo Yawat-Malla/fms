@@ -7,7 +7,7 @@ import AnimationProvider from '@/components/AnimationProvider';
 
 interface ProvidersProps {
   children: React.ReactNode;
-  session: any;
+  session?: any;
 }
 
 export default function Providers({ children, session }: ProvidersProps) {

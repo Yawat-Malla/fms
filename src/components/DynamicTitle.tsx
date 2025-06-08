@@ -15,7 +15,7 @@ export default function DynamicTitle() {
 
     if (!isLoading && settings?.siteName) {
       console.log('[DynamicTitle] Updating document title to:', settings.siteName);
-      document.title = settings.siteName;
+        document.title = settings.siteName;
     }
   }, [settings?.siteName, isLoading]);
 

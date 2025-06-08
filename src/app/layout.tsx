@@ -10,6 +10,7 @@ import { TextSettingsProvider } from '@/contexts/TextSettingsContext';
 import { SettingsProvider } from '@/contexts/SettingsContext';
 import DynamicTitle from '@/components/DynamicTitle';
 import prisma from '@/lib/prisma';
+import I18nProvider from '@/components/I18nProvider';
 
 // Use Inter as the primary font (closer to iOS San Francisco font)
 const inter = Inter({
@@ -50,17 +51,19 @@ export default async function RootLayout({
         <title>{title}</title>
       </head>
       <body className={inter.className}>
-        <SettingsProvider>
-          <Providers session={session}>
-            <TextSettingsProvider>
-              <AppProvider>
-                <DynamicTitle />
-                {children}
-                <Toaster position="top-right" />
-              </AppProvider>
-            </TextSettingsProvider>
-          </Providers>
-        </SettingsProvider>
+        <I18nProvider>
+          <SettingsProvider>
+            <Providers session={session}>
+              <TextSettingsProvider>
+                <AppProvider>
+                  <DynamicTitle />
+                  {children}
+                  <Toaster position="top-right" />
+                </AppProvider>
+              </TextSettingsProvider>
+            </Providers>
+          </SettingsProvider>
+        </I18nProvider>
       </body>
     </html>
   );

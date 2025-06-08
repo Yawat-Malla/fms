@@ -39,6 +39,8 @@ export interface Translations {
       totalFiles: string;
       totalSize: string;
       recentUploads: string;
+      availableFiles: string;
+      deletedFiles: string;
     };
     charts: {
       filesByType: string;
@@ -122,6 +124,16 @@ export interface Translations {
   files: {
     title: string;
     subtitle: string;
+    heading: string;
+    filteredResults: string;
+    newFile: string;
+    newDocument: string;
+    newFolder: string;
+    file: string;
+    files: string;
+    found: string;
+    recentlyModified: string;
+    viewAll: string;
     filters: {
       title: string;
       allFiles: string;
@@ -141,6 +153,21 @@ export interface Translations {
         specialGrant: string;
         otherGrants: string;
       };
+      allFiscalYears: string;
+      allSources: string;
+      allGrantTypes: string;
+      viewAll: string;
+      pdfs: string;
+      images: string;
+    };
+    selectSource: string;
+    emptyState: {
+      noFiles: string;
+      noFilesForFiscalYear: string;
+      noFilesForSource: string;
+      noFilesForGrantType: string;
+      noFilesMatchFilters: string;
+      clearFilters: string;
     };
     table: {
       name: string;
@@ -148,16 +175,127 @@ export interface Translations {
       size: string;
       uploadedBy: string;
       uploadedAt: string;
+      lastModified: string;
       status: string;
       actions: string;
+      fiscalYear: string;
+      source: string;
+      grantType: string;
+      created: string;
     };
     upload: {
       title: string;
-      button: string;
-      dragAndDrop: string;
-      or: string;
-      browse: string;
-      toUpload: string;
+      steps: {
+        0: string;
+        1: string;
+      };
+      success: {
+        title: string;
+        message: string;
+      };
+      metadata: {
+        title: string;
+        description: string;
+        titleLabel: string;
+        fiscalYearLabel: string;
+        sourceLabel: string;
+        grantTypeLabel: string;
+        remarksLabel: string;
+        titlePlaceholder: string;
+        fiscalYearPlaceholder: string;
+        sourcePlaceholder: string;
+        grantTypePlaceholder: string;
+        remarksPlaceholder: string;
+      };
+      document: {
+        title: string;
+        description: string;
+        a4Size: string;
+        nepaliPaper: string;
+        extraSize: string;
+        other: string;
+      };
+      navigation: {
+        back: string;
+        next: string;
+        upload: string;
+      };
+    };
+  };
+  bin: {
+    title: string;
+    subtitle: string;
+    restore: string;
+    deleteForever: string;
+    processing: string;
+    confirmRestore: string;
+    confirmDelete: string;
+    confirmRestoreMessage: string;
+    confirmDeleteMessage: string;
+    filters: {
+      type: string;
+      modified: string;
+      source: string;
+      fiscalYear: string;
+      grantType: string;
+      options: {
+        today: string;
+        yesterday: string;
+        last7Days: string;
+        last30Days: string;
+      };
+    };
+    emptyState: {
+      noItems: string;
+      noItemsForFilter: string;
+    };
+  };
+  reports: {
+    title: string;
+    subtitle: string;
+    generateReport: string;
+    reportType: string;
+    required: string;
+    fileFormat: string;
+    dateRange: string;
+    startDate: string;
+    endDate: string;
+    fiscalYear: string;
+    source: string;
+    grantType: string;
+    generate: string;
+    generating: string;
+    download: string;
+    delete: string;
+    deleteAll: string;
+    confirmDelete: string;
+    confirmDeleteAll: string;
+    confirmDeleteMessage: string;
+    confirmDeleteAllMessage: string;
+    types: {
+      fileCount: string;
+      missingUploads: string;
+      custom: string;
+    };
+    formats: {
+      pdf: string;
+      excel: string;
+    };
+    errors: {
+      selectReportType: string;
+      selectEndDate: string;
+      selectStartDate: string;
+      invalidDateRange: string;
+      downloadFailed: string;
+      deleteFailed: string;
+      deleteAllFailed: string;
+      generateFailed: string;
+    };
+    success: {
+      generated: string;
+      deleted: string;
+      deletedAll: string;
+      downloaded: string;
     };
   };
 }
@@ -202,6 +340,8 @@ export const translations: Record<Language, Translations> = {
         totalFiles: 'Total Files',
         totalSize: 'Total Size',
         recentUploads: 'Recent Uploads',
+        availableFiles: 'Available Files',
+        deletedFiles: 'Deleted Files',
       },
       charts: {
         filesByType: 'Files by Type',
@@ -285,6 +425,16 @@ export const translations: Record<Language, Translations> = {
     files: {
       title: 'Files',
       subtitle: 'Manage your files',
+      heading: 'All Files',
+      filteredResults: 'Filtered Results',
+      newFile: 'New file',
+      newDocument: 'New document',
+      newFolder: 'New folder',
+      file: 'file',
+      files: 'files',
+      found: 'found',
+      recentlyModified: 'Recently modified',
+      viewAll: 'View all',
       filters: {
         title: 'Filters',
         allFiles: 'All Files',
@@ -304,6 +454,21 @@ export const translations: Record<Language, Translations> = {
           specialGrant: 'Special Grant',
           otherGrants: 'Other Grants',
         },
+        allFiscalYears: 'All Fiscal Years',
+        allSources: 'All Sources',
+        allGrantTypes: 'All Grant Types',
+        viewAll: 'View all',
+        pdfs: 'PDFs',
+        images: 'Images',
+      },
+      selectSource: 'Select Source:',
+      emptyState: {
+        noFiles: 'No files found',
+        noFilesForFiscalYear: 'No files found for selected fiscal year',
+        noFilesForSource: 'No files found for selected source',
+        noFilesForGrantType: 'No files found for selected grant type',
+        noFilesMatchFilters: 'No files match your current filters',
+        clearFilters: 'Clear Filters',
       },
       table: {
         name: 'Name',
@@ -311,16 +476,127 @@ export const translations: Record<Language, Translations> = {
         size: 'Size',
         uploadedBy: 'Uploaded By',
         uploadedAt: 'Uploaded At',
+        lastModified: 'Last modified',
         status: 'Status',
         actions: 'Actions',
+        fiscalYear: 'Fiscal Year',
+        source: 'Source',
+        grantType: 'Grant Type',
+        created: 'Created',
       },
       upload: {
         title: 'Upload Files',
-        button: 'Upload',
-        dragAndDrop: 'Drag and drop files here',
-        or: 'or',
-        browse: 'browse',
-        toUpload: 'to upload',
+        steps: {
+          0: 'Metadata Entry',
+          1: 'Document Upload',
+        },
+        success: {
+          title: 'Upload Successful!',
+          message: 'Your files have been successfully uploaded and organized in the system.',
+        },
+        metadata: {
+          title: 'Metadata Entry',
+          description: 'Enter file metadata to help organize your documents.',
+          titleLabel: 'Title',
+          fiscalYearLabel: 'Fiscal Year',
+          sourceLabel: 'Funding Source',
+          grantTypeLabel: 'Grant Type',
+          remarksLabel: 'Summary / Remarks',
+          titlePlaceholder: 'Enter document title',
+          fiscalYearPlaceholder: 'Select fiscal year',
+          sourcePlaceholder: 'Select funding source',
+          grantTypePlaceholder: 'Select grant type',
+          remarksPlaceholder: 'Add any summary or remarks (optional)',
+        },
+        document: {
+          title: 'Document Upload',
+          description: 'Upload multi-page scanned PDFs or images. You can upload multiple files at once in each section. (Optional for each section)',
+          a4Size: 'A4 size',
+          nepaliPaper: 'Nepali Paper',
+          extraSize: 'Extra Size',
+          other: 'Other',
+        },
+        navigation: {
+          back: 'Back',
+          next: 'Next',
+          upload: 'Upload Files',
+        },
+      },
+    },
+    bin: {
+      title: 'Recycle Bin',
+      subtitle: 'Manage deleted files and folders',
+      restore: 'Restore',
+      deleteForever: 'Delete Forever',
+      processing: 'Processing...',
+      confirmRestore: 'Restore Items?',
+      confirmDelete: 'Delete Forever?',
+      confirmRestoreMessage: 'Are you sure you want to restore the selected items?',
+      confirmDeleteMessage: 'This will permanently delete the selected items. This action cannot be undone.',
+      filters: {
+        type: 'Type',
+        modified: 'Modified',
+        source: 'Source',
+        fiscalYear: 'Fiscal Year',
+        grantType: 'Grant Type',
+        options: {
+          today: 'Today',
+          yesterday: 'Yesterday',
+          last7Days: 'Last 7 days',
+          last30Days: 'Last 30 days',
+        },
+      },
+      emptyState: {
+        noItems: 'No deleted items found',
+        noItemsForFilter: 'No items match the selected filters',
+      },
+    },
+    reports: {
+      title: 'Reports',
+      subtitle: 'Generate and download various system reports',
+      generateReport: 'Generate Report',
+      reportType: 'Report Type',
+      required: 'Required',
+      fileFormat: 'File Format',
+      dateRange: 'Date Range',
+      startDate: 'Start Date',
+      endDate: 'End Date',
+      fiscalYear: 'Fiscal Year',
+      source: 'Source',
+      grantType: 'Grant Type',
+      generate: 'Generate',
+      generating: 'Generating...',
+      download: 'Download',
+      delete: 'Delete',
+      deleteAll: 'Delete All',
+      confirmDelete: 'Delete Report?',
+      confirmDeleteAll: 'Delete All Reports?',
+      confirmDeleteMessage: 'Are you sure you want to delete this report? This action cannot be undone.',
+      confirmDeleteAllMessage: 'Are you sure you want to delete all reports? This action cannot be undone.',
+      types: {
+        fileCount: 'Files by Year',
+        missingUploads: 'Missing Uploads',
+        custom: 'Custom Report',
+      },
+      formats: {
+        pdf: 'PDF',
+        excel: 'Excel',
+      },
+      errors: {
+        selectReportType: 'Please select a report type',
+        selectEndDate: 'Please select an end date',
+        selectStartDate: 'Please select a start date',
+        invalidDateRange: 'Start date must be before end date',
+        downloadFailed: 'Failed to download report',
+        deleteFailed: 'Failed to delete report',
+        deleteAllFailed: 'Failed to delete reports',
+        generateFailed: 'Failed to generate report',
+      },
+      success: {
+        generated: 'Report generated successfully',
+        deleted: 'Report deleted successfully',
+        deletedAll: 'All reports deleted successfully',
+        downloaded: 'Report downloaded successfully',
       },
     },
   },
@@ -363,6 +639,8 @@ export const translations: Record<Language, Translations> = {
         totalFiles: 'कुल फाइलहरू',
         totalSize: 'कुल साइज',
         recentUploads: 'हालैका अपलोडहरू',
+        availableFiles: 'उपलब्ध फाइलहरू',
+        deletedFiles: 'मेटाइएका फाइलहरू',
       },
       charts: {
         filesByType: 'प्रकार अनुसार फाइलहरू',
@@ -446,6 +724,16 @@ export const translations: Record<Language, Translations> = {
     files: {
       title: 'फाइलहरू',
       subtitle: 'फाइलहरू व्यवस्थापन गर्नुहोस्',
+      heading: 'सबै फाइलहरू',
+      filteredResults: 'फिल्टर गरिएका नतिजाहरू',
+      newFile: 'नयाँ फाइल',
+      newDocument: 'नयाँ कागजात',
+      newFolder: 'नयाँ फोल्डर',
+      file: 'फाइल',
+      files: 'फाइलहरू',
+      found: 'फेला पर्यो',
+      recentlyModified: 'हालै परिमार्जित',
+      viewAll: 'सबै हेर्नुहोस्',
       filters: {
         title: 'फिल्टरहरू',
         allFiles: 'सबै फाइलहरू',
@@ -465,6 +753,21 @@ export const translations: Record<Language, Translations> = {
           specialGrant: 'विशेष अनुदान',
           otherGrants: 'अन्य अनुदान',
         },
+        allFiscalYears: 'सबै आर्थिक वर्ष',
+        allSources: 'सबै स्रोत',
+        allGrantTypes: 'सबै अनुदान प्रकार',
+        viewAll: 'सबै हेर्नुहोस्',
+        pdfs: 'पिडीएफहरू',
+        images: 'तस्बिरहरू',
+      },
+      selectSource: 'स्रोत छान्नुहोस्:',
+      emptyState: {
+        noFiles: 'कुनै फाइल फेला परेन',
+        noFilesForFiscalYear: 'चयन गरिएको आर्थिक वर्षका लागि फाइल फेला परेन',
+        noFilesForSource: 'चयन गरिएको स्रोतका लागि फाइल फेला परेन',
+        noFilesForGrantType: 'चयन गरिएको अनुदान प्रकारका लागि फाइल फेला परेन',
+        noFilesMatchFilters: 'तपाईंको हालको फिल्टरसँग मेल खाने फाइलहरू छैनन्',
+        clearFilters: 'फिल्टरहरू हटाउनुहोस्',
       },
       table: {
         name: 'नाम',
@@ -472,16 +775,127 @@ export const translations: Record<Language, Translations> = {
         size: 'साइज',
         uploadedBy: 'अपलोड गर्ने',
         uploadedAt: 'अपलोड मिति',
+        lastModified: 'अन्तिम परिमार्जन',
         status: 'स्थिति',
         actions: 'कार्यहरू',
+        fiscalYear: 'आर्थिक वर्ष',
+        source: 'स्रोत',
+        grantType: 'अनुदान प्रकार',
+        created: 'सिर्जना मिति',
       },
       upload: {
         title: 'फाइलहरू अपलोड गर्नुहोस्',
-        button: 'अपलोड गर्नुहोस्',
-        dragAndDrop: 'फाइलहरू यहाँ तान्नुहोस् र छोड्नुहोस्',
-        or: 'वा',
-        browse: 'ब्राउज गर्नुहोस्',
-        toUpload: 'अपलोड गर्न',
+        steps: {
+          0: 'मेटाडाटा प्रविष्टि',
+          1: 'कागजात अपलोड',
+        },
+        success: {
+          title: 'अपलोड सफल!',
+          message: 'तपाईंको फाइलहरू सफलतापूर्वक अपलोड र व्यवस्थित गरिएको छ।',
+        },
+        metadata: {
+          title: 'मेटाडाटा प्रविष्टि',
+          description: 'कागजातहरू व्यवस्थित गर्न मेटाडाटा प्रविष्टि गर्नुहोस्।',
+          titleLabel: 'शीर्षक',
+          fiscalYearLabel: 'आर्थिक वर्ष',
+          sourceLabel: 'वित्तीय स्रोत',
+          grantTypeLabel: 'अनुदान प्रकार',
+          remarksLabel: 'सारांश / टिप्पणीहरू',
+          titlePlaceholder: 'कागजातको शीर्षक प्रविष्टि गर्नुहोस्',
+          fiscalYearPlaceholder: 'आर्थिक वर्ष छान्नुहोस्',
+          sourcePlaceholder: 'वित्तीय स्रोत छान्नुहोस्',
+          grantTypePlaceholder: 'अनुदान प्रकार छान्नुहोस्',
+          remarksPlaceholder: 'कुनै सारांश वा टिप्पणीहरू थप्नुहोस् (वैकल्पिक)',
+        },
+        document: {
+          title: 'कागजात अपलोड',
+          description: 'बहु-पृष्ठ स्क्यान गरिएका पिडीएफ वा तस्बिरहरू अपलोड गर्नुहोस्। तपाईं प्रत्येक खण्डमा एकै पटक धेरै फाइलहरू अपलोड गर्न सक्नुहुन्छ। (प्रत्येक खण्डको लागि वैकल्पिक)',
+          a4Size: 'ए४ साइज',
+          nepaliPaper: 'नेपाली कागज',
+          extraSize: 'अतिरिक्त साइज',
+          other: 'अन्य',
+        },
+        navigation: {
+          back: 'पछाडि',
+          next: 'अर्को',
+          upload: 'फाइलहरू अपलोड गर्नुहोस्',
+        },
+      },
+    },
+    bin: {
+      title: 'रिसाइकल बिन',
+      subtitle: 'मेटिएका फाइल र फोल्डरहरू व्यवस्थापन गर्नुहोस्',
+      restore: 'पुनर्स्थापना गर्नुहोस्',
+      deleteForever: 'सदाका लागि मेट्नुहोस्',
+      processing: 'प्रक्रियामा...',
+      confirmRestore: 'वस्तुहरू पुनर्स्थापना गर्ने?',
+      confirmDelete: 'सदाका लागि मेट्ने?',
+      confirmRestoreMessage: 'के तपाईं चयन गरिएका वस्तुहरू पुनर्स्थापना गर्न निश्चित हुनुहुन्छ?',
+      confirmDeleteMessage: 'यसले चयन गरिएका वस्तुहरूलाई स्थायी रूपमा मेट्नेछ। यो कार्य पूर्ववत गर्न सकिँदैन।',
+      filters: {
+        type: 'प्रकार',
+        modified: 'परिमार्जित',
+        source: 'स्रोत',
+        fiscalYear: 'आर्थिक वर्ष',
+        grantType: 'अनुदान प्रकार',
+        options: {
+          today: 'आज',
+          yesterday: 'हिजो',
+          last7Days: 'पछिल्लो ७ दिन',
+          last30Days: 'पछिल्लो ३० दिन',
+        },
+      },
+      emptyState: {
+        noItems: 'कुनै मेटिएका वस्तुहरू भेटिएनन्',
+        noItemsForFilter: 'चयन गरिएका फिल्टरहरूसँग मिल्ने कुनै वस्तुहरू छैनन्',
+      },
+    },
+    reports: {
+      title: 'प्रतिवेदनहरू',
+      subtitle: 'विभिन्न प्रणाली प्रतिवेदनहरू उत्पन्न र डाउनलोड गर्नुहोस्',
+      generateReport: 'प्रतिवेदन उत्पन्न गर्नुहोस्',
+      reportType: 'प्रतिवेदन प्रकार',
+      required: 'आवश्यक',
+      fileFormat: 'फाइल प्रारूप',
+      dateRange: 'मिति सीमा',
+      startDate: 'सुरु मिति',
+      endDate: 'अन्त्य मिति',
+      fiscalYear: 'आर्थिक वर्ष',
+      source: 'स्रोत',
+      grantType: 'अनुदान प्रकार',
+      generate: 'उत्पन्न गर्नुहोस्',
+      generating: 'उत्पन्न हुँदैछ...',
+      download: 'डाउनलोड गर्नुहोस्',
+      delete: 'मेट्नुहोस्',
+      deleteAll: 'सबै मेट्नुहोस्',
+      confirmDelete: 'प्रतिवेदन मेट्ने?',
+      confirmDeleteAll: 'सबै प्रतिवेदनहरू मेट्ने?',
+      confirmDeleteMessage: 'के तपाईं यो प्रतिवेदन मेट्न निश्चित हुनुहुन्छ? यो कार्य पूर्ववत गर्न सकिँदैन।',
+      confirmDeleteAllMessage: 'के तपाईं सबै प्रतिवेदनहरू मेट्न निश्चित हुनुहुन्छ? यो कार्य पूर्ववत गर्न सकिँदैन।',
+      types: {
+        fileCount: 'वर्ष अनुसार फाइलहरू',
+        missingUploads: 'हराएका अपलोडहरू',
+        custom: 'कस्टम प्रतिवेदन',
+      },
+      formats: {
+        pdf: 'पिडीएफ',
+        excel: 'एक्सेल',
+      },
+      errors: {
+        selectReportType: 'कृपया प्रतिवेदन प्रकार छान्नुहोस्',
+        selectEndDate: 'कृपया अन्त्य मिति छान्नुहोस्',
+        selectStartDate: 'कृपया सुरु मिति छान्नुहोस्',
+        invalidDateRange: 'सुरु मिति अन्त्य मितिभन्दा पहिले हुनुपर्छ',
+        downloadFailed: 'प्रतिवेदन डाउनलोड गर्न सकिएन',
+        deleteFailed: 'प्रतिवेदन मेट्न सकिएन',
+        deleteAllFailed: 'प्रतिवेदनहरू मेट्न सकिएन',
+        generateFailed: 'प्रतिवेदन उत्पन्न गर्न सकिएन',
+      },
+      success: {
+        generated: 'प्रतिवेदन सफलतापूर्वक उत्पन्न गरियो',
+        deleted: 'प्रतिवेदन सफलतापूर्वक मेटियो',
+        deletedAll: 'सबै प्रतिवेदनहरू सफलतापूर्वक मेटियो',
+        downloaded: 'प्रतिवेदन सफलतापूर्वक डाउनलोड गरियो',
       },
     },
   },

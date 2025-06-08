@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import Card from '@/components/ui/Card';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
+import { useApp } from '@/contexts/AppContext';
+import { TranslatedText } from '@/components/TranslatedText';
 
 const FolderIcon = () => (
   <svg className="w-5 h-5 text-yellow-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -22,6 +24,7 @@ interface SelectedItem {
 }
 
 export default function BinPage() {
+  const { language } = useApp();
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'list' | 'grid'>('list');
   const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
@@ -225,12 +228,10 @@ export default function BinPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-dark-800 rounded-lg shadow-lg p-6 w-full max-w-sm">
             <h2 className="text-lg font-semibold text-dark-100 mb-2">
-              {showConfirm === 'restore' ? 'Restore Items?' : 'Delete Forever?'}
+              <TranslatedText text={showConfirm === 'restore' ? 'bin.confirmRestore' : 'bin.confirmDelete'} />
             </h2>
             <p className="text-dark-300 mb-4">
-              {showConfirm === 'restore'
-                ? 'Are you sure you want to restore the selected items?'
-                : 'This will permanently delete the selected items. This action cannot be undone.'}
+              <TranslatedText text={showConfirm === 'restore' ? 'bin.confirmRestoreMessage' : 'bin.confirmDeleteMessage'} />
             </p>
             <div className="flex justify-end space-x-3">
               <button
@@ -238,7 +239,7 @@ export default function BinPage() {
                 onClick={() => setShowConfirm(null)}
                 disabled={actionLoading}
               >
-                Cancel
+                <TranslatedText text="common.cancel" />
               </button>
               <button
                 className={`px-4 py-2 text-sm font-medium rounded-md ${showConfirm === 'restore' ? 'bg-primary-500 text-white hover:bg-primary-600' : 'bg-red-500 text-white hover:bg-red-600'}`}
@@ -246,204 +247,171 @@ export default function BinPage() {
                 disabled={actionLoading}
               >
                 {actionLoading ? (
-                  <span className="flex items-center"><span className="animate-spin h-4 w-4 mr-2 border-b-2 border-white rounded-full"></span>Processing...</span>
-                ) : showConfirm === 'restore' ? 'Restore' : 'Delete Forever'}
+                  <span className="flex items-center">
+                    <span className="animate-spin h-4 w-4 mr-2 border-b-2 border-white rounded-full"></span>
+                    <TranslatedText text="bin.processing" />
+                  </span>
+                ) : (
+                  <TranslatedText text={showConfirm === 'restore' ? 'bin.restore' : 'bin.deleteForever'} />
+                )}
               </button>
             </div>
           </div>
         </div>
       )}
-      <div className="mb-6">
-        <div className="flex justify-between items-center">
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-dark-100">Bin</h1>
-            <p className="mt-1 text-sm text-dark-300">Items will be permanently deleted after 30 days</p>
+            <h1 className="text-2xl font-bold text-dark-100">
+              <TranslatedText text="bin.title" />
+            </h1>
+            <p className="text-dark-300">
+              <TranslatedText text="bin.subtitle" />
+            </p>
           </div>
           {selectedItems.length > 0 && (
             <div className="flex space-x-3">
               <button
+                className="px-4 py-2 text-sm font-medium text-white bg-primary-500 hover:bg-primary-600 rounded-md"
                 onClick={() => setShowConfirm('restore')}
-                className="px-4 py-2 text-sm font-medium text-dark-100 bg-dark-700 hover:bg-dark-600 rounded-md transition-colors disabled:opacity-60"
-                disabled={actionLoading}
               >
-                {actionLoading && showConfirm === 'restore' ? <span className="animate-spin h-4 w-4 mr-2 border-b-2 border-white rounded-full inline-block"></span> : null}
-                Restore
+                <TranslatedText text="bin.restore" />
               </button>
               <button
+                className="px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-md"
                 onClick={() => setShowConfirm('delete')}
-                className="px-4 py-2 text-sm font-medium text-red-400 bg-red-400/10 hover:bg-red-400/20 rounded-md transition-colors disabled:opacity-60"
-                disabled={actionLoading}
               >
-                {actionLoading && showConfirm === 'delete' ? <span className="animate-spin h-4 w-4 mr-2 border-b-2 border-red-400 rounded-full inline-block"></span> : null}
-                Delete Forever
+                <TranslatedText text="bin.deleteForever" />
               </button>
             </div>
           )}
         </div>
 
-        {/* Filter boxes */}
-        <div className="mt-6 flex flex-wrap gap-3">
-          {/* Type Filter */}
-          <div className="relative filter-dropdown">
+        {/* Filters */}
+        <div className="flex flex-wrap gap-3 mb-6">
+          <div className="filter-dropdown relative">
             <button
+              className="px-4 py-2 text-sm font-medium text-dark-100 bg-dark-700 hover:bg-dark-600 rounded-md"
               onClick={() => toggleDropdown('type')}
-              className={`px-4 py-2 text-sm font-medium ${selectedType ? 'text-primary-500 bg-primary-500/10' : 'text-dark-100 bg-dark-700'} hover:bg-dark-600 rounded-md transition-colors flex items-center gap-2`}
             >
-              Type {selectedType && `(${selectedType})`}
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
+              <TranslatedText text="bin.filters.type" />
             </button>
             {openDropdown === 'type' && (
-              <div className="absolute z-10 mt-2 w-48 rounded-md shadow-lg bg-dark-700 ring-1 ring-dark-500 ring-opacity-5">
-                <div className="py-1">
+              <div className="absolute z-10 mt-2 w-48 bg-dark-800 rounded-md shadow-lg">
                   {typeOptions.map((option) => (
                     <button
                       key={option}
+                    className="block w-full text-left px-4 py-2 text-sm text-dark-100 hover:bg-dark-700"
                       onClick={() => handleFilterSelect('type', option)}
-                      className={`block px-4 py-2 text-sm w-full text-left ${selectedType === option ? 'bg-primary-500/10 text-primary-500' : 'text-dark-100 hover:bg-dark-600'}`}
                     >
                       {option}
                     </button>
                   ))}
-                </div>
               </div>
             )}
           </div>
 
-          {/* Modified Filter */}
-          <div className="relative filter-dropdown">
+          <div className="filter-dropdown relative">
             <button
+              className="px-4 py-2 text-sm font-medium text-dark-100 bg-dark-700 hover:bg-dark-600 rounded-md"
               onClick={() => toggleDropdown('modified')}
-              className={`px-4 py-2 text-sm font-medium ${selectedModified ? 'text-primary-500 bg-primary-500/10' : 'text-dark-100 bg-dark-700'} hover:bg-dark-600 rounded-md transition-colors flex items-center gap-2`}
             >
-              Modified {selectedModified && `(${selectedModified})`}
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
+              <TranslatedText text="bin.filters.modified" />
             </button>
             {openDropdown === 'modified' && (
-              <div className="absolute z-10 mt-2 w-48 rounded-md shadow-lg bg-dark-700 ring-1 ring-dark-500 ring-opacity-5">
-                <div className="py-1">
+              <div className="absolute z-10 mt-2 w-48 bg-dark-800 rounded-md shadow-lg">
                   {modifiedOptions.map((option) => (
                     <button
                       key={option}
+                    className="block w-full text-left px-4 py-2 text-sm text-dark-100 hover:bg-dark-700"
                       onClick={() => handleFilterSelect('modified', option)}
-                      className={`block px-4 py-2 text-sm w-full text-left ${selectedModified === option ? 'bg-primary-500/10 text-primary-500' : 'text-dark-100 hover:bg-dark-600'}`}
                     >
-                      {option}
+                    <TranslatedText text={`bin.filters.options.${option.toLowerCase().replace(/\s+/g, '')}`} />
                     </button>
                   ))}
-                </div>
               </div>
             )}
           </div>
 
-          {/* Source Filter */}
-          <div className="relative filter-dropdown">
+          <div className="filter-dropdown relative">
             <button
+              className="px-4 py-2 text-sm font-medium text-dark-100 bg-dark-700 hover:bg-dark-600 rounded-md"
               onClick={() => toggleDropdown('source')}
-              className={`px-4 py-2 text-sm font-medium ${selectedSource ? 'text-primary-500 bg-primary-500/10' : 'text-dark-100 bg-dark-700'} hover:bg-dark-600 rounded-md transition-colors flex items-center gap-2`}
             >
-              Source {selectedSource && `(${selectedSource})`}
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
+              <TranslatedText text="bin.filters.source" />
             </button>
             {openDropdown === 'source' && (
-              <div className="absolute z-10 mt-2 w-64 rounded-md shadow-lg bg-dark-700 ring-1 ring-dark-500 ring-opacity-5">
-                <div className="py-1">
+              <div className="absolute z-10 mt-2 w-48 bg-dark-800 rounded-md shadow-lg">
                   {sourceOptions.map((option) => (
                     <button
                       key={option}
+                    className="block w-full text-left px-4 py-2 text-sm text-dark-100 hover:bg-dark-700"
                       onClick={() => handleFilterSelect('source', option)}
-                      className={`block px-4 py-2 text-sm w-full text-left ${selectedSource === option ? 'bg-primary-500/10 text-primary-500' : 'text-dark-100 hover:bg-dark-600'}`}
                     >
                       {option}
                     </button>
                   ))}
-                </div>
               </div>
             )}
           </div>
 
-          {/* Fiscal Year Filter */}
-          <div className="relative filter-dropdown">
+          <div className="filter-dropdown relative">
             <button
+              className="px-4 py-2 text-sm font-medium text-dark-100 bg-dark-700 hover:bg-dark-600 rounded-md"
               onClick={() => toggleDropdown('fiscalYear')}
-              className={`px-4 py-2 text-sm font-medium ${selectedFiscalYear ? 'text-primary-500 bg-primary-500/10' : 'text-dark-100 bg-dark-700'} hover:bg-dark-600 rounded-md transition-colors flex items-center gap-2`}
             >
-              Fiscal Year {selectedFiscalYear && `(${selectedFiscalYear})`}
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
+              <TranslatedText text="bin.filters.fiscalYear" />
             </button>
             {openDropdown === 'fiscalYear' && (
-              <div className="absolute z-10 mt-2 w-48 rounded-md shadow-lg bg-dark-700 ring-1 ring-dark-500 ring-opacity-5">
-                <div className="py-1">
+              <div className="absolute z-10 mt-2 w-48 bg-dark-800 rounded-md shadow-lg">
                   {fiscalYearOptions.map((option) => (
                     <button
                       key={option}
+                    className="block w-full text-left px-4 py-2 text-sm text-dark-100 hover:bg-dark-700"
                       onClick={() => handleFilterSelect('fiscalYear', option)}
-                      className={`block px-4 py-2 text-sm w-full text-left ${selectedFiscalYear === option ? 'bg-primary-500/10 text-primary-500' : 'text-dark-100 hover:bg-dark-600'}`}
                     >
                       {option}
                     </button>
                   ))}
-                </div>
               </div>
             )}
           </div>
 
-          {/* Grant Type Filter */}
-          <div className="relative filter-dropdown">
+          <div className="filter-dropdown relative">
             <button
+              className="px-4 py-2 text-sm font-medium text-dark-100 bg-dark-700 hover:bg-dark-600 rounded-md"
               onClick={() => toggleDropdown('grantType')}
-              className={`px-4 py-2 text-sm font-medium ${selectedGrantType ? 'text-primary-500 bg-primary-500/10' : 'text-dark-100 bg-dark-700'} hover:bg-dark-600 rounded-md transition-colors flex items-center gap-2`}
             >
-              Grant Type {selectedGrantType && `(${selectedGrantType})`}
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
+              <TranslatedText text="bin.filters.grantType" />
             </button>
             {openDropdown === 'grantType' && (
-              <div className="absolute z-10 mt-2 w-64 rounded-md shadow-lg bg-dark-700 ring-1 ring-dark-500 ring-opacity-5">
-                <div className="py-1">
+              <div className="absolute z-10 mt-2 w-48 bg-dark-800 rounded-md shadow-lg">
                   {grantTypeOptions.map((option) => (
                     <button
                       key={option}
+                    className="block w-full text-left px-4 py-2 text-sm text-dark-100 hover:bg-dark-700"
                       onClick={() => handleFilterSelect('grantType', option)}
-                      className={`block px-4 py-2 text-sm w-full text-left ${selectedGrantType === option ? 'bg-primary-500/10 text-primary-500' : 'text-dark-100 hover:bg-dark-600'}`}
                     >
                       {option}
                     </button>
                   ))}
-                </div>
               </div>
             )}
           </div>
-
-          {/* Clear Filters Button */}
-          {(selectedType || selectedModified || selectedSource || selectedFiscalYear || selectedGrantType) && (
-            <button
-              onClick={() => {
-                setSelectedType('');
-                setSelectedModified('');
-                setSelectedSource('');
-                setSelectedFiscalYear('');
-                setSelectedGrantType('');
-              }}
-              className="px-4 py-2 text-sm font-medium text-red-400 bg-red-400/10 hover:bg-red-400/20 rounded-md transition-colors flex items-center gap-2"
-            >
-              Clear Filters
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          )}
         </div>
-      </div>
 
+        {/* Content */}
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin h-8 w-8 border-b-2 border-primary-500 rounded-full"></div>
+          </div>
+        ) : filteredFiles.length === 0 && filteredFolders.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-dark-300">
+              <TranslatedText text={selectedType || selectedModified || selectedSource || selectedFiscalYear || selectedGrantType ? 'bin.emptyState.noItemsForFilter' : 'bin.emptyState.noItems'} />
+            </p>
+      </div>
+        ) : (
       <Card>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-4">
@@ -455,7 +423,7 @@ export default function BinPage() {
                 onChange={handleSelectAll}
               />
               <span className="ml-2 text-sm text-dark-300">
-                {selectedItems.length} selected
+                    {selectedItems.length} <TranslatedText text="files.found" />
               </span>
             </div>
           </div>
@@ -495,42 +463,27 @@ export default function BinPage() {
                     </div>
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
-                    Name
+                        <TranslatedText text="files.table.name" />
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
+                        <TranslatedText text="files.table.type" />
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
+                        <TranslatedText text="files.table.lastModified" />
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
-                    Type
+                        <TranslatedText text="files.table.fiscalYear" />
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
-                    Deleted
+                        <TranslatedText text="files.table.source" />
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
-                    Delete After
+                        <TranslatedText text="files.table.grantType" />
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-dark-700 divide-y divide-dark-600">
-                {loading ? (
-                  Array(3).fill(0).map((_, index) => (
-                    <tr key={index} className="animate-pulse">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="h-4 w-4 bg-dark-600 rounded"></div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="h-4 bg-dark-600 rounded w-3/4"></div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="h-4 bg-dark-600 rounded w-1/2"></div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="h-4 bg-dark-600 rounded w-1/4"></div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="h-4 bg-dark-600 rounded w-1/4"></div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  filteredFiles.map((file) => (
+                    {filteredFiles.map((file) => (
                     <tr
                       key={file.id}
                       className="hover:bg-dark-600 transition-colors"
@@ -558,24 +511,60 @@ export default function BinPage() {
                         {file.deletedAt}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
-                        {file.deleteAfter}
+                          {file.fiscalYear}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                          {file.source}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                          {file.grantType}
+                        </td>
+                      </tr>
+                    ))}
+                    {filteredFolders.map((folder) => (
+                      <tr
+                        key={folder.id}
+                        className="hover:bg-dark-600 transition-colors"
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 text-primary-500 rounded border-dark-500 bg-dark-700 focus:ring-primary-500"
+                              checked={selectedItems.some(item => item.id === folder.id && item.type === 'folder')}
+                              onChange={() => handleSelectItem(folder.id, 'folder')}
+                            />
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <FolderIcon />
+                            <span className="text-sm font-medium text-dark-100">{folder.name}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                          <TranslatedText text="files.newFolder" />
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                          {folder.deletedAt}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                          {folder.fiscalYear}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                          {folder.source}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                          {folder.grantType}
                       </td>
                     </tr>
-                  ))
-                )}
+                    ))}
               </tbody>
             </table>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {loading ? (
-              Array(6).fill(0).map((_, index) => (
-                <div key={index} className="animate-pulse">
-                  <div className="h-32 bg-dark-700 rounded-lg"></div>
-                </div>
-              ))
-            ) : (
-              filteredFiles.map((file) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredFiles.map((file) => (
                 <motion.div
                   key={file.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -601,17 +590,73 @@ export default function BinPage() {
                       </div>
                     </div>
                     <div className="text-xs text-dark-400 space-y-1">
-                      <p>Type: {file.type}</p>
-                      <p>Deleted: {file.deletedAt}</p>
-                      <p>Delete After: {file.deleteAfter}</p>
+                        <p>
+                          <TranslatedText text="files.table.type" />: {file.type}
+                        </p>
+                        <p>
+                          <TranslatedText text="files.table.lastModified" />: {file.deletedAt}
+                        </p>
+                        <p>
+                          <TranslatedText text="files.table.fiscalYear" />: {file.fiscalYear}
+                        </p>
+                        <p>
+                          <TranslatedText text="files.table.source" />: {file.source}
+                        </p>
+                        <p>
+                          <TranslatedText text="files.table.grantType" />: {file.grantType}
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+
+                {filteredFolders.map((folder) => (
+                  <motion.div
+                    key={folder.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="relative p-4 bg-dark-700 rounded-lg border border-dark-600"
+                  >
+                    <div className="absolute top-2 left-2">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 text-primary-500 rounded border-dark-500 bg-dark-700 focus:ring-primary-500"
+                        checked={selectedItems.some(item => item.id === folder.id && item.type === 'folder')}
+                        onChange={() => handleSelectItem(folder.id, 'folder')}
+                      />
+                    </div>
+                    <div className="flex flex-col space-y-3 mt-4">
+                      <div className="flex items-center space-x-3">
+                        <FolderIcon />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-dark-100 truncate">
+                            {folder.name}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-xs text-dark-400 space-y-1">
+                        <p>
+                          <TranslatedText text="files.table.lastModified" />: {folder.deletedAt}
+                        </p>
+                        <p>
+                          <TranslatedText text="files.table.fiscalYear" />: {folder.fiscalYear}
+                        </p>
+                        <p>
+                          <TranslatedText text="files.table.source" />: {folder.source}
+                        </p>
+                        <p>
+                          <TranslatedText text="files.table.grantType" />: {folder.grantType}
+                        </p>
                     </div>
                   </div>
                 </motion.div>
-              ))
+                ))}
+              </div>
             )}
-          </div>
+          </Card>
         )}
-      </Card>
+      </div>
     </>
   );
 } 

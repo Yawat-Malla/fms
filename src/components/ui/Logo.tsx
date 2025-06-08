@@ -37,7 +37,7 @@ export default function Logo({
     console.error('[Logo] Error state:', error);
     return <div className={`text-red-500 ${className}`}>Logo error: {error}</div>;
   }
-
+  
   return (
     <div className="relative" style={{ width, height }}>
       <Image

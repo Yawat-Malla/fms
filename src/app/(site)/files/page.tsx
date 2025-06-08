@@ -10,6 +10,7 @@ import FileRow from '@/components/files/FileRow';
 import { format } from 'date-fns';
 import { toast } from 'react-hot-toast';
 import { generateFiscalYears } from '@/utils/fiscalYears';
+import { TranslatedText } from '@/components/TranslatedText';
 
 export default function FilesPage() {
   const { data: session, status } = useSession();
@@ -36,11 +37,11 @@ export default function FilesPage() {
 
   // Filter tabs
   const tabs = [
-    { id: 'view-all', name: 'View all' },
-    { id: 'by-fiscal-year', name: 'By Fiscal Year' },
-    { id: 'by-source', name: 'By Source' },
-    { id: 'pdfs', name: 'PDFs' },
-    { id: 'images', name: 'Images' },
+    { id: 'view-all', name: <TranslatedText text="files.filters.viewAll" /> },
+    { id: 'by-fiscal-year', name: <TranslatedText text="files.filters.byFiscalYear" /> },
+    { id: 'by-source', name: <TranslatedText text="files.filters.bySource.title" /> },
+    { id: 'pdfs', name: <TranslatedText text="files.filters.pdfs" /> },
+    { id: 'images', name: <TranslatedText text="files.filters.images" /> },
   ];
 
   // Get fiscal years using the utility function
@@ -401,18 +402,19 @@ export default function FilesPage() {
       <svg className="h-16 w-16 text-dark-400 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
       </svg>
-      <h3 className="text-lg font-medium text-dark-200">No files found</h3>
+      <h3 className="text-lg font-medium text-dark-200"><TranslatedText text="files.emptyState.noFiles" /></h3>
       <p className="text-dark-400 mt-1">
-        {selectedFiscalYear && `No files found for Fiscal Year ${selectedFiscalYear}`}
-        {selectedSource && `No files found from ${selectedSource}`}
-        {selectedGrantType && `No ${selectedGrantType} files found`}
-        {!selectedFiscalYear && !selectedSource && !selectedGrantType && 'No files match your current filters'}
+        {/* Use translation keys for filter messages if available, else fallback to original */}
+        {selectedFiscalYear && <TranslatedText text="files.emptyState.noFilesForFiscalYear" />}
+        {selectedSource && <TranslatedText text="files.emptyState.noFilesForSource" />}
+        {selectedGrantType && <TranslatedText text="files.emptyState.noFilesForGrantType" />}
+        {!selectedFiscalYear && !selectedSource && !selectedGrantType && <TranslatedText text="files.emptyState.noFilesMatchFilters" />}
       </p>
       <button
         onClick={clearFilters}
         className="mt-4 px-4 py-2 bg-dark-600 text-dark-200 rounded-md hover:bg-dark-500 transition-colors"
       >
-        Clear Filters
+        <TranslatedText text="files.emptyState.clearFilters" />
       </button>
     </div>
   );
@@ -475,9 +477,9 @@ export default function FilesPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-dark-100">{getFilterDescription()}</h1>
+        <h1 className="text-2xl font-semibold text-dark-100"><TranslatedText text="files.heading" /></h1>
         <p className="mt-1 text-dark-300">
-          {filteredFiles.length} {filteredFiles.length === 1 ? 'file' : 'files'} found
+          {filteredFiles.length} {filteredFiles.length === 1 ? <TranslatedText text="files.file" /> : <TranslatedText text="files.files" />} <TranslatedText text="files.found" />
         </p>
       </div>
 
@@ -494,7 +496,7 @@ export default function FilesPage() {
                   <path d="M10 5V15M5 10H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
-              <h3 className="text-dark-100 font-medium text-lg">New document</h3>
+              <h3 className="text-dark-100 font-medium text-lg"><TranslatedText text="files.newDocument" /></h3>
             </div>
           </Card>
           
@@ -508,7 +510,7 @@ export default function FilesPage() {
                   <path d="M5 15H15M5 10H15M5 5H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
-              <h3 className="text-dark-100 font-medium text-lg">New file</h3>
+              <h3 className="text-dark-100 font-medium text-lg"><TranslatedText text="files.newFile" /></h3>
             </div>
           </Card>
           
@@ -522,7 +524,7 @@ export default function FilesPage() {
                   <path d="M13 5H5C3.89543 5 3 5.89543 3 7V15C3 16.1046 3.89543 17 5 17H15C16.1046 17 17 16.1046 17 15V9M13 5L17 9M13 5V9H17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
-              <h3 className="text-dark-100 font-medium text-lg">New folder</h3>
+              <h3 className="text-dark-100 font-medium text-lg"><TranslatedText text="files.newFolder" /></h3>
             </div>
           </Card>
         </div>
@@ -532,7 +534,7 @@ export default function FilesPage() {
       {!selectedFiscalYear && !selectedSource && !selectedGrantType && activeTab === 'view-all' && (
         <div className="mb-8">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-medium text-dark-100">Recently modified</h2>
+            <h2 className="text-xl font-medium text-dark-100"><TranslatedText text="files.recentlyModified" /></h2>
             <Button 
               variant="ghost" 
               size="sm"
@@ -548,7 +550,7 @@ export default function FilesPage() {
                 </svg>
               }
             >
-              View all
+              <TranslatedText text="files.viewAll" />
             </Button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -561,7 +563,11 @@ export default function FilesPage() {
       <div>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-medium text-dark-100">
-            {selectedFiscalYear || selectedSource || selectedGrantType ? 'Filtered Results' : 'All Files'}
+            {selectedFiscalYear || selectedSource || selectedGrantType ? (
+              <TranslatedText text="files.filteredResults" />
+            ) : (
+              <TranslatedText text="files.heading" />
+            )}
           </h2>
           <div className="flex items-center space-x-2">
             {/* View toggle */}
@@ -598,7 +604,7 @@ export default function FilesPage() {
               }
               onClick={() => setShowFilters(!showFilters)}
             >
-              Filters
+              <TranslatedText text="files.filters.title" />
             </Button>
           </div>
         </div>
@@ -609,13 +615,13 @@ export default function FilesPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Fiscal Year Filter */}
               <div>
-                <label className="block text-sm font-medium text-dark-200 mb-2">Fiscal Year</label>
+                <label className="block text-sm font-medium text-dark-200 mb-2"><TranslatedText text="files.table.fiscalYear" /></label>
                 <select
                   value={selectedFiscalYear || ''}
                   onChange={(e) => handleFilterChange('fiscalYear', e.target.value || null)}
                   className="w-full bg-dark-600 border border-dark-500 rounded-md py-2 px-3 text-sm"
                 >
-                  <option value="">All Fiscal Years</option>
+                  <option value=""><TranslatedText text="files.filters.allFiscalYears" /></option>
                   {fiscalYearOptions.map((year) => (
                     <option key={year.id} value={year.id}>{year.name}</option>
                   ))}
@@ -624,13 +630,13 @@ export default function FilesPage() {
 
               {/* Source Filter */}
               <div>
-                <label className="block text-sm font-medium text-dark-200 mb-2">Source</label>
+                <label className="block text-sm font-medium text-dark-200 mb-2"><TranslatedText text="files.table.source" /></label>
                 <select
                   value={selectedSource || ''}
                   onChange={(e) => handleFilterChange('source', e.target.value || null)}
                   className="w-full bg-dark-600 border border-dark-500 rounded-md py-2 px-3 text-sm"
                 >
-                  <option value="">All Sources</option>
+                  <option value=""><TranslatedText text="files.filters.allSources" /></option>
                   {sourceFilters.map((source) => (
                     <option key={source.id} value={source.id}>{source.name}</option>
                   ))}
@@ -639,13 +645,13 @@ export default function FilesPage() {
 
               {/* Grant Type Filter */}
               <div>
-                <label className="block text-sm font-medium text-dark-200 mb-2">Grant Type</label>
+                <label className="block text-sm font-medium text-dark-200 mb-2"><TranslatedText text="files.table.grantType" /></label>
                 <select
                   value={selectedGrantType || ''}
                   onChange={(e) => handleFilterChange('grantType', e.target.value || null)}
                   className="w-full bg-dark-600 border border-dark-500 rounded-md py-2 px-3 text-sm"
                 >
-                  <option value="">All Grant Types</option>
+                  <option value=""><TranslatedText text="files.filters.allGrantTypes" /></option>
                   {filterOptions.grantTypes.map((type) => (
                     <option key={type} value={type}>{type}</option>
                   ))}
@@ -677,7 +683,7 @@ export default function FilesPage() {
         {/* By Source tab dropdown */}
         {activeTab === 'by-source' && (
           <div className="mb-6 flex items-center space-x-4">
-            <label className="block text-sm font-medium text-dark-200">Select Source:</label>
+            <label className="block text-sm font-medium text-dark-200"><TranslatedText text="files.selectSource" /></label>
             <select
               value={selectedSource || ''}
               onChange={e => handleSourceChange(e.target.value || null)}
@@ -728,16 +734,16 @@ export default function FilesPage() {
                     </div>
                   </th>
                   <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
-                    File name
+                    <TranslatedText text="files.table.name" />
                   </th>
                   <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
-                    Uploaded by
+                    <TranslatedText text="files.table.uploadedBy" />
                   </th>
                   <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
-                    Last modified
+                    <TranslatedText text="files.table.lastModified" />
                   </th>
                   <th scope="col" className="px-4 py-3 w-12">
-                    <span className="sr-only">Actions</span>
+                    <span className="sr-only"><TranslatedText text="files.table.actions" /></span>
                   </th>
                 </tr>
               </thead>

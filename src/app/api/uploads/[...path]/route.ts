@@ -44,11 +44,11 @@ export async function GET(
     const contentType = getContentType(filePath);
 
     console.log('Uploads API - Serving file:', {
-      path: filePath,
-      type: contentType,
+        path: filePath,
+        type: contentType,
       size: fileBuffer.length,
       isSystemFile
-    });
+      });
 
     // Set appropriate headers for image serving
     const headers = new Headers();

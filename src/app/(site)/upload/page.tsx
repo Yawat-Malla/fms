@@ -10,6 +10,7 @@ import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import SearchableSelect from '@/components/ui/SearchableSelect';
 import { generateFiscalYears } from '@/utils/fiscalYears';
+import { TranslatedText } from '@/components/TranslatedText';
 
 // Define sources to match exactly with database records
 const SOURCES = [
@@ -156,7 +157,7 @@ const UploadPage = () => {
     >
       {/* Stepper Sidebar */}
       <aside className="w-64 min-w-[220px] bg-dark-800 rounded-2xl p-8 flex flex-col items-start shadow-lg h-fit sticky top-4">
-        <h2 className="text-lg font-bold text-dark-100 mb-8 tracking-wide">Upload Files</h2>
+        <h2 className="text-lg font-bold text-dark-100 mb-8 tracking-wide"><TranslatedText text="upload.title" /></h2>
         <ol className="space-y-6 w-full overflow-y-auto max-h-[calc(100vh-16rem)]">
           {steps.map((s, idx) => (
             <li key={s.label} className="flex items-center gap-4">
@@ -180,7 +181,7 @@ const UploadPage = () => {
                     : 'text-dark-400'
                 }`}
               >
-                {s.label}
+                <TranslatedText text={`upload.steps.${idx}`} />
               </span>
             </li>
           ))}
@@ -215,7 +216,7 @@ const UploadPage = () => {
                     transition={{ delay: 0.4 }}
                     className="mt-6 text-2xl font-medium text-dark-100"
                   >
-                    Upload Successful!
+                    <TranslatedText text="upload.success.title" />
                   </motion.h3>
                   <motion.p
                     initial={{ opacity: 0, y: 10 }}
@@ -223,7 +224,7 @@ const UploadPage = () => {
                     transition={{ delay: 0.5 }}
                     className="mt-3 text-dark-300 text-center max-w-md"
                   >
-                    Your files have been successfully uploaded and organized in the system.
+                    <TranslatedText text="upload.success.message" />
                   </motion.p>
                 </div>
               </Card>
@@ -243,13 +244,13 @@ const UploadPage = () => {
                   <div className="p-8 space-y-8">
                     <div>
                       <h2 className="text-2xl font-semibold text-dark-100 mb-2 flex items-center gap-2">
-                        <FiFileText className="h-6 w-6 text-primary-500" /> Metadata Entry
+                        <FiFileText className="h-6 w-6 text-primary-500" /> <TranslatedText text="upload.metadata.title" />
                       </h2>
-                      <p className="text-dark-300 mb-6">Enter file metadata to help organize your documents.</p>
+                      <p className="text-dark-300 mb-6"><TranslatedText text="upload.metadata.description" /></p>
                       <div className="grid grid-cols-1 gap-6">
                         <div className="space-y-2">
                           <label htmlFor="title" className="block text-sm font-medium text-dark-200">
-                            Title <span className="text-primary-500">*</span>
+                            <TranslatedText text="upload.metadata.titleLabel" /> <span className="text-primary-500">*</span>
                           </label>
                           <input
                             type="text"
@@ -266,7 +267,7 @@ const UploadPage = () => {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                           <div className="space-y-2">
                             <label htmlFor="fiscalYear" className="block text-sm font-medium text-dark-200">
-                              Fiscal Year <span className="text-primary-500">*</span>
+                              <TranslatedText text="upload.metadata.fiscalYearLabel" /> <span className="text-primary-500">*</span>
                             </label>
                             <SearchableSelect
                               options={fiscalYears}
@@ -277,7 +278,7 @@ const UploadPage = () => {
                           </div>
                           <div className="space-y-2">
                             <label htmlFor="source" className="block text-sm font-medium text-dark-200">
-                              Funding Source <span className="text-primary-500">*</span>
+                              <TranslatedText text="upload.metadata.sourceLabel" /> <span className="text-primary-500">*</span>
                             </label>
                             <select
                               id="source"
@@ -298,7 +299,7 @@ const UploadPage = () => {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                           <div className="space-y-2">
                             <label htmlFor="grantType" className="block text-sm font-medium text-dark-200">
-                              Grant Type <span className="text-primary-500">*</span>
+                              <TranslatedText text="upload.metadata.grantTypeLabel" /> <span className="text-primary-500">*</span>
                             </label>
                             <select
                               id="grantType"
@@ -317,7 +318,7 @@ const UploadPage = () => {
                           </div>
                           <div className="space-y-2">
                             <label htmlFor="remarks" className="block text-sm font-medium text-dark-200">
-                              Summary / Remarks
+                              <TranslatedText text="upload.metadata.remarksLabel" />
                             </label>
                             <textarea
                               id="remarks"
@@ -341,12 +342,12 @@ const UploadPage = () => {
                   <div className="p-8 space-y-8">
                     <div>
                       <h2 className="text-2xl font-semibold text-dark-100 mb-2 flex items-center gap-2">
-                        <FiUpload className="h-6 w-6 text-primary-500" /> Document Upload
+                        <FiUpload className="h-6 w-6 text-primary-500" /> <TranslatedText text="upload.document.title" />
                       </h2>
-                      <p className="text-dark-300 mb-6">Upload multi-page scanned PDFs or images. You can upload multiple files at once in each section. (Optional for each section)</p>
+                      <p className="text-dark-300 mb-6"><TranslatedText text="upload.document.description" /></p>
                       <div className="space-y-8">
                         <div>
-                          <h3 className="text-lg font-semibold text-dark-200 mb-2">A4 size</h3>
+                          <h3 className="text-lg font-semibold text-dark-200 mb-2"><TranslatedText text="upload.document.a4Size" /></h3>
                           <FileUploader
                             onFilesSelected={setA4Files}
                             maxFiles={20}
@@ -356,7 +357,7 @@ const UploadPage = () => {
                           />
                         </div>
                         <div>
-                          <h3 className="text-lg font-semibold text-dark-200 mb-2">Nepali Paper</h3>
+                          <h3 className="text-lg font-semibold text-dark-200 mb-2"><TranslatedText text="upload.document.nepaliPaper" /></h3>
                           <FileUploader
                             onFilesSelected={setNepaliFiles}
                             maxFiles={20}
@@ -366,7 +367,7 @@ const UploadPage = () => {
                           />
                         </div>
                         <div>
-                          <h3 className="text-lg font-semibold text-dark-200 mb-2">Extra Size</h3>
+                          <h3 className="text-lg font-semibold text-dark-200 mb-2"><TranslatedText text="upload.document.extraSize" /></h3>
                           <FileUploader
                             onFilesSelected={setExtraFiles}
                             maxFiles={20}
@@ -376,7 +377,7 @@ const UploadPage = () => {
                           />
                         </div>
                         <div>
-                          <h3 className="text-lg font-semibold text-dark-200 mb-2">Other</h3>
+                          <h3 className="text-lg font-semibold text-dark-200 mb-2"><TranslatedText text="upload.document.other" /></h3>
                           <FileUploader
                             onFilesSelected={setOtherFiles}
                             maxFiles={20}
@@ -399,7 +400,7 @@ const UploadPage = () => {
                   disabled={step === 0 || isSubmitting}
                   className="px-6 py-2.5 hover:bg-dark-700 transition-colors duration-200"
                 >
-                  <FiChevronLeft className="inline mr-2" /> Back
+                  <FiChevronLeft className="inline mr-2" /> <TranslatedText text="upload.navigation.back" />
                 </Button>
                 {step < steps.length - 1 ? (
                   <Button
@@ -408,7 +409,7 @@ const UploadPage = () => {
                     disabled={!canGoNext() || isSubmitting}
                     className="px-6 py-2.5 bg-primary-500 hover:bg-primary-600 text-white transition-colors duration-200"
                   >
-                    Next <FiChevronRight className="inline ml-2" />
+                    <TranslatedText text="upload.navigation.next" /> <FiChevronRight className="inline ml-2" />
                   </Button>
                 ) : (
                   <Button
@@ -417,7 +418,7 @@ const UploadPage = () => {
                     isLoading={isSubmitting}
                     className="px-6 py-2.5 bg-primary-500 hover:bg-primary-600 text-white transition-colors duration-200"
                   >
-                    Upload Files
+                    <TranslatedText text="upload.navigation.upload" />
                   </Button>
                 )}
               </div>

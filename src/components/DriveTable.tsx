@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { toast } from 'react-hot-toast';
 import FileActions from './FileActions';
 import { useRouter } from 'next/navigation';
+import { TranslatedText } from '@/components/TranslatedText';
 
 interface DriveTableProps {
   folders: any[];
@@ -176,22 +177,22 @@ const DriveTable = ({ folders, files, onFolderClick, onFileClick, onRefresh, cur
           <thead className="bg-dark-700">
             <tr>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider w-[30%]">
-                Name
+                <TranslatedText text="files.table.name" />
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider w-[15%]">
-                Fiscal Year
+                <TranslatedText text="files.table.fiscalYear" />
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider w-[15%]">
-                Source
+                <TranslatedText text="files.table.source" />
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider w-[15%]">
-                Grant Type
+                <TranslatedText text="files.table.grantType" />
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider w-[15%]">
-                Created
+                <TranslatedText text="files.table.created" />
               </th>
               <th scope="col" className="relative px-6 py-3 w-[10%]">
-                <span className="sr-only">Actions</span>
+                <span className="sr-only"><TranslatedText text="files.table.actions" /></span>
               </th>
             </tr>
           </thead>
@@ -217,14 +218,14 @@ const DriveTable = ({ folders, files, onFolderClick, onFileClick, onRefresh, cur
                       {isUploading ? (
                         <>
                           <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary-500"></div>
-                          <span>Uploading...</span>
+                          <span><TranslatedText text="Uploading..." /></span>
                         </>
                       ) : (
                         <>
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
                           </svg>
-                          <span>Add Files</span>
+                          <span><TranslatedText text="Add Files" /></span>
                         </>
                       )}
                     </button>
@@ -265,13 +266,21 @@ const DriveTable = ({ folders, files, onFolderClick, onFileClick, onRefresh, cur
                       <svg className="w-5 h-5 text-yellow-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                       </svg>
-                      <span className="truncate max-w-[calc(100%-2rem)]">{folder.name}</span>
+                      <span className="truncate max-w-[calc(100%-2rem)]">
+                        <TranslatedText text={folder.name} />
+                      </span>
                     </button>
                   )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-dark-300">{folder.fiscalYear?.name || '-'}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-dark-300">{folder.source?.name || '-'}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-dark-300">{folder.grantType?.name || '-'}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-dark-300">
+                  <TranslatedText text={folder.fiscalYear?.name || '-'} />
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-dark-300">
+                  <TranslatedText text={folder.source?.name || '-'} />
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-dark-300">
+                  <TranslatedText text={folder.grantType?.name || '-'} />
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-dark-300">
                   {format(new Date(folder.createdAt), 'MMM d, yyyy')}
                 </td>
@@ -319,13 +328,21 @@ const DriveTable = ({ folders, files, onFolderClick, onFileClick, onRefresh, cur
                       <div className="w-5 h-5 flex-shrink-0">
                         {getFileOrFolderIcon(file, false, 'w-5 h-5')}
                       </div>
-                      <span className="truncate max-w-[calc(100%-2rem)]">{file.name}</span>
+                      <span className="truncate max-w-[calc(100%-2rem)]">
+                        <TranslatedText text={file.name} />
+                      </span>
                     </button>
                   )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-dark-300">{file.fiscalYear?.name || '-'}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-dark-300">{file.source?.name || '-'}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-dark-300">{file.grantType?.name || '-'}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-dark-300">
+                  <TranslatedText text={file.fiscalYear?.name || '-'} />
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-dark-300">
+                  <TranslatedText text={file.source?.name || '-'} />
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-dark-300">
+                  <TranslatedText text={file.grantType?.name || '-'} />
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-dark-300">
                   {format(new Date(file.uploadedAt), 'MMM d, yyyy')}
                 </td>

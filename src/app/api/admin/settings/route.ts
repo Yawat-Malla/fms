@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     if (logoFile) {
       const bytes = await logoFile.arrayBuffer();
       const buffer = Buffer.from(bytes);
-
+      
       // Create uploads directory if it doesn't exist
       const uploadsDir = path.join(process.cwd(), 'uploads');
       try {

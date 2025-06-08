@@ -7,6 +7,7 @@ import UserMenu from './UserMenu';
 import { useApp } from '@/contexts/AppContext';
 import { useSession } from 'next-auth/react';
 import { NotificationDropdown } from '@/components/NotificationDropdown';
+import { useTranslation } from 'react-i18next';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard' },
@@ -21,7 +22,7 @@ const navigation = [
 const Navbar = () => {
   const { data: session, status } = useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { t } = useApp();
+  const { t } = useTranslation();
 
   // Debug logging
   console.log('Navbar render - Session status:', status);

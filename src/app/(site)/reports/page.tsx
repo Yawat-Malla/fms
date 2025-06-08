@@ -7,6 +7,9 @@ import { toast } from 'react-hot-toast';
 import { format } from 'date-fns';
 import { useSession } from 'next-auth/react';
 import { generateFiscalYears } from '@/utils/fiscalYears';
+import { useApp } from '@/contexts/AppContext';
+import { TranslatedText } from '@/components/TranslatedText';
+import { translations } from '@/translations';
 
 interface Report {
   id: number;
@@ -23,6 +26,7 @@ interface Report {
 
 export default function ReportsPage() {
   const { data: session } = useSession();
+  const { language } = useApp();
   const [selectedReportType, setSelectedReportType] = useState('file_count');
   const [selectedFormat, setSelectedFormat] = useState('pdf');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -37,9 +41,9 @@ export default function ReportsPage() {
   const [fiscalYears, setFiscalYears] = useState<{ id: string; name: string; }[]>([]);
 
   const reportTypes = [
-    { id: 'file_count', name: 'Files by Year' },
-    { id: 'missing_uploads', name: 'Missing Uploads' },
-    { id: 'custom', name: 'Custom Report' },
+    { id: 'file_count', name: 'reports.types.fileCount' },
+    { id: 'missing_uploads', name: 'reports.types.missingUploads' },
+    { id: 'custom', name: 'reports.types.custom' },
   ] as const;
 
   // Initialize fiscal years
@@ -61,7 +65,7 @@ export default function ReportsPage() {
       setReports(data);
     } catch (error) {
       console.error('Error fetching reports:', error);
-      toast.error('Failed to load reports');
+      toast.error(translations[language].reports.errors.generateFailed);
     } finally {
       setLoading(false);
     }
@@ -69,25 +73,25 @@ export default function ReportsPage() {
 
   const handleGenerateReport = async () => {
     try {
-    setIsGenerating(true);
+      setIsGenerating(true);
 
       // Validate required fields
       if (!selectedReportType) {
-        toast.error('Please select a report type');
+        toast.error(translations[language].reports.errors.selectReportType);
         return;
       }
 
       // Validate date range if selected
       if (startDate && !endDate) {
-        toast.error('Please select an end date');
+        toast.error(translations[language].reports.errors.selectEndDate);
         return;
       }
       if (!startDate && endDate) {
-        toast.error('Please select a start date');
+        toast.error(translations[language].reports.errors.selectStartDate);
         return;
       }
       if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
-        toast.error('Start date must be before end date');
+        toast.error(translations[language].reports.errors.invalidDateRange);
         return;
       }
 
@@ -111,7 +115,7 @@ export default function ReportsPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: `${reportTypes.find(r => r.id === selectedReportType)?.name} - ${format(new Date(), 'yyyy-MM-dd')}`,
+          name: `${translations[language].reports.types[selectedReportType as keyof typeof translations[typeof language]['reports']['types']]} - ${format(new Date(), 'yyyy-MM-dd')}`,
           type: selectedReportType,
           parameters,
           fileFormat: selectedFormat.toLowerCase(),
@@ -120,11 +124,11 @@ export default function ReportsPage() {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to generate report');
+        throw new Error(error.error || translations[language].reports.errors.generateFailed);
       }
 
       const report = await response.json();
-      toast.success('Report generated successfully');
+      toast.success(translations[language].reports.success.generated);
       
       // Refresh reports list
       fetchReports();
@@ -137,7 +141,7 @@ export default function ReportsPage() {
       setSelectedGrantType('');
     } catch (error) {
       console.error('Error generating report:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to generate report');
+      toast.error(error instanceof Error ? error.message : translations[language].reports.errors.generateFailed);
     } finally {
       setIsGenerating(false);
     }
@@ -145,13 +149,13 @@ export default function ReportsPage() {
 
   const handleDownload = async (report: Report) => {
     if (!report.downloadUrl) {
-      toast.error('Download URL not available');
+      toast.error(translations[language].reports.errors.downloadFailed);
       return;
     }
 
     try {
       const response = await fetch(report.downloadUrl);
-      if (!response.ok) throw new Error('Failed to download report');
+      if (!response.ok) throw new Error(translations[language].reports.errors.downloadFailed);
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
@@ -162,14 +166,15 @@ export default function ReportsPage() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+      toast.success(translations[language].reports.success.downloaded);
     } catch (error) {
       console.error('Error downloading report:', error);
-      toast.error('Failed to download report');
+      toast.error(translations[language].reports.errors.downloadFailed);
     }
   };
 
   const handleDeleteAllReports = async () => {
-    if (!confirm('Are you sure you want to delete all reports? This action cannot be undone.')) {
+    if (!confirm(translations[language].reports.confirmDeleteAllMessage)) {
       return;
     }
 
@@ -180,21 +185,21 @@ export default function ReportsPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete reports');
+        throw new Error(translations[language].reports.errors.deleteAllFailed);
       }
 
-      toast.success('All reports deleted successfully');
+      toast.success(translations[language].reports.success.deletedAll);
       setReports([]); // Clear reports from UI
     } catch (error) {
       console.error('Error deleting reports:', error);
-      toast.error('Failed to delete reports');
+      toast.error(translations[language].reports.errors.deleteAllFailed);
     } finally {
       setIsDeleting(false);
     }
   };
 
   const handleDeleteReport = async (report: Report) => {
-    if (!confirm(`Are you sure you want to delete the report "${report.name}"? This action cannot be undone.`)) {
+    if (!confirm(translations[language].reports.confirmDeleteMessage.replace('{name}', report.name))) {
       return;
     }
 
@@ -204,34 +209,40 @@ export default function ReportsPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete report');
+        throw new Error(translations[language].reports.errors.deleteFailed);
       }
 
-      toast.success('Report deleted successfully');
+      toast.success(translations[language].reports.success.deleted);
       // Remove the deleted report from the state
       setReports(reports.filter(r => r.id !== report.id));
     } catch (error) {
       console.error('Error deleting report:', error);
-      toast.error('Failed to delete report');
+      toast.error(translations[language].reports.errors.deleteFailed);
     }
   };
 
   return (
     <>
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-dark-100">Reports</h1>
-        <p className="mt-1 text-dark-300">Generate and download various system reports</p>
+        <h1 className="text-2xl font-semibold text-dark-100">
+          <TranslatedText text="reports.title" />
+        </h1>
+        <p className="mt-1 text-dark-300">
+          <TranslatedText text="reports.subtitle" />
+        </p>
       </div>
 
       {/* Report Generator Card */}
       <Card className="mb-6">
-        <h2 className="text-lg font-medium text-dark-100 mb-4">Generate Report</h2>
+        <h2 className="text-lg font-medium text-dark-100 mb-4">
+          <TranslatedText text="reports.generateReport" />
+        </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Report Type Selector */}
           <div>
             <label className="block text-sm font-medium text-dark-200 mb-2">
-              Report Type <span className="text-red-500">*</span>
+              <TranslatedText text="reports.reportType" /> <span className="text-red-500">*</span>
             </label>
             <div className="space-y-2">
               {reportTypes.map((type) => (
@@ -246,7 +257,7 @@ export default function ReportsPage() {
                     required
                   />
                   <label htmlFor={type.id} className="ml-3 block text-sm text-dark-100">
-                    {type.name}
+                    <TranslatedText text={type.name} />
                   </label>
                 </div>
               ))}
@@ -257,12 +268,12 @@ export default function ReportsPage() {
           <div>
             <div className="mb-4">
               <label className="block text-sm font-medium text-dark-200 mb-2">
-                Date Range
+                <TranslatedText text="reports.dateRange" />
               </label>
               <div className="flex space-x-4">
                 <div className="w-1/2">
                   <label htmlFor="start-date" className="block text-xs text-dark-300 mb-1">
-                    Start Date
+                    <TranslatedText text="reports.startDate" />
                   </label>
                   <input
                     type="date"
@@ -277,7 +288,7 @@ export default function ReportsPage() {
                 </div>
                 <div className="w-1/2">
                   <label htmlFor="end-date" className="block text-xs text-dark-300 mb-1">
-                    End Date
+                    <TranslatedText text="reports.endDate" />
                   </label>
                   <input
                     type="date"
@@ -296,7 +307,7 @@ export default function ReportsPage() {
             {/* Fiscal Year */}
             <div className="mb-4">
               <label htmlFor="fiscal-year" className="block text-sm font-medium text-dark-200 mb-2">
-                Fiscal Year
+                <TranslatedText text="reports.fiscalYear" />
               </label>
               <select
                 id="fiscal-year"
@@ -307,7 +318,7 @@ export default function ReportsPage() {
                   selectedReportType !== 'custom' ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               >
-                <option value="">All Fiscal Years</option>
+                <option value=""><TranslatedText text="files.filters.allFiscalYears" /></option>
                 {fiscalYears.map((year) => (
                   <option key={year.id} value={year.name}>
                     {year.name}
@@ -319,7 +330,7 @@ export default function ReportsPage() {
             {/* Source */}
             <div className="mb-4">
               <label htmlFor="source" className="block text-sm font-medium text-dark-200 mb-2">
-                Source
+                <TranslatedText text="reports.source" />
               </label>
               <select
                 id="source"
@@ -330,18 +341,18 @@ export default function ReportsPage() {
                   selectedReportType !== 'custom' ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               >
-                <option value="">All Sources</option>
-                <option value="Federal Government">Federal Government</option>
-                <option value="Provincial Government">Provincial Government</option>
-                <option value="Local Municipality">Local Municipality</option>
-                <option value="Other">Other</option>
+                <option value=""><TranslatedText text="files.filters.allSources" /></option>
+                <option value="Federal Government"><TranslatedText text="files.filters.bySource.federal" /></option>
+                <option value="Provincial Government"><TranslatedText text="files.filters.bySource.provincial" /></option>
+                <option value="Local Municipality"><TranslatedText text="files.filters.bySource.local" /></option>
+                <option value="Other"><TranslatedText text="files.filters.bySource.other" /></option>
               </select>
             </div>
 
             {/* Grant Type */}
             <div className="mb-4">
               <label htmlFor="grant-type" className="block text-sm font-medium text-dark-200 mb-2">
-                Grant Type
+                <TranslatedText text="reports.grantType" />
               </label>
               <select
                 id="grant-type"
@@ -352,19 +363,19 @@ export default function ReportsPage() {
                   selectedReportType !== 'custom' ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               >
-                <option value="">All Grant Types</option>
-                <option value="Current Expenditure">Current Expenditure</option>
-                <option value="Capital Expenditure">Capital Expenditure</option>
-                <option value="Supplementary Grant">Supplementary Grant</option>
-                <option value="Special Grant">Special Grant</option>
-                <option value="Other Grant">Other Grant</option>
+                <option value=""><TranslatedText text="files.filters.allGrantTypes" /></option>
+                <option value="Current Expenditure"><TranslatedText text="files.filters.byGrantType.currentExpenditure" /></option>
+                <option value="Capital Expenditure"><TranslatedText text="files.filters.byGrantType.capitalExpenditure" /></option>
+                <option value="Supplementary Grant"><TranslatedText text="files.filters.byGrantType.supplementaryGrant" /></option>
+                <option value="Special Grant"><TranslatedText text="files.filters.byGrantType.specialGrant" /></option>
+                <option value="Other Grant"><TranslatedText text="files.filters.byGrantType.otherGrants" /></option>
               </select>
             </div>
 
             {/* Format */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-dark-200 mb-2">
-                Format <span className="text-red-500">*</span>
+                <TranslatedText text="reports.fileFormat" /> <span className="text-red-500">*</span>
               </label>
               <div className="space-y-2">
                 <div className="flex items-center">
@@ -377,7 +388,7 @@ export default function ReportsPage() {
                     className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-dark-500 bg-dark-700"
                   />
                   <label htmlFor="format-pdf" className="ml-3 block text-sm text-dark-100">
-                    PDF
+                    <TranslatedText text="reports.formats.pdf" />
                   </label>
                 </div>
                 <div className="flex items-center">
@@ -390,7 +401,7 @@ export default function ReportsPage() {
                     className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-dark-500 bg-dark-700"
                   />
                   <label htmlFor="format-excel" className="ml-3 block text-sm text-dark-100">
-                    Excel
+                    <TranslatedText text="reports.formats.excel" />
                   </label>
                 </div>
               </div>
@@ -409,7 +420,11 @@ export default function ReportsPage() {
               </svg>
             }
           >
-            Generate Report
+            {isGenerating ? (
+              <TranslatedText text="reports.generating" />
+            ) : (
+              <TranslatedText text="reports.generate" />
+            )}
           </Button>
         </div>
       </Card>
@@ -417,7 +432,9 @@ export default function ReportsPage() {
       {/* Recent Reports Card */}
       <Card className="mb-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-medium text-dark-100">Recent Reports</h2>
+          <h2 className="text-lg font-medium text-dark-100">
+            <TranslatedText text="reports.title" />
+          </h2>
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -425,7 +442,7 @@ export default function ReportsPage() {
               onClick={fetchReports}
               isLoading={loading}
             >
-              Refresh
+              <TranslatedText text="common.refresh" />
             </Button>
             {reports.length > 0 && (
               <Button
@@ -439,7 +456,7 @@ export default function ReportsPage() {
                   </svg>
                 }
               >
-                Delete All
+                <TranslatedText text="reports.deleteAll" />
               </Button>
             )}
           </div>
@@ -450,22 +467,22 @@ export default function ReportsPage() {
             <thead>
               <tr>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
-                  Name
+                  <TranslatedText text="files.table.name" />
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
-                  Type
+                  <TranslatedText text="files.table.type" />
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
-                  Generated By
+                  <TranslatedText text="files.table.uploadedBy" />
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
-                  Generated On
+                  <TranslatedText text="files.table.uploadedAt" />
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
-                  Format
+                  <TranslatedText text="reports.fileFormat" />
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
-                  Actions
+                  <TranslatedText text="files.table.actions" />
                 </th>
               </tr>
             </thead>
@@ -496,7 +513,7 @@ export default function ReportsPage() {
               ) : reports.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-4 text-center text-dark-300">
-                    No reports generated yet
+                    <TranslatedText text="files.emptyState.noFiles" />
                   </td>
                 </tr>
               ) : (
@@ -506,7 +523,7 @@ export default function ReportsPage() {
                       {report.name}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
-                      {report.type}
+                      <TranslatedText text={`reports.types.${report.type === 'file_count' ? 'fileCount' : report.type}`} />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
                       {report.user.name}
@@ -520,7 +537,7 @@ export default function ReportsPage() {
                           ? 'bg-red-100/10 text-red-400' 
                           : 'bg-green-100/10 text-green-400'
                       }`}>
-                        {report.fileFormat.toUpperCase()}
+                        <TranslatedText text={`reports.formats.${report.fileFormat}`} />
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
@@ -531,14 +548,14 @@ export default function ReportsPage() {
                           onClick={() => handleDownload(report)}
                           disabled={!report.downloadUrl}
                         >
-                          Download
+                          <TranslatedText text="reports.download" />
                         </Button>
                         <Button
                           size="sm"
                           variant="danger"
                           onClick={() => handleDeleteReport(report)}
                         >
-                          Delete
+                          <TranslatedText text="reports.delete" />
                         </Button>
                       </div>
                     </td>

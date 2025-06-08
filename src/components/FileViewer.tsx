@@ -1,10 +1,17 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
+import { TranslatedText } from '@/components/TranslatedText';
 
 interface File {
   id: string;
   name: string;
   type?: string;
+  size: number;
+  uploadedAt: string;
+  fiscalYear?: { name: string };
+  source?: { name: string };
+  grantType?: { name: string };
+  url: string;
 }
 
 interface FileViewerProps {
@@ -12,8 +19,18 @@ interface FileViewerProps {
   onClose: () => void;
 }
 
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
 const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
   const [imgZoom, setImgZoom] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const renderFileContent = () => {
     const fileType = file.type?.toLowerCase() || '';
@@ -22,7 +39,7 @@ const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
     if (fileType.includes('pdf')) {
       return (
         <iframe
-          src={`/api/files/${file.id}/view`}
+          src={file.url}
           className="w-full h-full"
           title={file.name}
         />
@@ -30,7 +47,7 @@ const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
     } else if (fileType.includes('image')) {
       return (
         <Image
-          src={`/api/files/${file.id}/view`}
+          src={file.url}
           alt={file.name}
           width={100}
           height={100}
@@ -41,7 +58,7 @@ const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
     } else if (fileType.includes('video')) {
       return (
         <video
-          src={`/api/files/${file.id}/view`}
+          src={file.url}
           controls
           className="max-w-full"
         />
@@ -49,7 +66,7 @@ const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
     } else if (fileType.includes('audio')) {
       return (
         <audio
-          src={`/api/files/${file.id}/view`}
+          src={file.url}
           controls
           className="w-full"
         />
@@ -62,7 +79,7 @@ const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
           </svg>
           <p className="text-center">Preview not available for this file type</p>
           <a
-            href={`/api/files/${file.id}/download`}
+            href={file.url}
             className="mt-4 px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors"
             download
           >
@@ -102,7 +119,7 @@ const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v14m7-7H5" /></svg>
       </button>
       <a
-        href={`/api/files/${file.id}/download`}
+        href={file.url}
         download
         className="ml-2 text-dark-100 hover:text-primary-400 p-2 rounded-full transition-colors"
         title="Download"
@@ -114,68 +131,102 @@ const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
     </div>
   );
 
-  // If it's a PDF, render it as the modal itself
-  if (file.type?.toLowerCase().includes('pdf')) {
-    return (
-      <div className="fixed inset-0 z-50 bg-gray-900/80 flex items-start justify-center">
-        <div className="relative w-4/5 mt-12 h-[calc(100vh-6rem)] flex flex-col overflow-hidden">
-          <div className="absolute top-0 right-0 p-4 z-10">
-            <button
-              onClick={onClose}
-              className="text-dark-300 hover:text-dark-100 bg-dark-800/80 rounded-full p-2"
-            >
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          <iframe
-            src={`/api/files/${file.id}/view`}
-            className="w-full h-full rounded-lg overflow-hidden"
-            title={file.name}
-            scrolling="no"
-            style={{ overflow: 'hidden' }}
-          />
+  const renderPreview = () => {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center h-full">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
         </div>
-      </div>
-    );
-  }
+      );
+    } else if (error) {
+      return (
+        <div className="text-red-400 text-center">
+          <TranslatedText text="Error loading file" />
+        </div>
+      );
+    } else {
+      return (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <h3 className="text-sm font-medium text-dark-300 mb-2">
+                <TranslatedText text="File Information" />
+              </h3>
+              <div className="space-y-2 text-sm text-dark-100">
+                <p>
+                  <TranslatedText text="Size" />: {formatFileSize(file.size)}
+                </p>
+                <p>
+                  <TranslatedText text="Type" />: {file.type}
+                </p>
+                <p>
+                  <TranslatedText text="Uploaded" />: {new Date(file.uploadedAt).toLocaleString()}
+                </p>
+              </div>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-dark-300 mb-2">
+                <TranslatedText text="Metadata" />
+              </h3>
+              <div className="space-y-2 text-sm text-dark-100">
+                <p>
+                  <TranslatedText text="Fiscal Year" />: {file.fiscalYear?.name || '-'}
+                </p>
+                <p>
+                  <TranslatedText text="Source" />: {file.source?.name || '-'}
+                </p>
+                <p>
+                  <TranslatedText text="Grant Type" />: {file.grantType?.name || '-'}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h3 className="text-sm font-medium text-dark-300 mb-2">
+              <TranslatedText text="Preview" />
+            </h3>
+            <div className="bg-dark-900 rounded-lg p-4">
+              {renderFileContent()}
+            </div>
+          </div>
+        </div>
+      );
+    }
+  };
 
-  // For other file types, use the regular modal
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-gray-900/80 p-0">
-      <div
-        className={`bg-dark-800 rounded-lg shadow-xl overflow-hidden max-w-full w-auto mt-6 flex flex-col max-h-[150vh]`}
-        style={file.type?.toLowerCase().includes('image')
-          ? { transform: `scale(${imgZoom})`, transition: 'transform 0.2s' }
-          : {}}
-        onWheel={e => {
-          const fileType = file.type?.toLowerCase() || '';
-          if (fileType.includes('image')) {
-            e.preventDefault();
-            let nextZoom = imgZoom + (e.deltaY < 0 ? 0.1 : -0.1);
-            nextZoom = Math.max(0.1, Math.min(5, nextZoom));
-            setImgZoom(Number(nextZoom.toFixed(2)));
-          }
-        }}
-      >
-        <div className="flex items-center justify-between p-4 border-b border-dark-700 flex-shrink-0">
-          <h2 className="text-lg font-medium text-dark-100 truncate">{file.name}</h2>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-dark-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between p-4 border-b border-dark-700">
+          <h2 className="text-xl font-semibold text-dark-100">
+            <TranslatedText text={file.name} />
+          </h2>
           <button
             onClick={onClose}
-            className="text-dark-300 hover:text-dark-100 flex-shrink-0 ml-4"
+            className="text-dark-300 hover:text-dark-100 focus:outline-none"
           >
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
-
-        <div className={`flex-1 overflow-auto p-4 ${contentBackgroundClass} ${contentTextColorClass} scrollbar-thin scrollbar-thumb-dark-600 scrollbar-track-dark-800`}>
-          <div className="flex items-start justify-center">
-            {renderFileContent()}
-          </div>
-          {file.type?.toLowerCase().includes('image') && renderImageControls()}
+        <div className="flex-1 overflow-auto p-4">
+          {renderPreview()}
+        </div>
+        <div className="p-4 border-t border-dark-700 flex justify-end space-x-4">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm font-medium text-dark-100 hover:text-dark-50 focus:outline-none"
+          >
+            <TranslatedText text="Close" />
+          </button>
+          <a
+            href={file.url}
+            download={file.name}
+            className="px-4 py-2 text-sm font-medium text-white bg-primary-500 rounded-md hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+          >
+            <TranslatedText text="Download" />
+          </a>
         </div>
       </div>
     </div>
