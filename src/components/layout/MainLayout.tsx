@@ -185,10 +185,10 @@ export default function MainLayout({ children }: MainLayoutProps) {
                   className="p-1 rounded-full text-dark-400 hover:text-dark-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-dark-800 focus:ring-primary-500"
                 >
                   <span className="sr-only">View notifications</span>
-                  <Bell className="h-6 w-6" />
-                  {notifications.some(n => !n.read) && (
+                    <Bell className="h-6 w-6" />
+                    {notifications.some(n => !n.read) && (
                     <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-dark-800" />
-                  )}
+                    )}
                 </button>
 
                 {notificationsOpen && (

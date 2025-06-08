@@ -484,7 +484,10 @@ export default function FilesPage() {
       {/* Only show file creation cards when no filters are active */}
       {!selectedFiscalYear && !selectedSource && !selectedGrantType && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Card className="bg-dark-700 border border-dark-600 hover:bg-dark-600 transition-colors cursor-pointer">
+          <Card 
+            className="bg-dark-700 border border-dark-600 hover:bg-dark-600 transition-colors cursor-pointer"
+            onClick={() => window.location.href = '/upload'}
+          >
             <div className="flex flex-col items-center justify-center py-4">
               <div className="w-12 h-12 bg-primary-500/10 text-primary-500 rounded-lg flex items-center justify-center mb-3">
                 <svg className="h-6 w-6" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -495,7 +498,10 @@ export default function FilesPage() {
             </div>
           </Card>
           
-          <Card className="bg-dark-700 border border-dark-600 hover:bg-dark-600 transition-colors cursor-pointer">
+          <Card 
+            className="bg-dark-700 border border-dark-600 hover:bg-dark-600 transition-colors cursor-pointer"
+            onClick={() => window.location.href = '/upload'}
+          >
             <div className="flex flex-col items-center justify-center py-4">
               <div className="w-12 h-12 bg-primary-500/10 text-primary-500 rounded-lg flex items-center justify-center mb-3">
                 <svg className="h-6 w-6" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -506,7 +512,10 @@ export default function FilesPage() {
             </div>
           </Card>
           
-          <Card className="bg-dark-700 border border-dark-600 hover:bg-dark-600 transition-colors cursor-pointer">
+          <Card 
+            className="bg-dark-700 border border-dark-600 hover:bg-dark-600 transition-colors cursor-pointer"
+            onClick={() => window.location.href = '/upload'}
+          >
             <div className="flex flex-col items-center justify-center py-4">
               <div className="w-12 h-12 bg-primary-500/10 text-primary-500 rounded-lg flex items-center justify-center mb-3">
                 <svg className="h-6 w-6" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">

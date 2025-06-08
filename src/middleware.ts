@@ -5,6 +5,11 @@ import { getToken } from 'next-auth/jwt';
 
 // Combined middleware function
 async function mainMiddleware(request: NextRequest) {
+  // Allow access to uploads
+  if (request.nextUrl.pathname.startsWith('/uploads/')) {
+    return NextResponse.next();
+  }
+
   // Check if we're in maintenance mode
   try {
     const response = await fetch(`${request.nextUrl.origin}/api/settings`);

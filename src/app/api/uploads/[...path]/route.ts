@@ -12,35 +12,43 @@ export async function GET(
   { params }: { params: { path: string[] } }
 ) {
   try {
-    // Check authentication
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      return new NextResponse('Unauthorized', { status: 401 });
-    }
-
     // Join path segments without normalization
     const path = params.path.join('/');
     const filePath = join(process.cwd(), 'uploads', path);
     
-    console.log('File request:', {
+    console.log('Uploads API - File request:', {
       requestedPath: path,
       fullPath: filePath,
       exists: existsSync(filePath)
     });
 
+    // Check if the file exists
     if (!existsSync(filePath)) {
-      console.error('File not found:', filePath);
+      console.error('Uploads API - File not found:', filePath);
       return new NextResponse('File not found', { status: 404 });
+    }
+
+    // For system files (like logo) or logo files, allow public access
+    const isSystemFile = path.startsWith('system/') || path.startsWith('site-logo-');
+    
+    // For non-system files, require authentication
+    if (!isSystemFile) {
+      const session = await getServerSession(authOptions);
+      if (!session?.user) {
+        console.log('Uploads API - Unauthorized access attempt for non-system file');
+        return new NextResponse('Unauthorized', { status: 401 });
+      }
     }
 
     const fileBuffer = await readFile(filePath);
     const contentType = getContentType(filePath);
 
-      console.log('[Uploads API] Serving file:', {
-        path: filePath,
-        type: contentType,
-      size: fileBuffer.length
-      });
+    console.log('Uploads API - Serving file:', {
+      path: filePath,
+      type: contentType,
+      size: fileBuffer.length,
+      isSystemFile
+    });
 
     // Set appropriate headers for image serving
     const headers = new Headers();
@@ -50,7 +58,7 @@ export async function GET(
 
     return new NextResponse(fileBuffer, { headers });
   } catch (error) {
-    console.error('Error serving file:', error);
+    console.error('Uploads API - Error serving file:', error);
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 }

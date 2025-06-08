@@ -10,7 +10,13 @@ export const siteConfig = {
 export const getLogoPath = async () => {
   try {
     const settings = await prisma.systemSettings.findFirst();
-    return settings?.logoUrl || siteConfig.defaultLogo;
+    console.log('Settings from database:', settings);
+    
+    // Use only siteLogo field
+    const logoPath = settings?.siteLogo;
+    console.log('Logo path from settings:', logoPath);
+    
+    return logoPath || siteConfig.defaultLogo;
   } catch (error) {
     console.error('Error fetching logo path:', error);
     return siteConfig.defaultLogo;

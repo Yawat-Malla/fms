@@ -2,17 +2,22 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
-import { writeFile } from 'fs/promises';
+import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 
 // GET /api/admin/settings - Get admin settings
 export async function GET() {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.role || session.user.role !== 'admin') {
+      return new NextResponse('Unauthorized', { status: 401 });
+    }
+
     const settings = await prisma.systemSettings.findFirst();
     return NextResponse.json(settings || {});
   } catch (error) {
     console.error('Error fetching settings:', error);
-    return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 });
+    return new NextResponse('Internal Server Error', { status: 500 });
   }
 }
 
@@ -20,31 +25,47 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user || session.user.role !== 'admin') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session?.user?.role || session.user.role !== 'admin') {
+      return new NextResponse('Unauthorized', { status: 401 });
     }
 
     const formData = await request.formData();
-    const siteName = formData.get('siteName') as string;
-    let siteNameNepali = formData.get('siteNameNepali') as string | null;
-    siteNameNepali = siteNameNepali ?? '';
+    const siteName = (formData.get('siteName') as string)?.trim() || 'File Management System';
+    const siteNameNepali = (formData.get('siteNameNepali') as string)?.trim() || 'फाइल व्यवस्थापन प्रणाली';
     const maintenanceMode = formData.get('maintenanceMode') === 'true';
-    const enabledModules = JSON.parse(formData.get('enabledModules') as string);
-    const siteLogo = formData.get('siteLogo') as File | null;
+    const logoFile = formData.get('siteLogo') as File | null;
 
-    let siteLogoPath = undefined;
-
-    // Handle logo upload if provided
-    if (siteLogo) {
-      const uploadsDir = path.join(process.cwd(), 'uploads', 'system');
-      const filename = `site-logo-${Date.now()}.${siteLogo.name.split('.').pop()}`;
-      const filepath = path.join(uploadsDir, filename);
-      
-      const bytes = await siteLogo.arrayBuffer();
+    let logoPath = '';
+    if (logoFile) {
+      const bytes = await logoFile.arrayBuffer();
       const buffer = Buffer.from(bytes);
+
+      // Create uploads directory if it doesn't exist
+      const uploadsDir = path.join(process.cwd(), 'uploads');
+      try {
+        await mkdir(uploadsDir, { recursive: true });
+      } catch (error) {
+        console.error('Error creating uploads directory:', error);
+      }
+
+      // Get the file extension from the original filename
+      const originalName = logoFile.name;
+      const extension = path.extname(originalName);
       
-      await writeFile(filepath, buffer);
-      siteLogoPath = `/uploads/system/${filename}`;
+      // Generate a unique filename with the original extension
+      const timestamp = Date.now();
+      const filename = `site-logo-${timestamp}${extension}`;
+      const filePath = path.join(uploadsDir, filename);
+      
+      console.log('Saving logo file:', {
+        originalName,
+        extension,
+        filename,
+        filePath
+      });
+
+      await writeFile(filePath, buffer);
+      logoPath = `/uploads/${filename}`;
     }
 
     // First, try to find existing settings
@@ -58,10 +79,8 @@ export async function POST(request: Request) {
         data: {
           siteName,
           siteNameNepali,
-          siteLogo: siteLogoPath || undefined,
           maintenanceMode,
-          enabledModules,
-          updatedAt: new Date(),
+          ...(logoPath && { siteLogo: logoPath }),
         },
       });
     } else {
@@ -70,20 +89,18 @@ export async function POST(request: Request) {
         data: {
           siteName,
           siteNameNepali,
-          siteLogo: siteLogoPath,
           maintenanceMode,
-          enabledModules,
+          siteLogo: logoPath,
+          enabledModules: ['files', 'users', 'reports'],
         },
       });
     }
 
+    console.log('Updated settings:', settings);
     return NextResponse.json(settings);
   } catch (error) {
-    console.error('Error updating admin settings:', error);
-    return NextResponse.json(
-      { error: 'Failed to update admin settings' },
-      { status: 500 }
-    );
+    console.error('Error updating settings:', error);
+    return new NextResponse('Internal Server Error', { status: 500 });
   }
 }
 
@@ -95,7 +112,7 @@ export async function PUT(request: Request) {
     }
 
     const data = await request.json();
-    const { siteName, siteNameNepali, maintenanceMode, logoUrl } = data;
+    const { siteName, siteNameNepali, maintenanceMode, siteLogo } = data;
 
     // First, try to find existing settings
     const existingSettings = await prisma.systemSettings.findFirst();
@@ -109,7 +126,7 @@ export async function PUT(request: Request) {
           siteName,
           siteNameNepali,
           maintenanceMode,
-          logoUrl,
+          siteLogo,
         },
       });
     } else {
@@ -119,7 +136,7 @@ export async function PUT(request: Request) {
           siteName,
           siteNameNepali,
           maintenanceMode,
-          logoUrl,
+          siteLogo,
           enabledModules: ['files', 'users', 'reports'],
         },
       });

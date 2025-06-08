@@ -7,6 +7,7 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { Switch } from '@/components/ui/Switch';
+import Image from 'next/image';
 
 export default function AdminSettingsPage() {
   const router = useRouter();
@@ -14,9 +15,10 @@ export default function AdminSettingsPage() {
     siteName: '',
     siteNameNepali: '',
     maintenanceMode: false,
-    logoUrl: '',
+    siteLogo: '',
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
 
   useEffect(() => {
     fetchSettings();
@@ -33,7 +35,7 @@ export default function AdminSettingsPage() {
         siteName: data.siteName || '',
         siteNameNepali: data.siteNameNepali || '',
         maintenanceMode: data.maintenanceMode || false,
-        logoUrl: data.logoUrl || '',
+        siteLogo: data.siteLogo || '',
       });
     } catch (error) {
       console.error('Error fetching settings:', error);
@@ -46,12 +48,17 @@ export default function AdminSettingsPage() {
     setIsLoading(true);
 
     try {
+      const formData = new FormData();
+      formData.append('siteName', settings.siteName);
+      formData.append('siteNameNepali', settings.siteNameNepali);
+      formData.append('maintenanceMode', settings.maintenanceMode.toString());
+      if (logoFile) {
+        formData.append('siteLogo', logoFile);
+      }
+
       const response = await fetch('/api/admin/settings', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(settings),
+        method: 'POST',
+        body: formData,
       });
 
       if (!response.ok) {
@@ -63,7 +70,7 @@ export default function AdminSettingsPage() {
         siteName: updatedSettings.siteName,
         siteNameNepali: updatedSettings.siteNameNepali,
         maintenanceMode: updatedSettings.maintenanceMode,
-        logoUrl: updatedSettings.logoUrl,
+        siteLogo: updatedSettings.siteLogo,
       });
 
       toast.success('Settings updated successfully');
@@ -73,6 +80,26 @@ export default function AdminSettingsPage() {
       toast.error('Failed to update settings');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select an image file');
+        return;
+      }
+      setLogoFile(file);
+      // Create a preview URL for the selected image
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setSettings(prev => ({
+          ...prev,
+          siteLogo: event.target?.result as string
+        }));
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -102,6 +129,35 @@ export default function AdminSettingsPage() {
               onChange={(e) => setSettings({ ...settings, siteNameNepali: e.target.value })}
               placeholder="Enter site name in Nepali"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Site Logo
+            </label>
+            <div className="flex items-center space-x-4">
+              {settings.siteLogo && (
+                <div className="relative w-16 h-16">
+                  <Image
+                    src={settings.siteLogo}
+                    alt="Site Logo"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleLogoChange}
+                className="block w-full text-sm text-gray-500
+                  file:mr-4 file:py-2 file:px-4
+                  file:rounded-md file:border-0
+                  file:text-sm file:font-medium
+                  file:bg-primary-500 file:text-white
+                  hover:file:bg-primary-600"
+              />
+            </div>
           </div>
 
           <div className="flex items-center justify-between">

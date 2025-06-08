@@ -1,6 +1,6 @@
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
 import './globals.css';
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import { Toaster } from 'react-hot-toast';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -9,7 +9,6 @@ import { AppProvider } from '@/contexts/AppContext';
 import { TextSettingsProvider } from '@/contexts/TextSettingsContext';
 import { SettingsProvider } from '@/contexts/SettingsContext';
 import DynamicTitle from '@/components/DynamicTitle';
-import DynamicFavicon from '@/components/DynamicFavicon';
 import prisma from '@/lib/prisma';
 
 // Use Inter as the primary font (closer to iOS San Francisco font)
@@ -23,25 +22,15 @@ const inter = Inter({
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await prisma.systemSettings.findFirst();
-  const siteName = settings?.siteName || 'File Management System';
-  const siteLogo = settings?.siteLogo || '/favicon.ico';
+  const title = settings?.siteName || 'File Management System';
+  
+  console.log('[RootLayout] Generated metadata with title:', title);
   
   return {
-    title: siteName,
-    description: "A modern file management system for government offices",
+    title,
+    description: 'A modern file management system built with Next.js',
     icons: {
-      icon: [
-        { url: siteLogo, sizes: 'any' },
-        { url: '/favicon.ico', sizes: 'any' }
-      ],
-      shortcut: siteLogo,
-      apple: siteLogo,
-    },
-    manifest: '/site.webmanifest',
-    themeColor: '#1a1a1a',
-    viewport: 'width=device-width, initial-scale=1',
-    other: {
-      'msapplication-TileImage': siteLogo,
+      icon: '/nepal-emblem.png',
     },
   };
 }
@@ -53,21 +42,19 @@ export default async function RootLayout({
 }) {
   const session = await getServerSession(authOptions);
   const settings = await prisma.systemSettings.findFirst();
+  const title = settings?.siteName || 'File Management System';
 
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
       <head>
-        <link rel="icon" href={settings?.siteLogo || '/favicon.ico'} />
-        <link rel="shortcut icon" href={settings?.siteLogo || '/favicon.ico'} />
-        <link rel="apple-touch-icon" href={settings?.siteLogo || '/apple-touch-icon.png'} />
+        <title>{title}</title>
       </head>
-      <body>
+      <body className={inter.className}>
         <SettingsProvider>
           <Providers session={session}>
             <TextSettingsProvider>
               <AppProvider>
                 <DynamicTitle />
-                <DynamicFavicon />
                 {children}
                 <Toaster position="top-right" />
               </AppProvider>

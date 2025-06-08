@@ -46,9 +46,21 @@ const nextConfig = {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, immutable',
           },
+          {
+            key: 'Content-Type',
+            value: 'image/jpeg',
+          },
         ],
       },
     ];
+  },
+  // Ensure static files are properly served
+  poweredByHeader: false,
+  compress: true,
+  generateEtags: true,
+  // Add public directory configuration
+  publicRuntimeConfig: {
+    uploadsPath: '/uploads',
   },
 };
 
