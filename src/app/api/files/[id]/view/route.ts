@@ -11,14 +11,18 @@ export async function GET(
 ) {
   try {
     const session = await getServerSession(authOptions);
+    console.log('[FILE_VIEW] Session:', session);
 
     if (!session?.user) {
+      console.log('[FILE_VIEW] No user session found');
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
     const fileId = parseInt(params.id, 10);
+    console.log('[FILE_VIEW] fileId:', fileId);
 
     if (isNaN(fileId)) {
+      console.log('[FILE_VIEW] Invalid file ID');
       return new NextResponse('Invalid file ID', { status: 400 });
     }
 
@@ -27,22 +31,24 @@ export async function GET(
         id: fileId,
       },
     });
+    console.log('[FILE_VIEW] file from DB:', file);
 
     if (!file) {
+      console.log('[FILE_VIEW] File not found in DB');
       return new NextResponse('File not found', { status: 404 });
     }
 
     // Resolve the file path relative to the project root
     const filePath = path.resolve(process.cwd(), file.path);
-
-    // Log the file path to the console for debugging
-    console.log('[FILE_VIEW]', 'Attempting to read file from:', filePath);
+    console.log('[FILE_VIEW] Resolved file path:', filePath);
 
     if (!fs.existsSync(filePath)) {
+      console.log('[FILE_VIEW] File does not exist on disk');
       return new NextResponse('File not found', { status: 404 });
     }
 
     const fileBuffer = fs.readFileSync(filePath);
+    console.log('[FILE_VIEW] fileBuffer length:', fileBuffer.length);
     const headers = new Headers();
     if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
       headers.set('Content-Type', 'application/pdf');

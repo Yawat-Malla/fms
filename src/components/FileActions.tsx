@@ -120,7 +120,7 @@ const FileActions: React.FC<FileActionsProps> = ({
 
       {showViewer && (
         <FileViewer
-          file={item}
+          file={{ ...item, url: `/api/files/${item.id}/view` }}
           onClose={() => setShowViewer(false)}
         />
       )}

@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiUpload, FiX, FiFile, FiAlertCircle } from 'react-icons/fi';
+import { useTranslation } from 'react-i18next';
 
 interface FileUploaderProps {
   onFilesSelected: (files: File[]) => void;
@@ -23,6 +24,7 @@ const FileUploader = ({
   const [error, setError] = useState<string | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { t } = useTranslation();
 
   const validateFiles = useCallback((files: File[]) => {
     if (files.length > maxFiles) {
@@ -167,17 +169,17 @@ const FileUploader = ({
             className="text-center"
           >
             <p className="text-lg font-medium text-dark-100">
-              Drag and drop your files here
+              {t('files.upload.document.description')}
             </p>
             <p className="mt-1 text-sm text-dark-300">
-              or click to browse files
+              {t('files.upload.document.orClick')}
             </p>
             <p className="mt-2 text-xs text-dark-400">
-              Supported formats: PDF, Word, Excel, JPEG, PNG
+              {t('files.upload.document.supportedFormats')}
               <br />
-              Max file size: {maxSizeMB}MB
+              {t('files.upload.document.maxSize')}
               <br />
-              Max files: {maxFiles}
+              {t('files.upload.document.maxFiles', { count: maxFiles })}
             </p>
           </motion.div>
         </div>

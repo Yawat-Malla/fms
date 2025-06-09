@@ -10,6 +10,8 @@ import { toast } from 'react-hot-toast';
 import { useSession } from 'next-auth/react';
 import Avatar from '@/components/ui/Avatar';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
+import { TranslatedText } from '@/components/TranslatedText';
+import { translations } from '@/translations';
 
 interface ProfileSettings {
   fullName: string;
@@ -35,7 +37,7 @@ interface AdminSettings {
 export default function SettingsPage() {
   const router = useRouter();
   const { data: session, update: updateSession } = useSession();
-  const { theme, language, toggleTheme, setLanguage, t } = useApp();
+  const { theme, language, toggleTheme, setLanguage } = useApp();
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
 
@@ -489,8 +491,12 @@ export default function SettingsPage() {
   return (
     <div className="max-w-6xl">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-dark-100">Settings</h1>
-        <p className="mt-1 text-sm text-dark-300">Manage your account settings and preferences</p>
+        <h1 className="text-2xl font-bold text-dark-100">
+          <TranslatedText text="settings.title" />
+        </h1>
+        <p className="mt-1 text-sm text-dark-300">
+          <TranslatedText text="settings.subtitle" />
+        </p>
       </div>
 
       {/* Settings Navigation */}
@@ -507,7 +513,7 @@ export default function SettingsPage() {
               onClick={() => setActiveTab(tab)}
               className={getTabButtonClasses(activeTab === tab)}
             >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              <TranslatedText text={`settings.${tab}.title`} />
             </button>
           ))}
         </nav>
@@ -519,8 +525,12 @@ export default function SettingsPage() {
         {activeTab === 'profile' && (
           <Card>
             <div className="space-y-4">
-              <h2 className="text-2xl font-semibold text-dark-100 mb-2">Profile Settings</h2>
-              <p className="text-dark-300 mb-4">Update your personal information and profile picture</p>
+              <h2 className="text-2xl font-semibold text-dark-100 mb-2">
+                <TranslatedText text="settings.profile.title" />
+              </h2>
+              <p className="text-dark-300 mb-4">
+                <TranslatedText text="settings.profile.pictureDescription" />
+              </p>
               {/* Profile Picture */}
               <div className="flex items-center space-x-6">
                 <div className="relative h-24 w-24">
@@ -543,14 +553,14 @@ export default function SettingsPage() {
                     htmlFor="profile-picture"
                     className="cursor-pointer inline-flex items-center px-4 py-2 border border-dark-600 rounded-md shadow-sm text-sm font-medium text-dark-100 hover:bg-dark-700"
                   >
-                    Change Photo
+                    <TranslatedText text="settings.profile.picture" />
                   </label>
                 </div>
               </div>
               {/* Full Name */}
               <div>
                 <label htmlFor="full-name" className="block text-sm font-medium text-dark-200">
-                  Full Name
+                  <TranslatedText text="settings.profile.fullName" />
                 </label>
                 <input
                   type="text"
@@ -563,7 +573,7 @@ export default function SettingsPage() {
               {/* Username */}
           <div>
                 <label htmlFor="username" className="block text-sm font-medium text-dark-200">
-                  Username
+                  <TranslatedText text="settings.profile.username" />
             </label>
               <input
                 type="text"
@@ -576,7 +586,7 @@ export default function SettingsPage() {
               {/* Email */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-dark-200">
-                  Email
+                  <TranslatedText text="settings.profile.email" />
                 </label>
                 <input
                   type="email"
@@ -588,14 +598,16 @@ export default function SettingsPage() {
               </div>
               {/* Save Button */}
               <div className="mt-6 flex flex-col space-y-2">
-                <p className="text-sm text-dark-300 italic">Note: Some changes may require you to log in again to take effect.</p>
+                <p className="text-sm text-dark-300 italic">
+                  <TranslatedText text="settings.profile.saveNote" />
+                </p>
                 <div className="flex justify-end">
                   <Button
                     variant="primary"
                     onClick={handleSaveSettings}
                     isLoading={isSaving}
                   >
-                    Save Changes
+                    <TranslatedText text="settings.buttons.save" />
                   </Button>
                 </div>
               </div>
@@ -607,16 +619,22 @@ export default function SettingsPage() {
         {activeTab === 'preferences' && (
           <Card>
             <div className="space-y-6">
-              <h2 className="text-2xl font-semibold text-dark-100 mb-2">Preferences & Notifications</h2>
-              <p className="text-dark-300 mb-4">Customize your application preferences and notification settings</p>
+              <h2 className="text-2xl font-semibold text-dark-100 mb-2">
+                <TranslatedText text="settings.preferences.title" />
+              </h2>
+              <p className="text-dark-300 mb-4">
+                <TranslatedText text="settings.preferences.description" />
+              </p>
 
               {/* General Preferences */}
               <div className="space-y-4">
-                <h3 className="text-lg font-medium text-dark-100">General Preferences</h3>
+                <h3 className="text-lg font-medium text-dark-100">
+                  <TranslatedText text="settings.preferences.general" />
+                </h3>
                 {/* Language Selection */}
                 <div>
                   <label htmlFor="language" className="block text-sm font-medium text-dark-200">
-                    Language
+                    <TranslatedText text="settings.language.label" />
                   </label>
                   <select
                     id="language"
@@ -624,20 +642,30 @@ export default function SettingsPage() {
                     onChange={(e) => setLanguage(e.target.value as 'en' | 'ne')}
                     className="mt-1 block w-full rounded-md border-dark-600 bg-dark-700 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
                   >
-                    <option value="en">English</option>
-                    <option value="ne">नेपाली</option>
+                    <option value="en">
+                      <TranslatedText text="settings.language.options.en" />
+                    </option>
+                    <option value="ne">
+                      <TranslatedText text="settings.language.options.ne" />
+                    </option>
                   </select>
                 </div>
               </div>
 
               {/* Notification Preferences */}
               <div className="border-t border-dark-600 pt-6">
-                <h3 className="text-lg font-medium text-dark-100 mb-4">Notification Preferences</h3>
+                <h3 className="text-lg font-medium text-dark-100 mb-4">
+                  <TranslatedText text="settings.preferences.notifications" />
+                </h3>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <label className="text-dark-100">File Updates</label>
-                      <p className="text-sm text-dark-300">Get notified when files are updated</p>
+                      <label className="text-dark-100">
+                        <TranslatedText text="settings.preferences.fileUpdates" />
+                      </label>
+                      <p className="text-sm text-dark-300">
+                        <TranslatedText text="settings.preferences.fileUpdatesDescription" />
+                      </p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
@@ -655,8 +683,12 @@ export default function SettingsPage() {
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <label className="text-dark-100">Security Alerts</label>
-                      <p className="text-sm text-dark-300">Get notified about security-related events</p>
+                      <label className="text-dark-100">
+                        <TranslatedText text="settings.preferences.securityAlerts" />
+                      </label>
+                      <p className="text-sm text-dark-300">
+                        <TranslatedText text="settings.preferences.securityAlertsDescription" />
+                      </p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
@@ -674,8 +706,12 @@ export default function SettingsPage() {
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <label className="text-dark-100">System Updates</label>
-                      <p className="text-sm text-dark-300">Get notified about system updates and maintenance</p>
+                      <label className="text-dark-100">
+                        <TranslatedText text="settings.preferences.systemUpdates" />
+                      </label>
+                      <p className="text-sm text-dark-300">
+                        <TranslatedText text="settings.preferences.systemUpdatesDescription" />
+                      </p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
@@ -700,16 +736,22 @@ export default function SettingsPage() {
         {activeTab === 'admin' && session?.user?.role === 'admin' ? (
           <Card>
             <div className="space-y-4">
-              <h2 className="text-2xl font-semibold text-dark-100 mb-2">Admin Settings</h2>
-              <p className="text-dark-300 mb-4">Manage system-wide settings and configurations</p>
+              <h2 className="text-2xl font-semibold text-dark-100 mb-2">
+                <TranslatedText text="settings.admin.title" />
+              </h2>
+              <p className="text-dark-300 mb-4">
+                <TranslatedText text="settings.admin.description" />
+              </p>
               
               {/* Site Configuration */}
               <div>
-                <h3 className="text-sm font-medium text-dark-200 mb-4">Site Configuration</h3>
+                <h3 className="text-sm font-medium text-dark-200 mb-4">
+                  <TranslatedText text="settings.admin.siteSettings" />
+                </h3>
                 <div className="space-y-4">
                   <div>
                     <label htmlFor="site-name" className="block text-sm font-medium text-dark-200">
-                      Site Name
+                      <TranslatedText text="settings.admin.siteName" />
                     </label>
                     <input
                       type="text"
@@ -724,7 +766,7 @@ export default function SettingsPage() {
                   </div>
                   <div>
                     <label htmlFor="site-logo" className="block text-sm font-medium text-dark-200">
-                      Site Logo
+                      <TranslatedText text="settings.admin.siteLogo" />
                     </label>
                     <div className="mt-1 flex items-center space-x-4">
                       <img
@@ -764,8 +806,12 @@ export default function SettingsPage() {
               {/* Maintenance Mode */}
               <div className="flex items-center justify-between mt-6">
                 <div>
-                  <h3 className="text-sm font-medium text-dark-200">Maintenance Mode</h3>
-                  <p className="text-xs text-dark-400">Put the site in maintenance mode</p>
+                  <h3 className="text-sm font-medium text-dark-200">
+                    <TranslatedText text="settings.admin.maintenanceMode" />
+                  </h3>
+                  <p className="text-xs text-dark-400">
+                    <TranslatedText text="settings.admin.maintenanceModeDescription" />
+                  </p>
                 </div>
                 <input
                   type="checkbox"
@@ -785,7 +831,7 @@ export default function SettingsPage() {
                   onClick={handleAdminSettingsSave}
                   isLoading={isLoadingAdminSettings}
                 >
-                  Save Admin Settings
+                  <TranslatedText text="settings.buttons.save" />
                 </Button>
               </div>
             </div>
@@ -793,8 +839,12 @@ export default function SettingsPage() {
         ) : activeTab === 'admin' ? (
           <Card>
             <div className="p-6 text-center">
-              <h2 className="text-xl font-semibold text-red-500 mb-2">Access Denied</h2>
-              <p className="text-dark-300">You do not have permission to access the admin settings.</p>
+              <h2 className="text-xl font-semibold text-red-500 mb-2">
+                <TranslatedText text="settings.admin.accessDenied" />
+              </h2>
+              <p className="text-dark-300">
+                <TranslatedText text="settings.admin.accessDeniedDescription" />
+              </p>
             </div>
           </Card>
         ) : null}
@@ -803,50 +853,86 @@ export default function SettingsPage() {
         {activeTab === 'danger' && (
           <Card className="border border-red-500">
             <div className="space-y-4">
-              <h2 className="text-2xl font-semibold text-red-500 mb-2">Danger Zone</h2>
-              <p className="text-dark-300 mb-4">Irreversible and destructive actions</p>
+              <h2 className="text-2xl font-semibold text-red-500 mb-2">
+                <TranslatedText text="settings.danger.title" />
+              </h2>
+              <p className="text-dark-300 mb-4">
+                <TranslatedText text="settings.danger.description" />
+              </p>
               
               {/* Delete Account */}
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-medium text-red-500">Delete Account</h3>
-                  <p className="text-xs text-dark-400">Permanently delete your account and all data</p>
+                  <h3 className="text-sm font-medium text-red-500">
+                    <TranslatedText text="settings.danger.deleteAccount" />
+                  </h3>
+                  <p className="text-xs text-dark-400">
+                    <TranslatedText text="settings.danger.deleteAccountDescription" />
+                  </p>
                 </div>
                 <Button
                   variant="danger"
-                  onClick={handleDeleteAccount}
+                  onClick={() => setConfirmDialog({
+                    isOpen: true,
+                    title: translations[language].settings.danger.deleteAccount,
+                    message: translations[language].settings.danger.deleteAccountConfirm,
+                    onConfirm: handleDeleteAccount,
+                    variant: 'danger'
+                  })}
                 >
-                  Delete Account
+                  <TranslatedText text="settings.danger.deleteAccount" />
                 </Button>
           </div>
 
               {/* Reset Settings */}
               <div className="flex items-center justify-between">
           <div>
-                  <h3 className="text-sm font-medium text-red-500">Reset Settings</h3>
-                  <p className="text-xs text-dark-400">Reset all settings to default values</p>
+                  <h3 className="text-sm font-medium text-red-500">
+                    <TranslatedText text="settings.danger.resetSettings" />
+                  </h3>
+                  <p className="text-xs text-dark-400">
+                    <TranslatedText text="settings.danger.resetSettingsDescription" />
+                  </p>
                 </div>
                 <Button
                   variant="danger"
-                  onClick={handleResetSettings}
+                  onClick={() => setConfirmDialog({
+                    isOpen: true,
+                    title: translations[language].settings.danger.resetSettings,
+                    message: translations[language].settings.danger.resetSettingsConfirm,
+                    onConfirm: handleResetSettings,
+                    variant: 'warning'
+                  })}
                 >
-                  Reset Settings
+                  <TranslatedText text="settings.danger.resetSettings" />
                 </Button>
           </div>
 
               {/* Wipe Data */}
+              {session?.user?.role === 'admin' && (
               <div className="flex items-center justify-between">
           <div>
-                  <h3 className="text-sm font-medium text-red-500">Wipe Data</h3>
-                  <p className="text-xs text-dark-400">Delete all your data from the system</p>
+                    <h3 className="text-sm font-medium text-red-500">
+                      <TranslatedText text="settings.danger.wipeData" />
+                    </h3>
+                    <p className="text-xs text-dark-400">
+                      <TranslatedText text="settings.danger.wipeDataDescription" />
+                    </p>
                 </div>
                 <Button
                   variant="danger"
-                  onClick={handleWipeData}
+                    onClick={() => setConfirmDialog({
+                      isOpen: true,
+                      title: translations[language].settings.danger.wipeData,
+                      message: translations[language].settings.danger.wipeDataConfirm,
+                      onConfirm: handleWipeData,
+                      variant: 'danger'
+                    })}
                 >
-                  Wipe Data
+                    <TranslatedText text="settings.danger.wipeData" />
                 </Button>
           </div>
+              )}
         </div>
       </Card>
         )}
@@ -858,14 +944,14 @@ export default function SettingsPage() {
           variant="outline"
           onClick={() => router.back()}
         >
-          Cancel
+          <TranslatedText text="settings.buttons.cancel" />
         </Button>
         <Button 
           variant="primary"
           onClick={handleSaveSettings}
           isLoading={isSaving}
         >
-          Save Changes
+          <TranslatedText text="settings.buttons.save" />
         </Button>
       </div>
 

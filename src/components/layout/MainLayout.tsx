@@ -7,6 +7,7 @@ import Avatar from '@/components/ui/Avatar';
 import { Bell } from 'lucide-react';
 import SearchResults from '@/components/SearchResults';
 import AvatarDropdown from '@/components/AvatarDropdown';
+import { useTranslation } from 'react-i18next';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -30,6 +31,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchResults, setShowSearchResults] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+  const { t } = useTranslation();
 
   const handleNotificationClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -157,7 +159,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                     id="search"
                     name="search"
                     className="block w-full bg-dark-700 border border-dark-600 rounded-md py-2 pl-10 pr-3 text-sm placeholder-dark-400 focus:outline-none focus:bg-dark-600 focus:border-dark-500 focus:ring-1 focus:ring-primary-500"
-                    placeholder="Search files and folders..."
+                    placeholder={t('common.search')}
                     type="search"
                     value={searchQuery}
                     onChange={(e) => {

@@ -73,7 +73,7 @@ export default function ReportsPage() {
 
   const handleGenerateReport = async () => {
     try {
-      setIsGenerating(true);
+    setIsGenerating(true);
 
       // Validate required fields
       if (!selectedReportType) {
@@ -219,6 +219,10 @@ export default function ReportsPage() {
       console.error('Error deleting report:', error);
       toast.error(translations[language].reports.errors.deleteFailed);
     }
+  };
+
+  const handleRefresh = async () => {
+    await fetchReports();
   };
 
   return (
@@ -438,11 +442,10 @@ export default function ReportsPage() {
           <div className="flex gap-2">
             <Button
               variant="outline"
-              size="sm"
-              onClick={fetchReports}
-              isLoading={loading}
+              onClick={handleRefresh}
+              className="ml-2"
             >
-              <TranslatedText text="common.refresh" />
+              <TranslatedText text="reports.buttons.refresh" />
             </Button>
             {reports.length > 0 && (
               <Button

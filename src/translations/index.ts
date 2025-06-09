@@ -12,6 +12,7 @@ export interface Translations {
     view: string;
     close: string;
     confirm: string;
+    search: string;
   };
   sidebar: {
     home: string;
@@ -70,13 +71,9 @@ export interface Translations {
     title: string;
     subtitle: string;
     systemSettings: string;
-    theme: {
-      label: string;
-      description: string;
-    };
+    theme: string;
     language: {
       label: string;
-      description: string;
       options: {
         en: string;
         ne: string;
@@ -119,6 +116,52 @@ export interface Translations {
     buttons: {
       save: string;
       cancel: string;
+    };
+    profile: {
+      title: string;
+      picture: string;
+      pictureDescription: string;
+      fullName: string;
+      username: string;
+      email: string;
+      password: string;
+      saveNote: string;
+    };
+    preferences: {
+      title: string;
+      description: string;
+      general: string;
+      notifications: string;
+      fileUpdates: string;
+      fileUpdatesDescription: string;
+      securityAlerts: string;
+      securityAlertsDescription: string;
+      systemUpdates: string;
+      systemUpdatesDescription: string;
+    };
+    admin: {
+      title: string;
+      description: string;
+      accessDenied: string;
+      accessDeniedDescription: string;
+      siteSettings: string;
+      siteName: string;
+      siteLogo: string;
+      maintenanceMode: string;
+      maintenanceModeDescription: string;
+    };
+    danger: {
+      title: string;
+      description: string;
+      resetSettings: string;
+      resetSettingsDescription: string;
+      resetSettingsConfirm: string;
+      deleteAccount: string;
+      deleteAccountDescription: string;
+      deleteAccountConfirm: string;
+      wipeData: string;
+      wipeDataDescription: string;
+      wipeDataConfirm: string;
     };
   };
   files: {
@@ -185,14 +228,8 @@ export interface Translations {
     };
     upload: {
       title: string;
-      steps: {
-        0: string;
-        1: string;
-      };
-      success: {
-        title: string;
-        message: string;
-      };
+      subtitle: string;
+      steps: string[];
       metadata: {
         title: string;
         description: string;
@@ -201,11 +238,6 @@ export interface Translations {
         sourceLabel: string;
         grantTypeLabel: string;
         remarksLabel: string;
-        titlePlaceholder: string;
-        fiscalYearPlaceholder: string;
-        sourcePlaceholder: string;
-        grantTypePlaceholder: string;
-        remarksPlaceholder: string;
       };
       document: {
         title: string;
@@ -214,11 +246,22 @@ export interface Translations {
         nepaliPaper: string;
         extraSize: string;
         other: string;
+        maxSize: string;
+        selectedFiles: string;
+        orClick: string;
+        supportedFormats: string;
+        maxFiles: string;
       };
-      navigation: {
-        back: string;
-        next: string;
+      buttons: {
         upload: string;
+        cancel: string;
+        next: string;
+        back: string;
+      };
+      messages: {
+        uploading: string;
+        success: string;
+        error: string;
       };
     };
   };
@@ -297,6 +340,17 @@ export interface Translations {
       deletedAll: string;
       downloaded: string;
     };
+    buttons: {
+      generate: string;
+      download: string;
+      refresh: string;
+    };
+    messages: {
+      generating: string;
+      downloadSuccess: string;
+      downloadError: string;
+      noReports: string;
+    };
   };
 }
 
@@ -313,6 +367,7 @@ export const translations: Record<Language, Translations> = {
       view: 'View',
       close: 'Close',
       confirm: 'Confirm',
+      search: 'Search files and folders...',
     },
     sidebar: {
       home: 'Home',
@@ -369,18 +424,14 @@ export const translations: Record<Language, Translations> = {
     },
     settings: {
       title: 'Settings',
-      subtitle: 'System Settings',
-      systemSettings: 'General',
-      theme: {
-        label: 'Dark Mode',
-        description: 'Switch between light and dark mode',
-      },
+      subtitle: 'Manage your account settings and preferences',
+      systemSettings: 'System Settings',
+      theme: 'Theme',
       language: {
         label: 'Language',
-        description: 'Choose your language',
         options: {
           en: 'English',
-          ne: 'नेपाली',
+          ne: 'Nepali',
         },
       },
       storageDirectory: {
@@ -418,8 +469,54 @@ export const translations: Record<Language, Translations> = {
         },
       },
       buttons: {
-        save: 'Save',
+        save: 'Save Changes',
         cancel: 'Cancel',
+      },
+      profile: {
+        title: 'Profile',
+        picture: 'Change Picture',
+        pictureDescription: 'Update your profile picture',
+        fullName: 'Full Name',
+        username: 'Username',
+        email: 'Email',
+        password: 'Password',
+        saveNote: 'Changes will be applied after saving',
+      },
+      preferences: {
+        title: 'Preferences',
+        description: 'Customize your application preferences',
+        general: 'General',
+        notifications: 'Notifications',
+        fileUpdates: 'File Updates',
+        fileUpdatesDescription: 'Get notified when files are updated',
+        securityAlerts: 'Security Alerts',
+        securityAlertsDescription: 'Receive notifications about security-related events',
+        systemUpdates: 'System Updates',
+        systemUpdatesDescription: 'Stay informed about system updates and maintenance',
+      },
+      admin: {
+        title: 'Admin Settings',
+        description: 'Manage system-wide settings and configurations',
+        accessDenied: 'Access Denied',
+        accessDeniedDescription: 'You do not have permission to access admin settings',
+        siteSettings: 'Site Settings',
+        siteName: 'Site Name',
+        siteLogo: 'Site Logo',
+        maintenanceMode: 'Maintenance Mode',
+        maintenanceModeDescription: 'Enable maintenance mode to restrict access',
+      },
+      danger: {
+        title: 'Danger Zone',
+        description: 'Irreversible and destructive actions',
+        resetSettings: 'Reset Settings',
+        resetSettingsDescription: 'Reset all settings to default values',
+        resetSettingsConfirm: 'Are you sure you want to reset all settings? This action cannot be undone.',
+        deleteAccount: 'Delete Account',
+        deleteAccountDescription: 'Permanently delete your account and all associated data',
+        deleteAccountConfirm: 'Are you sure you want to delete your account? This action cannot be undone.',
+        wipeData: 'Wipe All Data',
+        wipeDataDescription: 'Delete all data from the system (Admin only)',
+        wipeDataConfirm: 'Are you sure you want to wipe all data? This action cannot be undone.',
       },
     },
     files: {
@@ -486,41 +583,45 @@ export const translations: Record<Language, Translations> = {
       },
       upload: {
         title: 'Upload Files',
-        steps: {
-          0: 'Metadata Entry',
-          1: 'Document Upload',
-        },
-        success: {
-          title: 'Upload Successful!',
-          message: 'Your files have been successfully uploaded and organized in the system.',
-        },
+        subtitle: 'Upload and manage your files',
+        steps: [
+          'Add Metadata',
+          'Select Files',
+          'Review & Upload'
+        ],
         metadata: {
-          title: 'Metadata Entry',
-          description: 'Enter file metadata to help organize your documents.',
+          title: 'File Metadata',
+          description: 'Add additional information about your files',
           titleLabel: 'Title',
           fiscalYearLabel: 'Fiscal Year',
-          sourceLabel: 'Funding Source',
+          sourceLabel: 'Source',
           grantTypeLabel: 'Grant Type',
-          remarksLabel: 'Summary / Remarks',
-          titlePlaceholder: 'Enter document title',
-          fiscalYearPlaceholder: 'Select fiscal year',
-          sourcePlaceholder: 'Select funding source',
-          grantTypePlaceholder: 'Select grant type',
-          remarksPlaceholder: 'Add any summary or remarks (optional)',
+          remarksLabel: 'Remarks'
         },
         document: {
           title: 'Document Upload',
-          description: 'Upload multi-page scanned PDFs or images. You can upload multiple files at once in each section. (Optional for each section)',
-          a4Size: 'A4 size',
-          nepaliPaper: 'Nepali Paper',
-          extraSize: 'Extra Size',
-          other: 'Other',
+          description: 'Drag and drop your files here',
+          a4Size: 'A4 Size Documents',
+          nepaliPaper: 'Nepali Paper Size Documents',
+          extraSize: 'Extra Size Documents',
+          other: 'Other Documents',
+          maxSize: 'Max file size: 10MB',
+          selectedFiles: 'Selected Files',
+          orClick: 'or click to browse files',
+          supportedFormats: 'Supported formats: PDF, Word, Excel, JPEG, PNG',
+          maxFiles: 'Max files: {{count}}'
         },
-        navigation: {
-          back: 'Back',
+        buttons: {
+          upload: 'Upload',
+          cancel: 'Cancel',
           next: 'Next',
-          upload: 'Upload Files',
+          back: 'Back'
         },
+        messages: {
+          uploading: 'Uploading files...',
+          success: 'Files uploaded successfully',
+          error: 'Error uploading files'
+        }
       },
     },
     bin: {
@@ -598,6 +699,17 @@ export const translations: Record<Language, Translations> = {
         deletedAll: 'All reports deleted successfully',
         downloaded: 'Report downloaded successfully',
       },
+      buttons: {
+        generate: 'Generate',
+        download: 'Download',
+        refresh: 'Refresh',
+      },
+      messages: {
+        generating: 'Generating report...',
+        downloadSuccess: 'Report downloaded successfully',
+        downloadError: 'Error downloading report',
+        noReports: 'No reports available',
+      },
     },
   },
   ne: {
@@ -612,6 +724,7 @@ export const translations: Record<Language, Translations> = {
       view: 'हेर्नुहोस्',
       close: 'बन्द गर्नुहोस्',
       confirm: 'पुष्टि गर्नुहोस्',
+      search: 'फाइल र फोल्डरहरू खोज्नुहोस्...',
     },
     sidebar: {
       home: 'गृह',
@@ -667,18 +780,14 @@ export const translations: Record<Language, Translations> = {
       },
     },
     settings: {
-      title: 'सेटिङ्स',
-      subtitle: 'सिस्टम सेटिङ्स',
-      systemSettings: 'सामान्य',
-      theme: {
-        label: 'डार्क मोड',
-        description: 'लाइट र डार्क मोड बीच स्विच गर्नुहोस्',
-      },
+      title: 'सेटिङहरू',
+      subtitle: 'आफ्नो खाता सेटिङहरू र प्राथमिकताहरू व्यवस्थापन गर्नुहोस्',
+      systemSettings: 'सिस्टम सेटिङहरू',
+      theme: 'थिम',
       language: {
         label: 'भाषा',
-        description: 'भाषा छान्नुहोस्',
         options: {
-          en: 'English',
+          en: 'अंग्रेजी',
           ne: 'नेपाली',
         },
       },
@@ -717,8 +826,54 @@ export const translations: Record<Language, Translations> = {
         },
       },
       buttons: {
-        save: 'सुरक्षित',
-        cancel: 'रद्द',
+        save: 'परिवर्तनहरू सेभ गर्नुहोस्',
+        cancel: 'रद्द गर्नुहोस्',
+      },
+      profile: {
+        title: 'प्रोफाइल',
+        picture: 'तस्विर परिवर्तन गर्नुहोस्',
+        pictureDescription: 'आफ्नो प्रोफाइल तस्विर अपडेट गर्नुहोस्',
+        fullName: 'पूरा नाम',
+        username: 'प्रयोगकर्ता नाम',
+        email: 'इमेल',
+        password: 'पासवर्ड',
+        saveNote: 'परिवर्तनहरू सेभ गर्ने बित्तिकै लागू हुनेछन्',
+      },
+      preferences: {
+        title: 'प्राथमिकताहरू',
+        description: 'आफ्नो अनुप्रयोग प्राथमिकताहरू अनुकूलन गर्नुहोस्',
+        general: 'सामान्य',
+        notifications: 'सूचनाहरू',
+        fileUpdates: 'फाइल अपडेटहरू',
+        fileUpdatesDescription: 'फाइलहरू अपडेट हुँदा सूचित हुनुहोस्',
+        securityAlerts: 'सुरक्षा सूचनाहरू',
+        securityAlertsDescription: 'सुरक्षा सम्बन्धी घटनाहरूको बारेमा सूचना प्राप्त गर्नुहोस्',
+        systemUpdates: 'सिस्टम अपडेटहरू',
+        systemUpdatesDescription: 'सिस्टम अपडेट र मर्मत सम्भारको बारेमा जानकारी राख्नुहोस्',
+      },
+      admin: {
+        title: 'व्यवस्थापक सेटिङहरू',
+        description: 'सिस्टम व्यापी सेटिङहरू र कन्फिगरेसनहरू व्यवस्थापन गर्नुहोस्',
+        accessDenied: 'पहुँच अस्वीकृत',
+        accessDeniedDescription: 'तपाईंसँग व्यवस्थापक सेटिङहरूमा पहुँच गर्न अनुमति छैन',
+        siteSettings: 'साइट सेटिङहरू',
+        siteName: 'साइट नाम',
+        siteLogo: 'साइट लोगो',
+        maintenanceMode: 'मर्मत मोड',
+        maintenanceModeDescription: 'पहुँच प्रतिबन्धित गर्न मर्मत मोड सक्रिय गर्नुहोस्',
+      },
+      danger: {
+        title: 'खतरा क्षेत्र',
+        description: 'अपरिवर्तनीय र विनाशकारी कार्यहरू',
+        resetSettings: 'सेटिङहरू रिसेट गर्नुहोस्',
+        resetSettingsDescription: 'सबै सेटिङहरू पूर्वनिर्धारित मानहरूमा रिसेट गर्नुहोस्',
+        resetSettingsConfirm: 'के तपाईं सबै सेटिङहरू रिसेट गर्न निश्चित हुनुहुन्छ? यो कार्य पूर्ववत गर्न सकिँदैन।',
+        deleteAccount: 'खाता मेटाउनुहोस्',
+        deleteAccountDescription: 'आफ्नो खाता र सबै सम्बन्धित डाटा स्थायी रूपमा मेटाउनुहोस्',
+        deleteAccountConfirm: 'के तपाईं आफ्नो खाता मेटाउन निश्चित हुनुहुन्छ? यो कार्य पूर्ववत गर्न सकिँदैन।',
+        wipeData: 'सबै डाटा मेटाउनुहोस्',
+        wipeDataDescription: 'सिस्टमबाट सबै डाटा मेटाउनुहोस् (व्यवस्थापक मात्र)',
+        wipeDataConfirm: 'के तपाईं सबै डाटा मेटाउन निश्चित हुनुहुन्छ? यो कार्य पूर्ववत गर्न सकिँदैन।',
       },
     },
     files: {
@@ -785,41 +940,45 @@ export const translations: Record<Language, Translations> = {
       },
       upload: {
         title: 'फाइलहरू अपलोड गर्नुहोस्',
-        steps: {
-          0: 'मेटाडाटा प्रविष्टि',
-          1: 'कागजात अपलोड',
-        },
-        success: {
-          title: 'अपलोड सफल!',
-          message: 'तपाईंको फाइलहरू सफलतापूर्वक अपलोड र व्यवस्थित गरिएको छ।',
-        },
+        subtitle: 'आफ्ना फाइलहरू अपलोड र व्यवस्थापन गर्नुहोस्',
+        steps: [
+          'मेटाडाटा थप्नुहोस्',
+          'फाइलहरू चयन गर्नुहोस्',
+          'समीक्षा गर्नुहोस् र अपलोड गर्नुहोस्'
+        ],
         metadata: {
-          title: 'मेटाडाटा प्रविष्टि',
-          description: 'कागजातहरू व्यवस्थित गर्न मेटाडाटा प्रविष्टि गर्नुहोस्।',
+          title: 'फाइल मेटाडाटा',
+          description: 'आफ्ना फाइलहरूको बारेमा अतिरिक्त जानकारी थप्नुहोस्',
           titleLabel: 'शीर्षक',
           fiscalYearLabel: 'आर्थिक वर्ष',
-          sourceLabel: 'वित्तीय स्रोत',
+          sourceLabel: 'स्रोत',
           grantTypeLabel: 'अनुदान प्रकार',
-          remarksLabel: 'सारांश / टिप्पणीहरू',
-          titlePlaceholder: 'कागजातको शीर्षक प्रविष्टि गर्नुहोस्',
-          fiscalYearPlaceholder: 'आर्थिक वर्ष छान्नुहोस्',
-          sourcePlaceholder: 'वित्तीय स्रोत छान्नुहोस्',
-          grantTypePlaceholder: 'अनुदान प्रकार छान्नुहोस्',
-          remarksPlaceholder: 'कुनै सारांश वा टिप्पणीहरू थप्नुहोस् (वैकल्पिक)',
+          remarksLabel: 'टिप्पणीहरू'
         },
         document: {
-          title: 'कागजात अपलोड',
-          description: 'बहु-पृष्ठ स्क्यान गरिएका पिडीएफ वा तस्बिरहरू अपलोड गर्नुहोस्। तपाईं प्रत्येक खण्डमा एकै पटक धेरै फाइलहरू अपलोड गर्न सक्नुहुन्छ। (प्रत्येक खण्डको लागि वैकल्पिक)',
-          a4Size: 'ए४ साइज',
-          nepaliPaper: 'नेपाली कागज',
-          extraSize: 'अतिरिक्त साइज',
-          other: 'अन्य',
+          title: 'दस्तावेज अपलोड',
+          description: 'आफ्ना फाइलहरू यहाँ तान्नुहोस् र छोड्नुहोस्',
+          a4Size: 'ए४ साइज दस्तावेजहरू',
+          nepaliPaper: 'नेपाली कागज साइज दस्तावेजहरू',
+          extraSize: 'अतिरिक्त साइज दस्तावेजहरू',
+          other: 'अन्य दस्तावेजहरू',
+          maxSize: 'अधिकतम फाइल साइज: १० एमबी',
+          selectedFiles: 'चयनित फाइलहरू',
+          orClick: 'वा फाइलहरू ब्राउज गर्न क्लिक गर्नुहोस्',
+          supportedFormats: 'समर्थित प्रारूपहरू: पीडीएफ, वर्ड, एक्सेल, जेपीईजी, पीएनजी',
+          maxFiles: 'अधिकतम फाइलहरू: {{count}}'
         },
-        navigation: {
-          back: 'पछाडि',
+        buttons: {
+          upload: 'अपलोड गर्नुहोस्',
+          cancel: 'रद्द गर्नुहोस्',
           next: 'अर्को',
-          upload: 'फाइलहरू अपलोड गर्नुहोस्',
+          back: 'पछाडि'
         },
+        messages: {
+          uploading: 'फाइलहरू अपलोड गर्दै...',
+          success: 'फाइलहरू सफलतापूर्वक अपलोड भयो',
+          error: 'फाइलहरू अपलोड गर्दा त्रुटि भयो'
+        }
       },
     },
     bin: {
@@ -852,19 +1011,19 @@ export const translations: Record<Language, Translations> = {
     },
     reports: {
       title: 'प्रतिवेदनहरू',
-      subtitle: 'विभिन्न प्रणाली प्रतिवेदनहरू उत्पन्न र डाउनलोड गर्नुहोस्',
-      generateReport: 'प्रतिवेदन उत्पन्न गर्नुहोस्',
+      subtitle: 'सिस्टम प्रतिवेदनहरू तयार पार्न र डाउनलोड गर्नुहोस्',
+      generateReport: 'प्रतिवेदन तयार पार्नुहोस्',
       reportType: 'प्रतिवेदन प्रकार',
       required: 'आवश्यक',
-      fileFormat: 'फाइल प्रारूप',
+      fileFormat: 'फाइल ढाँचा',
       dateRange: 'मिति सीमा',
       startDate: 'सुरु मिति',
       endDate: 'अन्त्य मिति',
       fiscalYear: 'आर्थिक वर्ष',
       source: 'स्रोत',
       grantType: 'अनुदान प्रकार',
-      generate: 'उत्पन्न गर्नुहोस्',
-      generating: 'उत्पन्न हुँदैछ...',
+      generate: 'तयार पार्नुहोस्',
+      generating: 'प्रतिवेदन तयार पार्दै...',
       download: 'डाउनलोड गर्नुहोस्',
       delete: 'मेट्नुहोस्',
       deleteAll: 'सबै मेट्नुहोस्',
@@ -874,7 +1033,7 @@ export const translations: Record<Language, Translations> = {
       confirmDeleteAllMessage: 'के तपाईं सबै प्रतिवेदनहरू मेट्न निश्चित हुनुहुन्छ? यो कार्य पूर्ववत गर्न सकिँदैन।',
       types: {
         fileCount: 'वर्ष अनुसार फाइलहरू',
-        missingUploads: 'हराएका अपलोडहरू',
+        missingUploads: 'नहिचलेका अपलोडहरू',
         custom: 'कस्टम प्रतिवेदन',
       },
       formats: {
@@ -889,13 +1048,24 @@ export const translations: Record<Language, Translations> = {
         downloadFailed: 'प्रतिवेदन डाउनलोड गर्न सकिएन',
         deleteFailed: 'प्रतिवेदन मेट्न सकिएन',
         deleteAllFailed: 'प्रतिवेदनहरू मेट्न सकिएन',
-        generateFailed: 'प्रतिवेदन उत्पन्न गर्न सकिएन',
+        generateFailed: 'प्रतिवेदन तयार पार्न सकिएन',
       },
       success: {
         generated: 'प्रतिवेदन सफलतापूर्वक उत्पन्न गरियो',
         deleted: 'प्रतिवेदन सफलतापूर्वक मेटियो',
         deletedAll: 'सबै प्रतिवेदनहरू सफलतापूर्वक मेटियो',
         downloaded: 'प्रतिवेदन सफलतापूर्वक डाउनलोड गरियो',
+      },
+      buttons: {
+        generate: 'तयार पार्नुहोस्',
+        download: 'डाउनलोड गर्नुहोस्',
+        refresh: 'ताजा पार्नुहोस्',
+      },
+      messages: {
+        generating: 'प्रतिवेदन तयार पार्दै...',
+        downloadSuccess: 'प्रतिवेदन सफलतापूर्वक डाउनलोड भयो',
+        downloadError: 'प्रतिवेदन डाउनलोड गर्दा त्रुटि भयो',
+        noReports: 'कुनै प्रतिवेदन उपलब्ध छैन',
       },
     },
   },

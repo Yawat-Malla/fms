@@ -12,6 +12,11 @@ import SearchableSelect from '@/components/ui/SearchableSelect';
 import { generateFiscalYears } from '@/utils/fiscalYears';
 import { TranslatedText } from '@/components/TranslatedText';
 
+interface Option {
+  value: string;
+  label: string;
+}
+
 // Define sources to match exactly with database records
 const SOURCES = [
   { id: 'Federal Government', name: 'Federal Government' },
@@ -31,11 +36,11 @@ const GRANT_TYPES = [
 
 const steps = [
   {
-    label: 'Metadata Entry',
+    label: 'files.upload.steps.1',
     icon: <FiFileText className="h-5 w-5" />,
   },
   {
-    label: 'Document Upload',
+    label: 'files.upload.steps.0',
     icon: <FiUpload className="h-5 w-5" />,
   },
 ];
@@ -47,9 +52,9 @@ const UploadPage = () => {
   const [nepaliFiles, setNepaliFiles] = useState<File[]>([]);
   const [extraFiles, setExtraFiles] = useState<File[]>([]);
   const [otherFiles, setOtherFiles] = useState<File[]>([]);
-  const [fiscalYear, setFiscalYear] = useState('');
-  const [source, setSource] = useState('');
-  const [grantType, setGrantType] = useState('');
+  const [fiscalYear, setFiscalYear] = useState<Option | null>(null);
+  const [source, setSource] = useState<Option | null>(null);
+  const [grantType, setGrantType] = useState<Option | null>(null);
   const [title, setTitle] = useState('');
   const [remarks, setRemarks] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -79,6 +84,18 @@ const UploadPage = () => {
     label: year.name
   }));
 
+  // Convert sources to options
+  const sourceOptions = SOURCES.map(source => ({
+    value: source.id,
+    label: source.name
+  }));
+
+  // Convert grant types to options
+  const grantTypeOptions = GRANT_TYPES.map(grant => ({
+    value: grant.id,
+    label: grant.name
+  }));
+
   const canGoNext = () => {
     if (step === 0) {
       return title && fiscalYear && source && grantType;
@@ -96,9 +113,9 @@ const UploadPage = () => {
     try {
       const formData = new FormData();
       formData.append('title', title);
-      formData.append('fiscalYear', fiscalYear);
-      formData.append('source', source);
-      formData.append('grantType', grantType);
+      formData.append('fiscalYear', fiscalYear?.value || '');
+      formData.append('source', source?.value || '');
+      formData.append('grantType', grantType?.value || '');
       formData.append('remarks', remarks);
       
       // Append files with their section-specific keys
@@ -133,9 +150,9 @@ const UploadPage = () => {
         setNepaliFiles([]);
         setExtraFiles([]);
         setOtherFiles([]);
-        setFiscalYear('');
-        setSource('');
-        setGrantType('');
+        setFiscalYear(null);
+        setSource(null);
+        setGrantType(null);
         setTitle('');
         setRemarks('');
         router.refresh();
@@ -157,7 +174,7 @@ const UploadPage = () => {
     >
       {/* Stepper Sidebar */}
       <aside className="w-64 min-w-[220px] bg-dark-800 rounded-2xl p-8 flex flex-col items-start shadow-lg h-fit sticky top-4">
-        <h2 className="text-lg font-bold text-dark-100 mb-8 tracking-wide"><TranslatedText text="upload.title" /></h2>
+        <h2 className="text-lg font-bold text-dark-100 mb-8 tracking-wide"><TranslatedText text="files.upload.title" /></h2>
         <ol className="space-y-6 w-full overflow-y-auto max-h-[calc(100vh-16rem)]">
           {steps.map((s, idx) => (
             <li key={s.label} className="flex items-center gap-4">
@@ -181,7 +198,7 @@ const UploadPage = () => {
                     : 'text-dark-400'
                 }`}
               >
-                <TranslatedText text={`upload.steps.${idx}`} />
+                <TranslatedText text={`files.upload.steps.${idx}`} />
               </span>
             </li>
           ))}
@@ -216,7 +233,7 @@ const UploadPage = () => {
                     transition={{ delay: 0.4 }}
                     className="mt-6 text-2xl font-medium text-dark-100"
                   >
-                    <TranslatedText text="upload.success.title" />
+                    <TranslatedText text="files.upload.messages.success" />
                   </motion.h3>
                   <motion.p
                     initial={{ opacity: 0, y: 10 }}
@@ -224,7 +241,7 @@ const UploadPage = () => {
                     transition={{ delay: 0.5 }}
                     className="mt-3 text-dark-300 text-center max-w-md"
                   >
-                    <TranslatedText text="upload.success.message" />
+                    <TranslatedText text="files.upload.messages.success" />
                   </motion.p>
                 </div>
               </Card>
@@ -244,93 +261,65 @@ const UploadPage = () => {
                   <div className="p-8 space-y-8">
                     <div>
                       <h2 className="text-2xl font-semibold text-dark-100 mb-2 flex items-center gap-2">
-                        <FiFileText className="h-6 w-6 text-primary-500" /> <TranslatedText text="upload.metadata.title" />
+                        <FiFileText className="h-6 w-6 text-primary-500" /> <TranslatedText text="files.upload.metadata.title" />
                       </h2>
-                      <p className="text-dark-300 mb-6"><TranslatedText text="upload.metadata.description" /></p>
+                      <p className="text-dark-300 mb-6"><TranslatedText text="files.upload.metadata.description" /></p>
                       <div className="grid grid-cols-1 gap-6">
                         <div className="space-y-2">
-                          <label htmlFor="title" className="block text-sm font-medium text-dark-200">
-                            <TranslatedText text="upload.metadata.titleLabel" /> <span className="text-primary-500">*</span>
+                          <label className="block text-sm font-medium text-dark-200">
+                            <TranslatedText text="files.upload.metadata.titleLabel" /> <span className="text-primary-500">*</span>
                           </label>
                           <input
                             type="text"
-                            name="title"
-                            id="title"
-                            className="block w-full bg-dark-700 border border-dark-600 rounded-lg shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-dark-100 placeholder-dark-400 px-4 py-2.5"
                             value={title}
-                            onChange={e => setTitle(e.target.value)}
+                            onChange={(e) => setTitle(e.target.value)}
+                            className="mt-1 block w-full rounded-md border-dark-600 bg-dark-700 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
                             required
-                            placeholder="Enter document title"
-                            disabled={isSubmitting}
                           />
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                           <div className="space-y-2">
-                            <label htmlFor="fiscalYear" className="block text-sm font-medium text-dark-200">
-                              <TranslatedText text="upload.metadata.fiscalYearLabel" /> <span className="text-primary-500">*</span>
+                          <label className="block text-sm font-medium text-dark-200">
+                            <TranslatedText text="files.upload.metadata.fiscalYearLabel" /> <span className="text-primary-500">*</span>
                             </label>
                             <SearchableSelect
                               options={fiscalYears}
-                              value={fiscalYear ? { value: fiscalYear, label: fiscalYear } : null}
-                              onChange={(option) => setFiscalYear(option.value)}
-                              placeholder="Select Fiscal Year"
+                            value={fiscalYear}
+                            onChange={setFiscalYear}
+                            placeholder="Select fiscal year"
                             />
                           </div>
                           <div className="space-y-2">
-                            <label htmlFor="source" className="block text-sm font-medium text-dark-200">
-                              <TranslatedText text="upload.metadata.sourceLabel" /> <span className="text-primary-500">*</span>
+                          <label className="block text-sm font-medium text-dark-200">
+                            <TranslatedText text="files.upload.metadata.sourceLabel" /> <span className="text-primary-500">*</span>
                             </label>
-                            <select
-                              id="source"
-                              name="source"
-                              className="block w-full bg-dark-700 border border-dark-600 rounded-lg shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-dark-100 px-4 py-2.5"
+                          <SearchableSelect
+                            options={sourceOptions}
                               value={source}
-                              onChange={e => setSource(e.target.value)}
-                              required
-                              disabled={isSubmitting}
-                            >
-                              <option value="">Select Source</option>
-                              {SOURCES.map(src => (
-                                <option key={src.id} value={src.id}>{src.name}</option>
-                              ))}
-                            </select>
-                          </div>
+                            onChange={setSource}
+                            placeholder="Select source"
+                          />
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                           <div className="space-y-2">
-                            <label htmlFor="grantType" className="block text-sm font-medium text-dark-200">
-                              <TranslatedText text="upload.metadata.grantTypeLabel" /> <span className="text-primary-500">*</span>
+                          <label className="block text-sm font-medium text-dark-200">
+                            <TranslatedText text="files.upload.metadata.grantTypeLabel" /> <span className="text-primary-500">*</span>
                             </label>
-                            <select
-                              id="grantType"
-                              name="grantType"
-                              className="block w-full bg-dark-700 border border-dark-600 rounded-lg shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-dark-100 px-4 py-2.5"
+                          <SearchableSelect
+                            options={grantTypeOptions}
                               value={grantType}
-                              onChange={e => setGrantType(e.target.value)}
-                              required
-                              disabled={isSubmitting}
-                            >
-                              <option value="">Select Grant Type</option>
-                              {GRANT_TYPES.map(grant => (
-                                <option key={grant.id} value={grant.id}>{grant.name}</option>
-                              ))}
-                            </select>
+                            onChange={setGrantType}
+                            placeholder="Select grant type"
+                          />
                           </div>
                           <div className="space-y-2">
-                            <label htmlFor="remarks" className="block text-sm font-medium text-dark-200">
-                              <TranslatedText text="upload.metadata.remarksLabel" />
+                          <label className="block text-sm font-medium text-dark-200">
+                            <TranslatedText text="files.upload.metadata.remarksLabel" />
                             </label>
                             <textarea
-                              id="remarks"
-                              name="remarks"
-                              rows={2}
-                              className="block w-full bg-dark-700 border border-dark-600 rounded-lg shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-dark-100 placeholder-dark-400 px-4 py-2.5"
                               value={remarks}
-                              onChange={e => setRemarks(e.target.value)}
-                              placeholder="Add any summary or remarks (optional)"
-                              disabled={isSubmitting}
-                            />
-                          </div>
+                            onChange={(e) => setRemarks(e.target.value)}
+                            rows={3}
+                            className="mt-1 block w-full rounded-md border-dark-600 bg-dark-700 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                          />
                         </div>
                       </div>
                     </div>
@@ -342,47 +331,47 @@ const UploadPage = () => {
                   <div className="p-8 space-y-8">
                     <div>
                       <h2 className="text-2xl font-semibold text-dark-100 mb-2 flex items-center gap-2">
-                        <FiUpload className="h-6 w-6 text-primary-500" /> <TranslatedText text="upload.document.title" />
+                        <FiUpload className="h-6 w-6 text-primary-500" /> <TranslatedText text="files.upload.document.title" />
                       </h2>
-                      <p className="text-dark-300 mb-6"><TranslatedText text="upload.document.description" /></p>
+                      <p className="text-dark-300 mb-6"><TranslatedText text="files.upload.document.description" /></p>
                       <div className="space-y-8">
                         <div>
-                          <h3 className="text-lg font-semibold text-dark-200 mb-2"><TranslatedText text="upload.document.a4Size" /></h3>
+                          <h3 className="text-lg font-semibold text-dark-200 mb-2"><TranslatedText text="files.upload.document.a4Size" /></h3>
                           <FileUploader
                             onFilesSelected={setA4Files}
                             maxFiles={20}
-                            maxSizeMB={20}
-                            acceptedFileTypes={['application/pdf', 'image/jpeg', 'image/png']}
+                            maxSizeMB={10}
+                            acceptedFileTypes={['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'image/jpeg', 'image/png']}
                             disabled={isSubmitting}
                           />
                         </div>
                         <div>
-                          <h3 className="text-lg font-semibold text-dark-200 mb-2"><TranslatedText text="upload.document.nepaliPaper" /></h3>
+                          <h3 className="text-lg font-semibold text-dark-200 mb-2"><TranslatedText text="files.upload.document.nepaliPaper" /></h3>
                           <FileUploader
                             onFilesSelected={setNepaliFiles}
                             maxFiles={20}
-                            maxSizeMB={20}
-                            acceptedFileTypes={['application/pdf', 'image/jpeg', 'image/png']}
+                            maxSizeMB={10}
+                            acceptedFileTypes={['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'image/jpeg', 'image/png']}
                             disabled={isSubmitting}
                           />
                         </div>
                         <div>
-                          <h3 className="text-lg font-semibold text-dark-200 mb-2"><TranslatedText text="upload.document.extraSize" /></h3>
+                          <h3 className="text-lg font-semibold text-dark-200 mb-2"><TranslatedText text="files.upload.document.extraSize" /></h3>
                           <FileUploader
                             onFilesSelected={setExtraFiles}
                             maxFiles={20}
-                            maxSizeMB={20}
-                            acceptedFileTypes={['application/pdf', 'image/jpeg', 'image/png']}
+                            maxSizeMB={10}
+                            acceptedFileTypes={['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'image/jpeg', 'image/png']}
                             disabled={isSubmitting}
                           />
                         </div>
                         <div>
-                          <h3 className="text-lg font-semibold text-dark-200 mb-2"><TranslatedText text="upload.document.other" /></h3>
+                          <h3 className="text-lg font-semibold text-dark-200 mb-2"><TranslatedText text="files.upload.document.other" /></h3>
                           <FileUploader
                             onFilesSelected={setOtherFiles}
                             maxFiles={20}
-                            maxSizeMB={20}
-                            acceptedFileTypes={['application/pdf', 'image/jpeg', 'image/png']}
+                            maxSizeMB={10}
+                            acceptedFileTypes={['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'image/jpeg', 'image/png']}
                             disabled={isSubmitting}
                           />
                         </div>
@@ -393,32 +382,32 @@ const UploadPage = () => {
               )}
               {/* Navigation Buttons */}
               <div className="flex justify-between mt-8">
+                {step > 0 && (
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setStep(s => Math.max(0, s - 1))}
-                  disabled={step === 0 || isSubmitting}
-                  className="px-6 py-2.5 hover:bg-dark-700 transition-colors duration-200"
+                    onClick={() => setStep(step - 1)}
+                    className="flex items-center"
                 >
-                  <FiChevronLeft className="inline mr-2" /> <TranslatedText text="upload.navigation.back" />
+                    <FiChevronLeft className="inline mr-2" /> <TranslatedText text="files.upload.buttons.back" />
                 </Button>
+                )}
                 {step < steps.length - 1 ? (
                   <Button
                     type="button"
-                    onClick={() => setStep(s => s + 1)}
-                    disabled={!canGoNext() || isSubmitting}
-                    className="px-6 py-2.5 bg-primary-500 hover:bg-primary-600 text-white transition-colors duration-200"
+                    onClick={() => setStep(step + 1)}
+                    disabled={!canGoNext()}
+                    className="flex items-center ml-auto"
                   >
-                    <TranslatedText text="upload.navigation.next" /> <FiChevronRight className="inline ml-2" />
+                    <TranslatedText text="files.upload.buttons.next" /> <FiChevronRight className="inline ml-2" />
                   </Button>
                 ) : (
                   <Button
                     type="submit"
                     disabled={!canGoNext() || isSubmitting}
-                    isLoading={isSubmitting}
-                    className="px-6 py-2.5 bg-primary-500 hover:bg-primary-600 text-white transition-colors duration-200"
+                    className="flex items-center ml-auto"
                   >
-                    <TranslatedText text="upload.navigation.upload" />
+                    <TranslatedText text="files.upload.buttons.upload" />
                   </Button>
                 )}
               </div>

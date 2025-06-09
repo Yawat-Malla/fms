@@ -511,16 +511,16 @@ export default function BinPage() {
                         {file.deletedAt}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
-                          {file.fiscalYear}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
-                          {file.source}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
-                          {file.grantType}
-                        </td>
-                      </tr>
-                    ))}
+                        {file.fiscalYear?.name || '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                        {file.source?.name || '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                        {file.grantType?.name || '-'}
+                      </td>
+                    </tr>
+                  ))}
                     {filteredFolders.map((folder) => (
                       <tr
                         key={folder.id}
@@ -549,15 +549,15 @@ export default function BinPage() {
                           {folder.deletedAt}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
-                          {folder.fiscalYear}
+                          {folder.fiscalYear?.name || '-'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
-                          {folder.source}
+                          {folder.source?.name || '-'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
-                          {folder.grantType}
-                      </td>
-                    </tr>
+                          {folder.grantType?.name || '-'}
+                        </td>
+                      </tr>
                     ))}
               </tbody>
             </table>
@@ -597,13 +597,13 @@ export default function BinPage() {
                           <TranslatedText text="files.table.lastModified" />: {file.deletedAt}
                         </p>
                         <p>
-                          <TranslatedText text="files.table.fiscalYear" />: {file.fiscalYear}
+                          <TranslatedText text="files.table.fiscalYear" />: {file.fiscalYear?.name || '-'}
                         </p>
                         <p>
-                          <TranslatedText text="files.table.source" />: {file.source}
+                          <TranslatedText text="files.table.source" />: {file.source?.name || '-'}
                         </p>
                         <p>
-                          <TranslatedText text="files.table.grantType" />: {file.grantType}
+                          <TranslatedText text="files.table.grantType" />: {file.grantType?.name || '-'}
                         </p>
                       </div>
                     </div>
@@ -640,13 +640,13 @@ export default function BinPage() {
                           <TranslatedText text="files.table.lastModified" />: {folder.deletedAt}
                         </p>
                         <p>
-                          <TranslatedText text="files.table.fiscalYear" />: {folder.fiscalYear}
+                          <TranslatedText text="files.table.fiscalYear" />: {folder.fiscalYear?.name || '-'}
                         </p>
                         <p>
-                          <TranslatedText text="files.table.source" />: {folder.source}
+                          <TranslatedText text="files.table.source" />: {folder.source?.name || '-'}
                         </p>
                         <p>
-                          <TranslatedText text="files.table.grantType" />: {folder.grantType}
+                          <TranslatedText text="files.table.grantType" />: {folder.grantType?.name || '-'}
                         </p>
                     </div>
                   </div>

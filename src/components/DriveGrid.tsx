@@ -148,18 +148,18 @@ const DriveGrid = ({ folders, files, onFolderClick, onFileClick, onRefresh }: Dr
                   {getFileOrFolderIcon(file, false, 'w-12 h-12')}
                 </div>
                 <span className="text-sm font-medium truncate w-full text-center">
-                  <TranslatedText text={file.name} />
+                  {file.name}
                 </span>
               </button>
               <div className="text-xs text-dark-300 space-y-1">
                 <div>
-                  <TranslatedText text="Fiscal Year" />: <TranslatedText text={file.fiscalYear?.name || '-'} />
+                  Fiscal Year: {file.fiscalYear?.name || '-'}
                 </div>
                 <div>
-                  <TranslatedText text="Source" />: <TranslatedText text={file.source?.name || '-'} />
+                  Source: {file.source?.name || '-'}
                 </div>
                 <div>
-                  <TranslatedText text="Grant Type" />: <TranslatedText text={file.grantType?.name || '-'} />
+                  Grant Type: {file.grantType?.name || '-'}
                 </div>
                 <div>
                   <TranslatedText text="Created" />: {format(new Date(file.uploadedAt), 'MMM d, yyyy')}
