@@ -1,12 +1,26 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
+async function restoreParentFolders(folderId: number) {
+  const folder = await prisma.folder.findUnique({ where: { id: folderId } });
+  if (folder && folder.parentId) {
+    // Restore parent first
+    await prisma.folder.update({
+      where: { id: folder.parentId },
+      data: { isDeleted: false, deletedAt: null, deleteAfter: null },
+    });
+    await restoreParentFolders(folder.parentId);
+  }
+}
+
 async function restoreFolderAndContents(folderId: number) {
   // Restore the folder
   await prisma.folder.update({
     where: { id: folderId },
     data: { isDeleted: false, deletedAt: null, deleteAfter: null },
   });
+  // Restore all parent folders recursively
+  await restoreParentFolders(folderId);
   // Restore all files in this folder
   await prisma.file.updateMany({
     where: { folderId },

@@ -18,16 +18,11 @@ const FileIcon = () => (
   </svg>
 );
 
-interface SelectedItem {
-  id: string;
-  type: 'file' | 'folder';
-}
-
 export default function BinPage() {
   const { language } = useApp();
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'list' | 'grid'>('list');
-  const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
+  const [selectedItems, setSelectedItems] = useState<{ id: string; type: 'file' | 'folder' }[]>([]);
   const [deletedFiles, setDeletedFiles] = useState<any[]>([]);
   const [deletedFolders, setDeletedFolders] = useState<any[]>([]);
   const [selectedType, setSelectedType] = useState<string>('');
@@ -57,19 +52,16 @@ export default function BinPage() {
       });
   }, []);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (openDropdown && !(event.target as Element).closest('.filter-dropdown')) {
         setOpenDropdown(null);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [openDropdown]);
 
-  // Filter files based on selected filters
   const filteredFiles = deletedFiles.filter(file => {
     if (selectedType && !file.name.toLowerCase().includes(selectedType.toLowerCase())) return false;
     if (selectedSource && file.source !== selectedSource) return false;
@@ -79,7 +71,6 @@ export default function BinPage() {
       const today = new Date();
       const deletedDate = new Date(file.deletedAt);
       const diffDays = Math.floor((today.getTime() - deletedDate.getTime()) / (1000 * 60 * 60 * 24));
-      
       switch (selectedModified) {
         case 'Today':
           if (diffDays !== 0) return false;
@@ -98,7 +89,6 @@ export default function BinPage() {
     return true;
   });
 
-  // Filter folders based on selected filters
   const filteredFolders = deletedFolders.filter(folder => {
     if (selectedType && !folder.name.toLowerCase().includes(selectedType.toLowerCase())) return false;
     if (selectedSource && folder.source !== selectedSource) return false;
@@ -108,7 +98,6 @@ export default function BinPage() {
       const today = new Date();
       const deletedDate = new Date(folder.deletedAt);
       const diffDays = Math.floor((today.getTime() - deletedDate.getTime()) / (1000 * 60 * 60 * 24));
-      
       switch (selectedModified) {
         case 'Today':
           if (diffDays !== 0) return false;
@@ -127,12 +116,10 @@ export default function BinPage() {
     return true;
   });
 
-  // Toggle dropdown
   const toggleDropdown = (dropdown: string) => {
     setOpenDropdown(openDropdown === dropdown ? null : dropdown);
   };
 
-  // Handle filter selection
   const handleFilterSelect = (filter: string, value: string) => {
     switch (filter) {
       case 'type':
@@ -154,7 +141,6 @@ export default function BinPage() {
     setOpenDropdown(null);
   };
 
-  // Selection logic for both files and folders
   const handleSelectAll = () => {
     if (selectedItems.length === filteredFiles.length + filteredFolders.length) {
       setSelectedItems([]);
@@ -175,50 +161,75 @@ export default function BinPage() {
     });
   };
 
-  // Restore selected
   const handleRestore = async () => {
     setActionLoading(true);
     for (const item of selectedItems) {
       const url = item.type === 'file'
         ? `/api/files/${item.id}/restore`
         : `/api/folders/${item.id}/restore`;
-      await fetch(url, { method: 'PATCH' });
+      const res = await fetch(url, { method: 'PATCH' });
+      if (!res.ok) {
+        toast.error('Failed to restore some items');
+        setActionLoading(false);
+        return;
+      }
     }
     toast.success('Restored successfully');
     setSelectedItems([]);
     setActionLoading(false);
     setShowConfirm(null);
     setLoading(true);
-    fetch('/api/bin')
-      .then(res => res.json())
-      .then(data => {
-        setDeletedFiles(data.files || []);
-        setDeletedFolders(data.folders || []);
-        setLoading(false);
-      });
+    setTimeout(() => {
+      fetch('/api/bin')
+        .then(res => res.json())
+        .then(data => {
+          setDeletedFiles(data.files || []);
+          setDeletedFolders(data.folders || []);
+          setLoading(false);
+          window.dispatchEvent(new Event('refresh-folders'));
+        });
+    }, 300);
   };
 
-  // Delete forever selected
   const handleDelete = async () => {
     setActionLoading(true);
+    let hasError = false;
     for (const item of selectedItems) {
       const url = item.type === 'file'
         ? `/api/files/${item.id}/forever`
         : `/api/folders/${item.id}/forever`;
-      await fetch(url, { method: 'DELETE' });
+      const res = await fetch(url, { method: 'DELETE' });
+      if (!res.ok) {
+        hasError = true;
+        console.error(`Failed to delete ${item.type} with id ${item.id}`);
+      }
     }
-    toast.success('Deleted forever');
     setSelectedItems([]);
     setActionLoading(false);
     setShowConfirm(null);
     setLoading(true);
-    fetch('/api/bin')
-      .then(res => res.json())
-      .then(data => {
-        setDeletedFiles(data.files || []);
-        setDeletedFolders(data.folders || []);
-        setLoading(false);
-      });
+    setTimeout(() => {
+      fetch('/api/bin')
+        .then(res => res.json())
+        .then(data => {
+          setDeletedFiles(data.files || []);
+          setDeletedFolders(data.folders || []);
+          setLoading(false);
+          // Check if any of the selected items are still present
+          const stillPresent = selectedItems.some(item => {
+            if (item.type === 'file') {
+              return (data.files || []).some(f => String(f.id) === item.id);
+            } else {
+              return (data.folders || []).some(f => String(f.id) === item.id);
+            }
+          });
+          if (stillPresent) {
+            toast.error('Failed to delete some items');
+          } else {
+            toast.success('Deleted forever');
+          }
+        });
+    }, 300);
   };
 
   return (
@@ -405,7 +416,7 @@ export default function BinPage() {
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin h-8 w-8 border-b-2 border-primary-500 rounded-full"></div>
           </div>
-        ) : filteredFiles.length === 0 && filteredFolders.length === 0 ? (
+        ) : filteredFiles.length + filteredFolders.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-dark-300">
               <TranslatedText text={selectedType || selectedModified || selectedSource || selectedFiscalYear || selectedGrantType ? 'bin.emptyState.noItemsForFilter' : 'bin.emptyState.noItems'} />
@@ -493,8 +504,8 @@ export default function BinPage() {
                           <input
                             type="checkbox"
                             className="h-4 w-4 text-primary-500 rounded border-dark-500 bg-dark-700 focus:ring-primary-500"
-                            checked={selectedItems.some(item => item.id === file.id && item.type === 'file')}
-                            onChange={() => handleSelectItem(file.id, 'file')}
+                            checked={selectedItems.some(item => item.id === String(file.id) && item.type === 'file')}
+                            onChange={() => handleSelectItem(String(file.id), 'file')}
                           />
                         </div>
                       </td>
@@ -522,43 +533,43 @@ export default function BinPage() {
                     </tr>
                   ))}
                     {filteredFolders.map((folder) => (
-                      <tr
-                        key={folder.id}
-                        className="hover:bg-dark-600 transition-colors"
-                      >
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <input
-                              type="checkbox"
-                              className="h-4 w-4 text-primary-500 rounded border-dark-500 bg-dark-700 focus:ring-primary-500"
-                              checked={selectedItems.some(item => item.id === folder.id && item.type === 'folder')}
-                              onChange={() => handleSelectItem(folder.id, 'folder')}
-                            />
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <FolderIcon />
-                            <span className="text-sm font-medium text-dark-100">{folder.name}</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
-                          <TranslatedText text="files.newFolder" />
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
-                          {folder.deletedAt}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
-                          {folder.fiscalYear?.name || '-'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
-                          {folder.source?.name || '-'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
-                          {folder.grantType?.name || '-'}
-                        </td>
-                      </tr>
-                    ))}
+                    <tr
+                      key={folder.id}
+                      className="hover:bg-dark-600 transition-colors"
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4 text-primary-500 rounded border-dark-500 bg-dark-700 focus:ring-primary-500"
+                            checked={selectedItems.some(item => item.id === String(folder.id) && item.type === 'folder')}
+                            onChange={() => handleSelectItem(String(folder.id), 'folder')}
+                          />
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <FolderIcon />
+                          <span className="text-sm font-medium text-dark-100">{folder.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                        {folder.type}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                        {folder.deletedAt}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                        {folder.fiscalYear?.name || '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                        {folder.source?.name || '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                        {folder.grantType?.name || '-'}
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>
@@ -576,8 +587,8 @@ export default function BinPage() {
                     <input
                       type="checkbox"
                       className="h-4 w-4 text-primary-500 rounded border-dark-500 bg-dark-700 focus:ring-primary-500"
-                      checked={selectedItems.some(item => item.id === file.id && item.type === 'file')}
-                      onChange={() => handleSelectItem(file.id, 'file')}
+                      checked={selectedItems.some(item => item.id === String(file.id) && item.type === 'file')}
+                      onChange={() => handleSelectItem(String(file.id), 'file')}
                     />
                   </div>
                   <div className="flex flex-col space-y-3 mt-4">
@@ -609,33 +620,35 @@ export default function BinPage() {
                     </div>
                   </motion.div>
                 ))}
-
                 {filteredFolders.map((folder) => (
-                  <motion.div
-                    key={folder.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="relative p-4 bg-dark-700 rounded-lg border border-dark-600"
-                  >
-                    <div className="absolute top-2 left-2">
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4 text-primary-500 rounded border-dark-500 bg-dark-700 focus:ring-primary-500"
-                        checked={selectedItems.some(item => item.id === folder.id && item.type === 'folder')}
-                        onChange={() => handleSelectItem(folder.id, 'folder')}
-                      />
-                    </div>
-                    <div className="flex flex-col space-y-3 mt-4">
-                      <div className="flex items-center space-x-3">
-                        <FolderIcon />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-dark-100 truncate">
-                            {folder.name}
-                          </p>
-                        </div>
+                <motion.div
+                  key={folder.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="relative p-4 bg-dark-700 rounded-lg border border-dark-600"
+                >
+                  <div className="absolute top-2 left-2">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 text-primary-500 rounded border-dark-500 bg-dark-700 focus:ring-primary-500"
+                      checked={selectedItems.some(item => item.id === String(folder.id) && item.type === 'folder')}
+                      onChange={() => handleSelectItem(String(folder.id), 'folder')}
+                    />
+                  </div>
+                  <div className="flex flex-col space-y-3 mt-4">
+                    <div className="flex items-center space-x-3">
+                      <FolderIcon />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-dark-100 truncate">
+                          {folder.name}
+                        </p>
                       </div>
-                      <div className="text-xs text-dark-400 space-y-1">
+                    </div>
+                    <div className="text-xs text-dark-400 space-y-1">
+                        <p>
+                          <TranslatedText text="files.table.type" />: {folder.type}
+                        </p>
                         <p>
                           <TranslatedText text="files.table.lastModified" />: {folder.deletedAt}
                         </p>
@@ -648,9 +661,9 @@ export default function BinPage() {
                         <p>
                           <TranslatedText text="files.table.grantType" />: {folder.grantType?.name || '-'}
                         </p>
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
+                  </motion.div>
                 ))}
               </div>
             )}

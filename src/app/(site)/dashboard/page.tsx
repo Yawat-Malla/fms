@@ -183,10 +183,19 @@ const Dashboard = () => {
       } else {
         setCurrentFolder(null);
         setFolders([]);
-      setLoading(false);
+        setLoading(false);
       }
     }
   };
+
+  // Listen for refresh-folders event (from bin restore)
+  useEffect(() => {
+    const refreshListener = () => {
+      handleRefresh();
+    };
+    window.addEventListener('refresh-folders', refreshListener);
+    return () => window.removeEventListener('refresh-folders', refreshListener);
+  }, []);
 
   // Helper to get current folder by path
   const getCurrentFolder = (foldersList: Folder[], pathArr: string[]) => {
