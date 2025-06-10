@@ -74,15 +74,16 @@ export default function Card({
 
   // Build the card classes based on props
   const cardClasses = [
-    'bg-dark-700',
+    'bg-white',
     'border',
     'border-dark-600',
     'rounded-lg',
-    'shadow-dark-sm',
+    'shadow-sm',
     'overflow-visible',
     'transition-all',
     'duration-300',
     'ease-out',
+    'hover:border-primary-500/50',
     interactive && 'cursor-pointer card-hover active:scale-[0.99]',
     className,
   ].filter(Boolean).join(' ');
@@ -94,7 +95,7 @@ export default function Card({
     >
       {/* Card header */}
       {(title || subtitle || icon || actions || fileType) && (
-        <div className="px-4 py-4 sm:px-6 flex justify-between items-start">
+        <div className="px-4 py-4 sm:px-6 flex justify-between items-start border-b border-dark-600/50">
           <div className="flex items-center">
             {(icon || fileType) && (
               <div className="mr-3 flex-shrink-0">
@@ -118,7 +119,7 @@ export default function Card({
       
       {/* Card footer */}
       {footer && (
-        <div className="px-4 py-4 sm:px-6 bg-dark-800 border-t border-dark-600 transition-colors duration-300">
+        <div className="px-4 py-4 sm:px-6 bg-dark-800/5 border-t border-dark-600/50 transition-colors duration-300">
           {footer}
         </div>
       )}

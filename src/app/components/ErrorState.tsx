@@ -35,7 +35,7 @@ const ErrorState: React.FC<ErrorStateProps> = ({ title, message, action }) => {
       {action && (
         <button
           onClick={action.onClick}
-          className="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+          className="px-4 py-2 bg-primary-500 text-black rounded-md hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
         >
           <TranslatedText text={action.label} />
         </button>

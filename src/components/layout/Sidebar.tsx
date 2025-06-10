@@ -216,8 +216,8 @@ export default function Sidebar() {
     
     const className = `${
       isActive
-        ? 'text-dark-100'
-        : 'text-dark-300 hover:bg-dark-700/50 hover:text-dark-100'
+        ? 'text-white'
+        : 'text-primary-100 hover:bg-primary-600 hover:text-white'
     } group flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${
       isNavigating ? 'pointer-events-none opacity-50' : ''
     }`;
@@ -461,9 +461,9 @@ export default function Sidebar() {
   ];
 
   return (
-    <div className="flex flex-col h-full bg-dark-800 border-r border-dark-700">
+    <div className="flex flex-col h-full bg-primary-500 border-r border-primary-600">
       {/* User profile section */}
-      <div className="flex-shrink-0 flex items-center px-6 py-5 border-b border-dark-700">
+      <div className="flex-shrink-0 flex items-center px-6 py-5 border-b border-primary-600">
         {session && (
           <Avatar 
             imageUrl={session?.user?.profilePicture || undefined}
@@ -473,17 +473,17 @@ export default function Sidebar() {
           />
         )}
         <div className="flex flex-col ml-4 min-w-0">
-          <span className="text-sm font-medium text-dark-100 truncate">
+          <span className="text-sm font-medium text-white truncate">
             {session?.user?.name || 'Loading...'}
           </span>
-          <span className="text-xs text-dark-300 truncate">
+          <span className="text-xs text-primary-100 truncate">
             {session?.user?.email || 'Loading...'}
           </span>
         </div>
       </div>
 
       {/* Main navigation */}
-      <nav className="flex-1 overflow-y-auto px-2 py-4 space-y-1 scrollbar-thin scrollbar-thumb-dark-600 scrollbar-track-dark-800">
+      <nav className="flex-1 overflow-y-auto px-2 py-4 space-y-1 scrollbar-thin scrollbar-thumb-primary-400 scrollbar-track-primary-600">
         {navigation.map((item) => (
           <div key={item.name}>
             {item.children ? (
@@ -494,8 +494,8 @@ export default function Sidebar() {
                   whileHover={{ scale: 1.02 }}
                   className={
                     isActive(item.href)
-                      ? 'bg-dark-700 text-dark-100 group w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-200'
-                      : 'text-dark-300 hover:bg-dark-700 hover:text-dark-100 group w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-200'
+                      ? 'bg-primary-600 text-white group w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-200'
+                      : 'text-primary-100 hover:bg-primary-600 hover:text-white group w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-200'
                   }
                 >
                   {item.icon}
@@ -503,7 +503,7 @@ export default function Sidebar() {
                   <motion.svg
                     animate={{ rotate: expandedMenus[item.name] ? 90 : 0 }}
                     transition={{ type: 'spring', stiffness: 300, damping: 24 }}
-                    className="ml-auto h-4 w-4 text-dark-400 transition-transform duration-300 ease-in-out"
+                    className="ml-auto h-4 w-4 text-primary-200 transition-transform duration-300 ease-in-out"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -536,8 +536,8 @@ export default function Sidebar() {
                                 whileHover={{ scale: 1.02 }}
                                 className={
                                   pathname === subItem.href
-                                    ? 'bg-dark-700 text-dark-100 group w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-200'
-                                    : 'text-dark-300 hover:bg-dark-700 hover:text-dark-100 group w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-200'
+                                    ? 'bg-primary-600 text-white group w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-200'
+                                    : 'text-primary-100 hover:bg-primary-600 hover:text-white group w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-200'
                                 }
                               >
                                 {subItem.icon}
@@ -545,7 +545,7 @@ export default function Sidebar() {
                                 <motion.svg
                                   animate={{ rotate: expandedSubmenus[subItem.name] ? 90 : 0 }}
                                   transition={{ type: 'spring', stiffness: 300, damping: 24 }}
-                                  className="ml-auto h-4 w-4 text-dark-400 transition-transform duration-300 ease-in-out"
+                                  className="ml-auto h-4 w-4 text-primary-200 transition-transform duration-300 ease-in-out"
                                   xmlns="http://www.w3.org/2000/svg"
                                   fill="none"
                                   viewBox="0 0 24 24"
@@ -577,8 +577,8 @@ export default function Sidebar() {
                                             whileHover={{ scale: 1.02 }}
                                             className={
                                               pathname === subSubItem.href
-                                                ? 'bg-dark-700 text-dark-100 group w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-200'
-                                                : 'text-dark-300 hover:bg-dark-700 hover:text-dark-100 group w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-200'
+                                                ? 'bg-primary-600 text-white group w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-200'
+                                                : 'text-primary-100 hover:bg-primary-600 hover:text-white group w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-200'
                                             }
                                           >
                                             {subSubItem.icon}
@@ -586,7 +586,7 @@ export default function Sidebar() {
                                             <motion.svg
                                               animate={{ rotate: expandedDecades[subSubItem.name] ? 90 : 0 }}
                                               transition={{ type: 'spring', stiffness: 300, damping: 24 }}
-                                              className="ml-auto h-4 w-4 text-dark-400 transition-transform duration-300 ease-in-out"
+                                              className="ml-auto h-4 w-4 text-primary-200 transition-transform duration-300 ease-in-out"
                                               xmlns="http://www.w3.org/2000/svg"
                                               fill="none"
                                               viewBox="0 0 24 24"
@@ -617,7 +617,7 @@ export default function Sidebar() {
                                                   >
                                                     <button
                                                       onClick={() => handleFilterClick(year.href)}
-                                                      className="w-full text-dark-300 hover:bg-dark-700 hover:text-dark-100 group flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-200"
+                                                      className="w-full text-primary-100 hover:bg-primary-600 hover:text-white group flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-200"
                                                     >
                                                       {year.icon}
                                                       {year.name}
@@ -659,12 +659,12 @@ export default function Sidebar() {
       </nav>
 
       {/* Logout button */}
-      <div className="px-2 py-4 border-t border-dark-700">
+      <div className="px-2 py-4 border-t border-primary-600">
         <motion.button
           whileHover={{ scale: 1.02 }}
           onClick={handleLogout}
           disabled={isLoggingOut}
-          className="w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-md text-dark-300 hover:bg-dark-700 hover:text-dark-100 transition-all duration-200"
+          className="w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-md text-primary-100 hover:bg-primary-600 hover:text-white transition-all duration-200"
         >
           <svg
             className="w-5 h-5 mr-3"

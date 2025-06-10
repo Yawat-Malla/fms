@@ -80,13 +80,13 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
             <button
               onClick={handleConfirm}
               disabled={isDeleting}
-              className={`px-4 py-2 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 ${
+              className={`px-4 py-2 text-sm font-medium text-black rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 ${
                 isDeleting ? 'bg-dark-600 cursor-not-allowed' : 'bg-red-500 hover:bg-red-600'
               }`}
             >
               {isDeleting ? (
                 <div className="flex items-center space-x-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-black"></div>
                   <span><TranslatedText text="Deleting..." /></span>
                 </div>
               ) : (

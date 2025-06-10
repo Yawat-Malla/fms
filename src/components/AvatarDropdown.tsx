@@ -55,12 +55,12 @@ export default function AvatarDropdown({ user }: AvatarDropdownProps) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="absolute right-0 mt-2 w-48 bg-dark-800 border border-dark-700 rounded-lg shadow-lg z-50"
+            className="absolute right-0 mt-2 w-48 bg-primary-500 border border-primary-600 rounded-lg shadow-lg z-50"
           >
             <div className="py-2">
-              <div className="px-4 py-2 border-b border-dark-700">
-                <p className="text-sm font-medium text-dark-100">{user.name}</p>
-                <p className="text-xs text-dark-400 truncate">{user.email}</p>
+              <div className="px-4 py-2 border-b border-primary-600">
+                <p className="text-sm font-medium text-white">{user.name}</p>
+                <p className="text-xs text-primary-200 truncate">{user.email}</p>
               </div>
 
               <button
@@ -68,7 +68,7 @@ export default function AvatarDropdown({ user }: AvatarDropdownProps) {
                   router.push('/settings?tab=profile');
                   setIsOpen(false);
                 }}
-                className="w-full px-4 py-2 text-left text-sm text-dark-200 hover:bg-dark-700 flex items-center"
+                className="w-full px-4 py-2 text-left text-sm text-primary-100 hover:bg-primary-600 flex items-center"
               >
                 <FiUser className="w-4 h-4 mr-2" />
                 Profile
@@ -79,7 +79,7 @@ export default function AvatarDropdown({ user }: AvatarDropdownProps) {
                   router.push('/settings');
                   setIsOpen(false);
                 }}
-                className="w-full px-4 py-2 text-left text-sm text-dark-200 hover:bg-dark-700 flex items-center"
+                className="w-full px-4 py-2 text-left text-sm text-primary-100 hover:bg-primary-600 flex items-center"
               >
                 <FiSettings className="w-4 h-4 mr-2" />
                 Settings
@@ -87,7 +87,7 @@ export default function AvatarDropdown({ user }: AvatarDropdownProps) {
 
               <button
                 onClick={handleSignOut}
-                className="w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-dark-700 flex items-center"
+                className="w-full px-4 py-2 text-left text-sm text-red-300 hover:bg-primary-600 flex items-center"
               >
                 <FiLogOut className="w-4 h-4 mr-2" />
                 Sign out

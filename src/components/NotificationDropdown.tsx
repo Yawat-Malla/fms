@@ -78,32 +78,39 @@ export function NotificationDropdown() {
       </button>
 
       {isOpen && (
-        <div 
-          className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg border border-gray-200 z-50"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="p-4">
-            <h2 className="font-semibold mb-2">Notifications</h2>
-            <div className="space-y-2 max-h-96 overflow-y-auto">
-              {notifications.length === 0 ? (
-                <div className="text-gray-500 text-center py-4">No notifications</div>
-              ) : (
-                notifications.map((notification) => (
-                  <div 
-                    key={notification.id}
-                    className={`p-2 hover:bg-gray-50 rounded cursor-pointer ${!notification.read ? 'bg-blue-50' : ''}`}
-                    onClick={() => markAsRead(notification.id)}
-                  >
-                    <div className="text-sm">{notification.message}</div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      {new Date(notification.createdAt).toLocaleString()}
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/20 z-40"
+            onClick={() => setIsOpen(false)}
+          />
+          <div 
+            className="absolute right-0 mt-2 w-80 bg-primary-500 rounded-md shadow-lg border border-primary-600 z-50 overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 bg-primary-500">
+              <h2 className="font-semibold mb-2 text-white">Notifications</h2>
+              <div className="space-y-2 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-primary-400 scrollbar-track-primary-600">
+                {notifications.length === 0 ? (
+                  <div className="text-primary-100 text-center py-4 bg-primary-500">No notifications</div>
+                ) : (
+                  notifications.map((notification) => (
+                    <div 
+                      key={notification.id}
+                      className={`p-2 hover:bg-primary-600 rounded cursor-pointer bg-primary-500 ${!notification.read ? 'bg-primary-600/50' : ''}`}
+                      onClick={() => markAsRead(notification.id)}
+                    >
+                      <div className="text-sm text-white">{notification.message}</div>
+                      <div className="text-xs text-primary-200 mt-1">
+                        {new Date(notification.createdAt).toLocaleString()}
+                      </div>
                     </div>
-                  </div>
-                ))
-              )}
+                  ))
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

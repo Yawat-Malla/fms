@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { Bell, Menu, X } from 'lucide-react';
 import Sidebar from './Sidebar';
 import Avatar from '@/components/ui/Avatar';
-import { Bell } from 'lucide-react';
-import SearchResults from '@/components/SearchResults';
 import AvatarDropdown from '@/components/AvatarDropdown';
 import { useTranslation } from 'react-i18next';
+import { NotificationDropdown } from '@/components/NotificationDropdown';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -182,62 +183,12 @@ export default function MainLayout({ children }: MainLayoutProps) {
             <div className="ml-4 flex items-center space-x-4">
               {/* Notification Bell */}
               <div className="relative">
-                <button
-                  onClick={handleNotificationClick}
-                  className="p-1 rounded-full text-dark-400 hover:text-dark-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-dark-800 focus:ring-primary-500"
-                >
-                  <span className="sr-only">View notifications</span>
-                    <Bell className="h-6 w-6" />
-                    {notifications.some(n => !n.read) && (
-                    <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-dark-800" />
-                    )}
-                </button>
-
-                {notificationsOpen && (
-                  <div 
-                    className="absolute right-0 mt-2 w-80 bg-dark-700 rounded-md shadow-lg border border-dark-600 z-50"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="p-4">
-                      <h2 className="font-semibold mb-2 text-dark-100">Notifications</h2>
-                      {loading ? (
-                        <div className="text-dark-300">Loading...</div>
-                      ) : notifications.length === 0 ? (
-                        <div className="text-dark-300">No notifications</div>
-                      ) : (
-                        <div className="space-y-2">
-                          {notifications.map((notification) => (
-                            <div
-                              key={notification.id}
-                              className={`p-3 rounded-md cursor-pointer transition-colors ${
-                                notification.read
-                                  ? 'bg-dark-600 hover:bg-dark-500'
-                                  : 'bg-dark-600/50 hover:bg-dark-500'
-                              }`}
-                              onClick={() => markAsRead(notification.id)}
-                            >
-                              <div className="flex items-start">
-                                <div className="flex-1">
-                                  <p className="text-sm font-medium text-dark-100">
-                                    {notification.title}
-                                  </p>
-                                  <p className="text-sm text-dark-300 mt-1">
-                                    {notification.message}
-                                  </p>
-                                  <p className="text-xs text-dark-400 mt-1">
-                                    {new Date(notification.createdAt).toLocaleString()}
-                                  </p>
-                                </div>
-                                {!notification.read && (
-                                  <span className="h-2 w-2 bg-primary-500 rounded-full mt-1" />
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                {loading ? (
+                  <span className="text-white">Loading...</span>
+                ) : session?.user ? (
+                  <NotificationDropdown />
+                ) : (
+                  <span className="text-white">Not logged in</span>
                 )}
               </div>
 

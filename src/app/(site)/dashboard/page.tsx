@@ -183,7 +183,7 @@ const Dashboard = () => {
       } else {
         setCurrentFolder(null);
         setFolders([]);
-        setLoading(false);
+      setLoading(false);
       }
     }
   };

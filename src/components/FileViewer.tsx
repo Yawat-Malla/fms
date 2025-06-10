@@ -169,24 +169,24 @@ const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
         </div>
       );
     }
-    return (
-      <div className="space-y-4">
-        <div>
-          <h3 className="text-sm font-medium text-dark-300 mb-2">
-            <TranslatedText text="Preview" />
-          </h3>
-          <div className="bg-dark-900 rounded-lg p-4">
-            {renderFileContent()}
+      return (
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-sm font-medium text-dark-300 mb-2">
+              <TranslatedText text="Preview" />
+            </h3>
+            <div className="bg-dark-900 rounded-lg p-4">
+              {renderFileContent()}
+            </div>
           </div>
         </div>
-      </div>
-    );
+      );
   };
 
   // Modal style for image files
   if (file.type?.startsWith('image')) {
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div
           className="bg-dark-800 rounded-lg shadow-xl flex flex-col p-0 relative"
           style={{
@@ -210,7 +210,7 @@ const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
           </button>
           {renderFileContent()}
         </div>
-      </div>
+        </div>
     );
   }
 
@@ -218,15 +218,15 @@ const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-dark-800 rounded-lg shadow-xl w-[90vw] h-[calc(90vh-10rem)] flex flex-col p-0 mt-40 relative">
-        <button
-          onClick={onClose}
+          <button
+            onClick={onClose}
           className="absolute top-4 right-4 z-10 text-dark-300 hover:text-dark-100 focus:outline-none bg-dark-700 rounded-full p-2"
           aria-label="Close"
-        >
+          >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
-        </button>
+          </button>
         <div className="flex-1 overflow-hidden">
           {renderFileContent()}
         </div>

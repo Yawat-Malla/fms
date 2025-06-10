@@ -29,12 +29,12 @@ const Navbar = () => {
   console.log('Navbar render - Session data:', session);
 
   return (
-    <nav className="bg-dark-800 border-b border-dark-700">
+    <nav className="bg-white border-b border-dark-600/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
-              <Link href="/" className="text-xl font-bold text-primary-500">
+              <Link href="/" className="text-xl font-bold text-primary-500 hover:text-primary-600 transition-colors">
                 FileMS
               </Link>
             </div>
@@ -52,14 +52,14 @@ const Navbar = () => {
                 <input
                   type="text"
                   placeholder="Search..."
-                  className="block w-full pl-10 pr-3 py-2 border border-dark-600 rounded-md leading-5 bg-dark-700 text-dark-100 placeholder-dark-400 focus:outline-none focus:bg-dark-800 focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                  className="block w-full pl-10 pr-3 py-2 border border-dark-600/50 rounded-md leading-5 bg-white text-dark-100 placeholder-dark-400 focus:outline-none focus:border-primary-500 focus:ring-primary-500 sm:text-sm transition-colors"
                 />
               </div>
             </div>
 
             {/* Online Status */}
             <div className="flex-shrink-0">
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-400/10 text-green-400">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100/10 text-primary-500">
                 Online
               </span>
             </div>

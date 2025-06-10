@@ -180,14 +180,14 @@ export default function BinPage() {
     setShowConfirm(null);
     setLoading(true);
     setTimeout(() => {
-      fetch('/api/bin')
-        .then(res => res.json())
-        .then(data => {
-          setDeletedFiles(data.files || []);
-          setDeletedFolders(data.folders || []);
-          setLoading(false);
+    fetch('/api/bin')
+      .then(res => res.json())
+      .then(data => {
+        setDeletedFiles(data.files || []);
+        setDeletedFolders(data.folders || []);
+        setLoading(false);
           window.dispatchEvent(new Event('refresh-folders'));
-        });
+      });
     }, 300);
   };
 
@@ -209,12 +209,12 @@ export default function BinPage() {
     setShowConfirm(null);
     setLoading(true);
     setTimeout(() => {
-      fetch('/api/bin')
-        .then(res => res.json())
-        .then(data => {
-          setDeletedFiles(data.files || []);
-          setDeletedFolders(data.folders || []);
-          setLoading(false);
+    fetch('/api/bin')
+      .then(res => res.json())
+      .then(data => {
+        setDeletedFiles(data.files || []);
+        setDeletedFolders(data.folders || []);
+        setLoading(false);
           // Check if any of the selected items are still present
           const stillPresent = selectedItems.some(item => {
             if (item.type === 'file') {
@@ -228,7 +228,7 @@ export default function BinPage() {
           } else {
             toast.success('Deleted forever');
           }
-        });
+      });
     }, 300);
   };
 
@@ -661,9 +661,9 @@ export default function BinPage() {
                         <p>
                           <TranslatedText text="files.table.grantType" />: {folder.grantType?.name || '-'}
                         </p>
-                      </div>
                     </div>
-                  </motion.div>
+                  </div>
+                </motion.div>
                 ))}
               </div>
             )}
