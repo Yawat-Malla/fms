@@ -64,14 +64,14 @@ export default function SearchResults({ query, onClose }: SearchResultsProps) {
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      className="absolute top-full left-0 right-0 mt-2 bg-dark-800 border border-dark-700 rounded-lg shadow-lg z-50 max-h-[60vh] overflow-y-auto"
+      className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-[60vh] overflow-y-auto"
     >
       <div className="p-4">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-dark-100">Search Results</h3>
+          <h3 className="text-lg font-semibold text-gray-900">Search Results</h3>
           <button
             onClick={onClose}
-            className="text-dark-400 hover:text-dark-200"
+            className="text-gray-400 hover:text-gray-600"
           >
             <FiX className="w-5 h-5" />
           </button>
@@ -89,19 +89,19 @@ export default function SearchResults({ query, onClose }: SearchResultsProps) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 onClick={() => handleResultClick(result)}
-                className="w-full text-left p-3 rounded-lg hover:bg-dark-700 transition-colors duration-200"
+                className="w-full text-left p-3 rounded-lg hover:bg-gray-50 transition-colors duration-200"
               >
                 <div className="flex items-center space-x-3">
                   {result.isFolder ? (
-                    <FiFolder className="w-5 h-5 text-yellow-400" />
+                    <FiFolder className="w-5 h-5 text-yellow-500" />
                   ) : (
-                    <FiFile className="w-5 h-5 text-blue-400" />
+                    <FiFile className="w-5 h-5 text-blue-500" />
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="text-dark-100 truncate">{result.name}</p>
-                    <p className="text-sm text-dark-400 truncate">{result.path}</p>
+                    <p className="text-gray-900 truncate">{result.name}</p>
+                    <p className="text-sm text-gray-500 truncate">{result.path}</p>
                   </div>
-                  <div className="flex items-center text-sm text-dark-400">
+                  <div className="flex items-center text-sm text-gray-500">
                     <FiClock className="w-4 h-4 mr-1" />
                     {formatDistanceToNow(new Date(result.sortDate), { addSuffix: true })}
                   </div>
@@ -110,7 +110,7 @@ export default function SearchResults({ query, onClose }: SearchResultsProps) {
             ))}
           </div>
         ) : query.trim() ? (
-          <div className="text-center py-8 text-dark-400">
+          <div className="text-center py-8 text-gray-500">
             No results found for "{query}"
           </div>
         ) : null}

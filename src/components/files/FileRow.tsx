@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { format } from 'date-fns';
 import { IFile } from '@/types/index';
 import Avatar from '@/components/ui/Avatar';
+import { useTranslation } from 'react-i18next';
 
 interface FileRowProps {
   file: IFile;
@@ -14,11 +15,43 @@ interface FileRowProps {
 
 export default function FileRow({ file, onSelect, onDelete, onView }: FileRowProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { i18n } = useTranslation();
   
-  // Format date
-  const formattedDate = file.lastModifiedAt 
-    ? format(new Date(file.lastModifiedAt), 'MMM d, yyyy')
-    : 'Unknown date';
+  // Utility to convert English numbers to Nepali
+  const toNepaliNumber = (input: string | number) => {
+    if (typeof input !== 'string') input = String(input);
+    const nepaliDigits = ['०','१','२','३','४','५','६','७','८','९'];
+    return input.replace(/[0-9]/g, d => nepaliDigits[d as any]);
+  };
+
+  // Format date with Nepali month and numerals if needed
+  const formatDate = (date: Date | string | undefined) => {
+    if (!date) return 'Unknown date';
+    let formattedDate = format(new Date(date), 'MMM d, yyyy');
+    if (i18n.language === 'ne') {
+      formattedDate = formattedDate
+        .replace('Jan', 'जनवरी')
+        .replace('Feb', 'फेब्रुअरी')
+        .replace('Mar', 'मार्च')
+        .replace('Apr', 'अप्रिल')
+        .replace('May', 'मे')
+        .replace('Jun', 'जुन')
+        .replace('Jul', 'जुलाई')
+        .replace('Aug', 'अगस्ट')
+        .replace('Sep', 'सेप्टेम्बर')
+        .replace('Oct', 'अक्टोबर')
+        .replace('Nov', 'नोभेम्बर')
+        .replace('Dec', 'डिसेम्बर');
+      formattedDate = toNepaliNumber(formattedDate);
+    }
+    return formattedDate;
+  };
+
+  // Format user name for Nepali (if it contains numbers)
+  const formatUserName = (name: string | undefined) => {
+    if (!name) return 'Unknown User';
+    return i18n.language === 'ne' ? toNepaliNumber(name) : name;
+  };
 
   // File type icon based on extension
   const getFileIcon = () => {
@@ -186,9 +219,11 @@ export default function FileRow({ file, onSelect, onDelete, onView }: FileRowPro
         </div>
       </td>
       <td className="py-4 px-4 text-sm text-dark-300">
-        <span>{file.user?.name || 'Unknown User'}</span>
+        <span>{formatUserName(file.user?.name)}</span>
       </td>
-      <td className="py-4 px-4 text-sm text-dark-300">{formattedDate}</td>
+      <td className="py-4 px-4 text-sm text-dark-300">
+        {formatDate(file.lastModifiedAt)}
+      </td>
       <td className="py-4 px-4 text-right relative overflow-visible">
         <button
           type="button"

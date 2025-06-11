@@ -9,6 +9,7 @@ import Avatar from '@/components/ui/Avatar';
 import AvatarDropdown from '@/components/AvatarDropdown';
 import { useTranslation } from 'react-i18next';
 import { NotificationDropdown } from '@/components/NotificationDropdown';
+import SearchResults from '@/components/SearchResults';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -183,7 +184,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             <div className="ml-4 flex items-center space-x-4">
               {/* Notification Bell */}
               <div className="relative">
-                {loading ? (
+                      {loading ? (
                   <span className="text-white">Loading...</span>
                 ) : session?.user ? (
                   <NotificationDropdown />

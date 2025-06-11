@@ -10,6 +10,7 @@ import { generateFiscalYears } from '@/utils/fiscalYears';
 import { useApp } from '@/contexts/AppContext';
 import { TranslatedText } from '@/components/TranslatedText';
 import { translations } from '@/translations';
+import SearchableSelect from '@/components/ui/SearchableSelect';
 
 interface Report {
   id: number;
@@ -23,6 +24,23 @@ interface Report {
     email: string;
   };
 }
+
+// Define sources to match exactly with database records
+const SOURCES = [
+  { id: 'federal_government', name: 'Federal Government' },
+  { id: 'provincial_government', name: 'Provincial Government' },
+  { id: 'local_municipality', name: 'Local Municipality' },
+  { id: 'other', name: 'Other' },
+];
+
+// Define grant types to match exactly with database records
+const GRANT_TYPES = [
+  { id: 'current_expenditure', name: 'Current Expenditure' },
+  { id: 'capital_expenditure', name: 'Capital Expenditure' },
+  { id: 'supplementary_grant', name: 'Supplementary Grant' },
+  { id: 'special_grant', name: 'Special Grant' },
+  { id: 'other_grant', name: 'Other Grant' },
+];
 
 export default function ReportsPage() {
   const { data: session } = useSession();
@@ -336,21 +354,16 @@ export default function ReportsPage() {
               <label htmlFor="source" className="block text-sm font-medium text-dark-200 mb-2">
                 <TranslatedText text="reports.source" />
               </label>
-              <select
-                id="source"
-                value={selectedSource}
-                onChange={(e) => setSelectedSource(e.target.value)}
+              <SearchableSelect
+                options={SOURCES.map(source => ({
+                  id: source.id,
+                  translationKey: `reports.sources.${source.id}`
+                }))}
+                value={selectedSource ? { id: selectedSource, translationKey: `reports.sources.${selectedSource}` } : null}
+                onChange={(option) => setSelectedSource(option?.id || '')}
+                placeholderTranslationKey="reports.selectSource"
                 disabled={selectedReportType !== 'custom'}
-                className={`block w-full rounded-md border-dark-600 bg-dark-800 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm ${
-                  selectedReportType !== 'custom' ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
-              >
-                <option value=""><TranslatedText text="files.filters.allSources" /></option>
-                <option value="Federal Government"><TranslatedText text="files.filters.bySource.federal" /></option>
-                <option value="Provincial Government"><TranslatedText text="files.filters.bySource.provincial" /></option>
-                <option value="Local Municipality"><TranslatedText text="files.filters.bySource.local" /></option>
-                <option value="Other"><TranslatedText text="files.filters.bySource.other" /></option>
-              </select>
+              />
             </div>
 
             {/* Grant Type */}
@@ -358,22 +371,16 @@ export default function ReportsPage() {
               <label htmlFor="grant-type" className="block text-sm font-medium text-dark-200 mb-2">
                 <TranslatedText text="reports.grantType" />
               </label>
-              <select
-                id="grant-type"
-                value={selectedGrantType}
-                onChange={(e) => setSelectedGrantType(e.target.value)}
+              <SearchableSelect
+                options={GRANT_TYPES.map(grant => ({
+                  id: grant.id,
+                  translationKey: `reports.grantTypes.${grant.id}`
+                }))}
+                value={selectedGrantType ? { id: selectedGrantType, translationKey: `reports.grantTypes.${selectedGrantType}` } : null}
+                onChange={(option) => setSelectedGrantType(option?.id || '')}
+                placeholderTranslationKey="reports.selectGrantType"
                 disabled={selectedReportType !== 'custom'}
-                className={`block w-full rounded-md border-dark-600 bg-dark-800 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm ${
-                  selectedReportType !== 'custom' ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
-              >
-                <option value=""><TranslatedText text="files.filters.allGrantTypes" /></option>
-                <option value="Current Expenditure"><TranslatedText text="files.filters.byGrantType.currentExpenditure" /></option>
-                <option value="Capital Expenditure"><TranslatedText text="files.filters.byGrantType.capitalExpenditure" /></option>
-                <option value="Supplementary Grant"><TranslatedText text="files.filters.byGrantType.supplementaryGrant" /></option>
-                <option value="Special Grant"><TranslatedText text="files.filters.byGrantType.specialGrant" /></option>
-                <option value="Other Grant"><TranslatedText text="files.filters.byGrantType.otherGrants" /></option>
-              </select>
+              />
             </div>
 
             {/* Format */}

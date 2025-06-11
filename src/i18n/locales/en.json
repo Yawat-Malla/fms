@@ -1,0 +1,374 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred.",
+    "success": "Success!",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "close": "Close",
+    "confirm": "Confirm",
+    "search": "Search"
+  },
+  "sidebar": {
+    "home": "Home",
+    "files": "Files",
+    "upload": "Upload",
+    "users": "Users",
+    "sync": "Sync",
+    "bin": "Recycle Bin",
+    "reports": "Reports",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signOut": "Sign Out",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot Password?",
+    "rememberMe": "Remember Me"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Overview of your file system",
+    "stats": {
+      "totalFiles": "Total Files",
+      "totalSize": "Total Size",
+      "recentUploads": "Recent Uploads",
+      "availableFiles": "Available Files",
+      "deletedFiles": "Deleted Files"
+    },
+    "charts": {
+      "filesByType": "Files by Type",
+      "uploadTrend": "Upload Trend"
+    }
+  },
+  "projects": {
+    "title": "Projects",
+    "subtitle": "Manage your projects",
+    "create": "Create Project",
+    "edit": "Edit Project",
+    "delete": "Delete Project"
+  },
+  "users": {
+    "title": "Users",
+    "subtitle": "Manage users",
+    "create": "Create User",
+    "edit": "Edit User",
+    "delete": "Delete User",
+    "role": {
+      "admin": "Admin",
+      "editor": "Editor",
+      "viewer": "Viewer"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "System Settings",
+    "systemSettings": "System Settings",
+    "theme": "Theme",
+    "language": {
+      "label": "Language",
+      "options": {
+        "en": "English",
+        "ne": "Nepali"
+      }
+    },
+    "storageDirectory": {
+      "label": "Storage Directory",
+      "placeholder": "Select directory...",
+      "description": "Directory where files are stored.",
+      "browse": "Browse"
+    },
+    "onlineServer": {
+      "title": "Online Server",
+      "apiUrl": {
+        "label": "API URL",
+        "placeholder": "Enter API URL...",
+        "description": "URL of the online server API."
+      },
+      "apiKey": {
+        "label": "API Key",
+        "placeholder": "Enter API Key...",
+        "description": "Key for authenticating with the API.",
+        "show": "Show"
+      },
+      "testConnection": "Test Connection"
+    },
+    "backup": {
+      "title": "Backup",
+      "create": {
+        "label": "Create Backup",
+        "description": "Create a backup of your data.",
+        "button": "Create"
+      },
+      "restore": {
+        "label": "Restore Backup",
+        "description": "Restore data from a backup.",
+        "button": "Restore"
+      }
+    },
+    "buttons": {
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "profile": {
+      "title": "Profile",
+      "picture": "Profile Picture",
+      "pictureDescription": "Upload a profile picture.",
+      "fullName": "Full Name",
+      "username": "Username",
+      "email": "Email",
+      "password": "Password",
+      "saveNote": "Save your changes."
+    },
+    "preferences": {
+      "title": "Preferences",
+      "description": "Set your preferences.",
+      "general": "General",
+      "notifications": "Notifications",
+      "fileUpdates": "File Updates",
+      "fileUpdatesDescription": "Get notified about file changes.",
+      "securityAlerts": "Security Alerts",
+      "securityAlertsDescription": "Get notified about security issues.",
+      "systemUpdates": "System Updates",
+      "systemUpdatesDescription": "Get notified about system updates."
+    },
+    "admin": {
+      "title": "Admin Settings",
+      "description": "Admin-only settings.",
+      "accessDenied": "Access Denied",
+      "accessDeniedDescription": "You do not have permission to access this section.",
+      "siteSettings": "Site Settings",
+      "siteName": "Site Name",
+      "siteLogo": "Site Logo",
+      "maintenanceMode": "Maintenance Mode",
+      "maintenanceModeDescription": "Enable maintenance mode for the site."
+    },
+    "danger": {
+      "title": "Danger Zone",
+      "description": "Dangerous actions.",
+      "resetSettings": "Reset Settings",
+      "resetSettingsDescription": "Reset all settings to default.",
+      "resetSettingsConfirm": "Are you sure you want to reset settings?",
+      "deleteAccount": "Delete Account",
+      "deleteAccountDescription": "Delete your account permanently.",
+      "deleteAccountConfirm": "Are you sure you want to delete your account?",
+      "wipeData": "Wipe Data",
+      "wipeDataDescription": "Wipe all data from the system.",
+      "wipeDataConfirm": "Are you sure you want to wipe all data?"
+    }
+  },
+  "files": {
+    "title": "Files",
+    "subtitle": "Manage your files",
+    "heading": "Files",
+    "filteredResults": "Filtered Results",
+    "newFile": "New File",
+    "newDocument": "New Document",
+    "newFolder": "New Folder",
+    "file": "File",
+    "files": "Files",
+    "found": "Found",
+    "recentlyModified": "Recently Modified",
+    "viewAll": "View All",
+    "filters": {
+      "title": "Filters",
+      "allFiles": "All Files",
+      "byFiscalYear": "By Fiscal Year",
+      "bySource": {
+        "title": "By Source",
+        "federal": "Federal Government",
+        "provincial": "Provincial Government",
+        "local": "Local Municipality",
+        "other": "Other"
+      },
+      "byGrantType": {
+        "title": "By Grant Type",
+        "currentExpenditure": "Current Expenditure",
+        "capitalExpenditure": "Capital Expenditure",
+        "supplementaryGrant": "Supplementary Grant",
+        "specialGrant": "Special Grant",
+        "otherGrants": "Other Grants"
+      },
+      "allFiscalYears": "All Fiscal Years",
+      "allSources": "All Sources",
+      "allGrantTypes": "All Grant Types",
+      "viewAll": "View All",
+      "pdfs": "PDFs",
+      "images": "Images"
+    },
+    "selectSource": "Select source",
+    "emptyState": {
+      "noFiles": "No files found.",
+      "noFilesForFiscalYear": "No files for this fiscal year.",
+      "noFilesForSource": "No files for this source.",
+      "noFilesForGrantType": "No files for this grant type.",
+      "noFilesMatchFilters": "No files match the filters.",
+      "clearFilters": "Clear Filters"
+    },
+    "table": {
+      "name": "Name",
+      "type": "Type",
+      "size": "Size",
+      "uploadedBy": "Uploaded By",
+      "uploadedAt": "Uploaded At",
+      "lastModified": "Last Modified",
+      "status": "Status",
+      "actions": "Actions",
+      "fiscalYear": "Fiscal Year",
+      "source": "Source",
+      "grantType": "Grant Type",
+      "created": "Date Created"
+    },
+    "upload": {
+      "title": "Upload Files",
+      "subtitle": "Upload your files",
+      "steps": ["Select Files", "Add Metadata", "Upload"],
+      "metadata": {
+        "title": "Title",
+        "description": "Description",
+        "titleLabel": "Title",
+        "fiscalYearLabel": "Fiscal Year",
+        "sourceLabel": "Source",
+        "grantTypeLabel": "Grant Type",
+        "remarksLabel": "Remarks"
+      },
+      "document": {
+        "title": "Document",
+        "description": "Document Description",
+        "a4Size": "A4 Size",
+        "nepaliPaper": "Nepali Paper",
+        "extraSize": "Extra Size",
+        "other": "Other",
+        "maxSize": "Max Size",
+        "selectedFiles": "Selected Files",
+        "orClick": "or click here",
+        "supportedFormats": "Supported Formats",
+        "maxFiles": "Max Files"
+      },
+      "buttons": {
+        "upload": "Upload",
+        "cancel": "Cancel",
+        "next": "Next",
+        "back": "Back"
+      },
+      "messages": {
+        "uploading": "Uploading...",
+        "success": "Upload successful!",
+        "error": "Upload failed."
+      }
+    }
+  },
+  "bin": {
+    "title": "Recycle Bin",
+    "subtitle": "Deleted files",
+    "restore": "Restore",
+    "deleteForever": "Delete Forever",
+    "processing": "Processing...",
+    "confirmRestore": "Are you sure you want to restore?",
+    "confirmDelete": "Are you sure you want to delete forever?",
+    "confirmRestoreMessage": "This will restore the selected files.",
+    "confirmDeleteMessage": "This will permanently delete the selected files.",
+    "filters": {
+      "type": "Type",
+      "modified": "Modified",
+      "source": "Source",
+      "fiscalYear": "Fiscal Year",
+      "grantType": "Grant Type",
+      "options": {
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "last7Days": "Last 7 Days",
+        "last30Days": "Last 30 Days"
+      }
+    },
+    "emptyState": {
+      "noItems": "No items in the bin.",
+      "noItemsForFilter": "No items for this filter."
+    }
+  },
+  "reports": {
+    "title": "Reports",
+    "subtitle": "Generate and view reports",
+    "selectSource": "Select source",
+    "selectGrantType": "Select grant type",
+    "sources": {
+      "federal_government": "Federal Government",
+      "provincial_government": "Provincial Government",
+      "local_municipality": "Local Municipality",
+      "other": "Other"
+    },
+    "grantTypes": {
+      "current_expenditure": "Current Expenditure",
+      "capital_expenditure": "Capital Expenditure",
+      "supplementary_grant": "Supplementary Grant",
+      "special_grant": "Special Grant",
+      "other_grant": "Other Grant"
+    },
+    "types": {
+      "missing_uploads": "Missing Uploads"
+    },
+    "generateReport": "Generate Report",
+    "reportType": "Report Type",
+    "required": "Required",
+    "fileFormat": "File Format",
+    "dateRange": "Date Range",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "fiscalYear": "Fiscal Year",
+    "source": "Source",
+    "grantType": "Grant Type",
+    "generate": "Generate",
+    "generating": "Generating...",
+    "download": "Download",
+    "delete": "Delete",
+    "deleteAll": "Delete All",
+    "confirmDelete": "Are you sure you want to delete this report?",
+    "confirmDeleteAll": "Are you sure you want to delete all reports?",
+    "confirmDeleteMessage": "This will delete the selected report.",
+    "confirmDeleteAllMessage": "This will delete all reports.",
+    "types": {
+      "fileCount": "File Count",
+      "missingUploads": "Missing Uploads",
+      "custom": "Custom Report"
+    },
+    "formats": {
+      "pdf": "PDF",
+      "excel": "Excel"
+    },
+    "errors": {
+      "selectReportType": "Please select a report type.",
+      "selectEndDate": "Please select an end date.",
+      "selectStartDate": "Please select a start date.",
+      "invalidDateRange": "Invalid date range.",
+      "downloadFailed": "Download failed.",
+      "deleteFailed": "Delete failed.",
+      "deleteAllFailed": "Delete all failed.",
+      "generateFailed": "Report generation failed."
+    },
+    "success": {
+      "generated": "Report generated!",
+      "deleted": "Report deleted!",
+      "deletedAll": "All reports deleted!",
+      "downloaded": "Report downloaded!"
+    },
+    "buttons": {
+      "generate": "Generate",
+      "download": "Download",
+      "refresh": "Refresh"
+    },
+    "messages": {
+      "generating": "Generating report...",
+      "downloadSuccess": "Download successful!",
+      "downloadError": "Download failed.",
+      "noReports": "No reports found."
+    }
+  },
+  "date": {
+    "format": "{{date}}"
+  }
+} 

@@ -1,0 +1,372 @@
+{
+  "common": {
+    "loading": "लोड हुँदैछ...",
+    "error": "त्रुटि आयो।",
+    "success": "सफलता!",
+    "cancel": "रद्द गर्नुहोस्",
+    "save": "सेभ गर्नुहोस्",
+    "delete": "हटाउनुहोस्",
+    "edit": "सम्पादन गर्नुहोस्",
+    "view": "हेर्नुहोस्",
+    "close": "बन्द गर्नुहोस्",
+    "confirm": "पुष्टि गर्नुहोस्",
+    "search": "खोज्नुहोस्"
+  },
+  "sidebar": {
+    "home": "गृहपृष्ठ",
+    "files": "फाइलहरू",
+    "upload": "अपलोड",
+    "users": "प्रयोगकर्ताहरू",
+    "sync": "सिंक",
+    "bin": "रिसाइकल बिन",
+    "reports": "रिपोर्टहरू",
+    "settings": "सेटिङहरू",
+    "logout": "लगआउट"
+  },
+  "auth": {
+    "signIn": "साइन इन",
+    "signOut": "साइन आउट",
+    "email": "इमेल",
+    "password": "पासवर्ड",
+    "forgotPassword": "पासवर्ड बिर्सनुभयो?",
+    "rememberMe": "मलाई सम्झनुहोस्"
+  },
+  "dashboard": {
+    "title": "ड्यासबोर्ड",
+    "subtitle": "तपाईंको फाइल प्रणालीको अवलोकन",
+    "stats": {
+      "totalFiles": "कुल फाइलहरू",
+      "totalSize": "कुल साइज",
+      "recentUploads": "हालैका अपलोडहरू",
+      "availableFiles": "उपलब्ध फाइलहरू",
+      "deletedFiles": "हटाइएका फाइलहरू"
+    },
+    "charts": {
+      "filesByType": "प्रकार अनुसार फाइलहरू",
+      "uploadTrend": "अपलोड ट्रेन्ड"
+    }
+  },
+  "projects": {
+    "title": "परियोजनाहरू",
+    "subtitle": "आफ्ना परियोजनाहरू व्यवस्थापन गर्नुहोस्",
+    "create": "परियोजना सिर्जना गर्नुहोस्",
+    "edit": "परियोजना सम्पादन गर्नुहोस्",
+    "delete": "परियोजना हटाउनुहोस्"
+  },
+  "users": {
+    "title": "प्रयोगकर्ताहरू",
+    "subtitle": "प्रयोगकर्ताहरू व्यवस्थापन गर्नुहोस्",
+    "create": "प्रयोगकर्ता सिर्जना गर्नुहोस्",
+    "edit": "प्रयोगकर्ता सम्पादन गर्नुहोस्",
+    "delete": "प्रयोगकर्ता हटाउनुहोस्",
+    "role": {
+      "admin": "प्रशासक",
+      "editor": "सम्पादक",
+      "viewer": "दर्शक"
+    }
+  },
+  "settings": {
+    "title": "सेटिङहरू",
+    "subtitle": "प्रणाली सेटिङहरू",
+    "systemSettings": "प्रणाली सेटिङहरू",
+    "theme": "थिम",
+    "language": {
+      "label": "भाषा",
+      "options": {
+        "en": "अंग्रेजी",
+        "ne": "नेपाली"
+      }
+    },
+    "storageDirectory": {
+      "label": "स्टोरेज डाइरेक्टरी",
+      "placeholder": "डाइरेक्टरी चयन गर्नुहोस्...",
+      "description": "फाइलहरू भण्डारण हुने डाइरेक्टरी।",
+      "browse": "ब्राउज गर्नुहोस्"
+    },
+    "onlineServer": {
+      "title": "अनलाइन सर्भर",
+      "apiUrl": {
+        "label": "API URL",
+        "placeholder": "API URL प्रविष्ट गर्नुहोस्...",
+        "description": "अनलाइन सर्भर API को URL।"
+      },
+      "apiKey": {
+        "label": "API Key",
+        "placeholder": "API Key प्रविष्ट गर्नुहोस्...",
+        "description": "API सँग प्रमाणीकरणको लागि कुञ्जी।",
+        "show": "देखाउनुहोस्"
+      },
+      "testConnection": "कनेक्शन परीक्षण गर्नुहोस्"
+    },
+    "backup": {
+      "title": "ब्याकअप",
+      "create": {
+        "label": "ब्याकअप सिर्जना गर्नुहोस्",
+        "description": "आफ्नो डाटा ब्याकअप गर्नुहोस्।",
+        "button": "सिर्जना गर्नुहोस्"
+      },
+      "restore": {
+        "label": "ब्याकअप पुनर्स्थापना गर्नुहोस्",
+        "description": "ब्याकअपबाट डाटा पुनर्स्थापना गर्नुहोस्।",
+        "button": "पुनर्स्थापना गर्नुहोस्"
+      }
+    },
+    "buttons": {
+      "save": "सेभ गर्नुहोस्",
+      "cancel": "रद्द गर्नुहोस्"
+    },
+    "profile": {
+      "title": "प्रोफाइल",
+      "picture": "प्रोफाइल तस्वीर",
+      "pictureDescription": "प्रोफाइल तस्वीर अपलोड गर्नुहोस्।",
+      "fullName": "पूरा नाम",
+      "username": "प्रयोगकर्ता नाम",
+      "email": "इमेल",
+      "password": "पासवर्ड",
+      "saveNote": "परिवर्तनहरू सेभ गर्नुहोस्।"
+    },
+    "preferences": {
+      "title": "प्राथमिकताहरू",
+      "description": "आफ्ना प्राथमिकताहरू सेट गर्नुहोस्।",
+      "general": "सामान्य",
+      "notifications": "सूचनाहरू",
+      "fileUpdates": "फाइल अपडेटहरू",
+      "fileUpdatesDescription": "फाइल परिवर्तनहरूको सूचना प्राप्त गर्नुहोस्।",
+      "securityAlerts": "सुरक्षा सूचना",
+      "securityAlertsDescription": "सुरक्षा समस्याहरूको सूचना प्राप्त गर्नुहोस्।",
+      "systemUpdates": "प्रणाली अपडेटहरू",
+      "systemUpdatesDescription": "प्रणाली अपडेटहरूको सूचना प्राप्त गर्नुहोस्।"
+    },
+    "admin": {
+      "title": "प्रशासन सेटिङहरू",
+      "description": "प्रशासन मात्रका लागि सेटिङहरू।",
+      "accessDenied": "प्रवेश अस्वीकृत",
+      "accessDeniedDescription": "तपाईंलाई यो खण्डमा पहुँच छैन।",
+      "siteSettings": "साइट सेटिङहरू",
+      "siteName": "साइट नाम",
+      "siteLogo": "साइट लोगो",
+      "maintenanceMode": "मर्मत मोड",
+      "maintenanceModeDescription": "साइटको लागि मर्मत मोड सक्षम गर्नुहोस्।"
+    },
+    "danger": {
+      "title": "जोखिम क्षेत्र",
+      "description": "जोखिमपूर्ण कार्यहरू।",
+      "resetSettings": "सेटिङहरू रिसेट गर्नुहोस्",
+      "resetSettingsDescription": "सबै सेटिङहरू डिफल्टमा रिसेट गर्नुहोस्।",
+      "resetSettingsConfirm": "के तपाईं सेटिङहरू रिसेट गर्न चाहनुहुन्छ?",
+      "deleteAccount": "खाता हटाउनुहोस्",
+      "deleteAccountDescription": "आफ्नो खाता स्थायी रूपमा हटाउनुहोस्।",
+      "deleteAccountConfirm": "के तपाईं आफ्नो खाता हटाउन चाहनुहुन्छ?",
+      "wipeData": "डाटा मेटाउनुहोस्",
+      "wipeDataDescription": "प्रणालीबाट सबै डाटा मेटाउनुहोस्।",
+      "wipeDataConfirm": "के तपाईं सबै डाटा मेटाउन चाहनुहुन्छ?"
+    }
+  },
+  "files": {
+    "title": "फाइलहरू",
+    "subtitle": "आफ्ना फाइलहरू व्यवस्थापन गर्नुहोस्",
+    "heading": "फाइलहरू",
+    "filteredResults": "फिल्टर गरिएका नतिजाहरू",
+    "newFile": "नयाँ फाइल",
+    "newDocument": "नयाँ कागजात",
+    "newFolder": "नयाँ फोल्डर",
+    "file": "फाइल",
+    "files": "फाइलहरू",
+    "found": "फेला पर्यो",
+    "recentlyModified": "हालै परिमार्जन गरियो",
+    "viewAll": "सबै हेर्नुहोस्",
+    "filters": {
+      "title": "फिल्टरहरू",
+      "allFiles": "सबै फाइलहरू",
+      "byFiscalYear": "आर्थिक वर्ष अनुसार",
+      "bySource": {
+        "title": "स्रोत अनुसार",
+        "federal": "संघीय सरकार",
+        "provincial": "प्रदेश सरकार",
+        "local": "स्थानीय सरकार",
+        "other": "अन्य"
+      },
+      "byGrantType": {
+        "title": "अनुदान प्रकार अनुसार",
+        "currentExpenditure": "चालू खर्च",
+        "capitalExpenditure": "पूँजीगत खर्च",
+        "supplementaryGrant": "पूरक अनुदान",
+        "specialGrant": "विशेष अनुदान",
+        "otherGrants": "अन्य अनुदानहरू"
+      },
+      "allFiscalYears": "सबै आर्थिक वर्षहरू",
+      "allSources": "सबै स्रोतहरू",
+      "allGrantTypes": "सबै अनुदान प्रकारहरू",
+      "viewAll": "सबै हेर्नुहोस्",
+      "pdfs": "PDFहरू",
+      "images": "तस्बिरहरू"
+    },
+    "selectSource": "स्रोत चयन गर्नुहोस्",
+    "emptyState": {
+      "noFiles": "कुनै फाइल फेला परेन।",
+      "noFilesForFiscalYear": "यो आर्थिक वर्षका लागि कुनै फाइल छैन।",
+      "noFilesForSource": "यो स्रोतका लागि कुनै फाइल छैन।",
+      "noFilesForGrantType": "यो अनुदान प्रकारका लागि कुनै फाइल छैन।",
+      "noFilesMatchFilters": "फिल्टरसँग मेल खाने कुनै फाइल छैन।",
+      "clearFilters": "फिल्टरहरू हटाउनुहोस्"
+    },
+    "table": {
+      "name": "नाम",
+      "type": "प्रकार",
+      "size": "साइज",
+      "uploadedBy": "अपलोड गर्ने",
+      "uploadedAt": "अपलोड गरिएको मिति",
+      "lastModified": "अन्तिम परिमार्जन",
+      "status": "स्थिति",
+      "actions": "कार्यहरू",
+      "fiscalYear": "आर्थिक वर्ष",
+      "source": "स्रोत",
+      "grantType": "अनुदान प्रकार",
+      "created": "सिर्जना मिति"
+    },
+    "upload": {
+      "title": "फाइलहरू अपलोड गर्नुहोस्",
+      "subtitle": "आफ्ना फाइलहरू अपलोड गर्नुहोस्",
+      "steps": ["फाइल चयन गर्नुहोस्", "मेटाडाटा थप्नुहोस्", "अपलोड गर्नुहोस्"],
+      "metadata": {
+        "title": "शीर्षक",
+        "description": "विवरण",
+        "titleLabel": "शीर्षक",
+        "fiscalYearLabel": "आर्थिक वर्ष",
+        "sourceLabel": "स्रोत",
+        "grantTypeLabel": "अनुदान प्रकार",
+        "remarksLabel": "कैफियत"
+      },
+      "document": {
+        "title": "कागजात",
+        "description": "कागजात विवरण",
+        "a4Size": "A4 साइज",
+        "nepaliPaper": "नेपाली कागज",
+        "extraSize": "थप साइज",
+        "other": "अन्य",
+        "maxSize": "अधिकतम साइज",
+        "selectedFiles": "चयन गरिएका फाइलहरू",
+        "orClick": "वा यहाँ क्लिक गर्नुहोस्",
+        "supportedFormats": "समर्थित ढाँचाहरू",
+        "maxFiles": "अधिकतम फाइलहरू"
+      },
+      "buttons": {
+        "upload": "अपलोड गर्नुहोस्",
+        "cancel": "रद्द गर्नुहोस्",
+        "next": "अर्को",
+        "back": "पछाडि"
+      },
+      "messages": {
+        "uploading": "अपलोड हुँदैछ...",
+        "success": "अपलोड सफल!",
+        "error": "अपलोड असफल।"
+      }
+    }
+  },
+  "bin": {
+    "title": "रिसाइकल बिन",
+    "subtitle": "हटाइएका फाइलहरू",
+    "restore": "पुनर्स्थापना गर्नुहोस्",
+    "deleteForever": "सधैंका लागि हटाउनुहोस्",
+    "processing": "प्रक्रिया हुँदैछ...",
+    "confirmRestore": "के तपाईं पुनर्स्थापना गर्न चाहनुहुन्छ?",
+    "confirmDelete": "के तपाईं सधैंका लागि हटाउन चाहनुहुन्छ?",
+    "confirmRestoreMessage": "यसले चयन गरिएका फाइलहरू पुनर्स्थापना गर्नेछ।",
+    "confirmDeleteMessage": "यसले चयन गरिएका फाइलहरू स्थायी रूपमा हटाउनेछ।",
+    "filters": {
+      "type": "प्रकार",
+      "modified": "परिमार्जन गरिएको",
+      "source": "स्रोत",
+      "fiscalYear": "आर्थिक वर्ष",
+      "grantType": "अनुदान प्रकार",
+      "options": {
+        "today": "आज",
+        "yesterday": "हिजो",
+        "last7Days": "पछिल्ला ७ दिन",
+        "last30Days": "पछिल्ला ३० दिन"
+      }
+    },
+    "emptyState": {
+      "noItems": "बिनमा कुनै वस्तु छैन।",
+      "noItemsForFilter": "यो फिल्टरका लागि कुनै वस्तु छैन।"
+    }
+  },
+  "reports": {
+    "title": "रिपोर्टहरू",
+    "subtitle": "रिपोर्टहरू सिर्जना र हेर्नुहोस्",
+    "selectSource": "स्रोत चयन गर्नुहोस्",
+    "selectGrantType": "अनुदान प्रकार चयन गर्नुहोस्",
+    "sources": {
+      "federal_government": "संघीय सरकार",
+      "provincial_government": "प्रदेश सरकार",
+      "local_municipality": "स्थानीय सरकार",
+      "other": "अन्य"
+    },
+    "grantTypes": {
+      "current_expenditure": "चालू खर्च",
+      "capital_expenditure": "पूँजीगत खर्च",
+      "supplementary_grant": "पूरक अनुदान",
+      "special_grant": "विशेष अनुदान",
+      "other_grant": "अन्य कार्यक्रमहरू"
+    },
+    "types": {
+      "missing_uploads": "अपलोडहरू हराइरहेका छन्",
+      "fileCount": "फाइल गणना",
+      "missingUploads": "अपलोडहरू हराइरहेका छन्",
+      "custom": "अनुकूल रिपोर्ट"
+    },
+    "generateReport": "रिपोर्ट सिर्जना गर्नुहोस्",
+    "reportType": "रिपोर्ट प्रकार",
+    "required": "आवश्यक",
+    "fileFormat": "फाइल ढाँचा",
+    "dateRange": "मिति दायरा",
+    "startDate": "सुरु मिति",
+    "endDate": "अन्त्य मिति",
+    "fiscalYear": "आर्थिक वर्ष",
+    "source": "स्रोत",
+    "grantType": "अनुदान प्रकार",
+    "generate": "सिर्जना गर्नुहोस्",
+    "generating": "सिर्जना हुँदैछ...",
+    "download": "डाउनलोड गर्नुहोस्",
+    "delete": "हटाउनुहोस्",
+    "deleteAll": "सबै हटाउनुहोस्",
+    "confirmDelete": "के तपाईं यो रिपोर्ट हटाउन चाहनुहुन्छ?",
+    "confirmDeleteAll": "के तपाईं सबै रिपोर्टहरू हटाउन चाहनुहुन्छ?",
+    "confirmDeleteMessage": "यसले चयन गरिएका रिपोर्ट हटाउनेछ।",
+    "confirmDeleteAllMessage": "यसले सबै रिपोर्टहरू हटाउनेछ।",
+    "formats": {
+      "pdf": "PDF",
+      "excel": "Excel"
+    },
+    "errors": {
+      "selectReportType": "कृपया रिपोर्ट प्रकार चयन गर्नुहोस्।",
+      "selectEndDate": "कृपया अन्त्य मिति चयन गर्नुहोस्।",
+      "selectStartDate": "कृपया सुरु मिति चयन गर्नुहोस्।",
+      "invalidDateRange": "अवैध मिति दायरा।",
+      "downloadFailed": "डाउनलोड असफल।",
+      "deleteFailed": "हटाउन असफल।",
+      "deleteAllFailed": "सबै हटाउन असफल।",
+      "generateFailed": "रिपोर्ट सिर्जना असफल।"
+    },
+    "success": {
+      "generated": "रिपोर्ट सिर्जना भयो!",
+      "deleted": "रिपोर्ट हटाइयो!",
+      "deletedAll": "सबै रिपोर्टहरू हटाइयो!",
+      "downloaded": "रिपोर्ट डाउनलोड भयो!"
+    },
+    "buttons": {
+      "generate": "सिर्जना गर्नुहोस्",
+      "download": "डाउनलोड गर्नुहोस्",
+      "refresh": "रिफ्रेस गर्नुहोस्"
+    },
+    "messages": {
+      "generating": "रिपोर्ट सिर्जना हुँदैछ...",
+      "downloadSuccess": "डाउनलोड सफल!",
+      "downloadError": "डाउनलोड असफल।",
+      "noReports": "कुनै रिपोर्ट फेला परेन।"
+    }
+  },
+  "date": {
+    "format": "{{date}}"
+  }
+} 

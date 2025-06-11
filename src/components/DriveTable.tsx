@@ -4,6 +4,7 @@ import { toast } from 'react-hot-toast';
 import FileActions from './FileActions';
 import { useRouter } from 'next/navigation';
 import { TranslatedText } from '@/components/TranslatedText';
+import { useTranslation } from 'react-i18next';
 
 interface DriveTableProps {
   folders: any[];
@@ -55,6 +56,100 @@ const DriveTable = ({ folders, files, onFolderClick, onFileClick, onRefresh, cur
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  const { t, i18n } = useTranslation();
+
+  // Helper function to format source name for translation
+  const formatSourceName = (sourceName: string | undefined) => {
+    if (!sourceName) return '-';
+    // Convert to lowercase and replace spaces with underscores
+    const formatted = sourceName.toLowerCase().replace(/\s+/g, '_');
+    console.log('Formatted source name:', { original: sourceName, formatted });
+    return formatted;
+  };
+
+  // Helper function to format grant type name for translation
+  const formatGrantTypeName = (grantTypeName: string | undefined) => {
+    if (!grantTypeName) return '-';
+    // Convert to lowercase and replace spaces with underscores
+    const formatted = grantTypeName.toLowerCase().replace(/\s+/g, '_');
+    console.log('Formatted grant type name:', { original: grantTypeName, formatted });
+    return formatted;
+  };
+
+  // Utility to convert English numbers to Nepali
+  const toNepaliNumber = (input: string | number) => {
+    if (typeof input !== 'string') input = String(input);
+    const nepaliDigits = ['०','१','२','३','४','५','६','७','८','९'];
+    return input.replace(/[0-9]/g, d => nepaliDigits[d as any]);
+  };
+
+  // Helper function to format date based on current language
+  const formatDate = (date: Date) => {
+    let formattedDate = format(date, 'MMM d, yyyy');
+    if (i18n.language === 'ne') {
+      formattedDate = formattedDate
+        .replace('Jan', 'जनवरी')
+        .replace('Feb', 'फेब्रुअरी')
+        .replace('Mar', 'मार्च')
+        .replace('Apr', 'अप्रिल')
+        .replace('May', 'मे')
+        .replace('Jun', 'जुन')
+        .replace('Jul', 'जुलाई')
+        .replace('Aug', 'अगस्ट')
+        .replace('Sep', 'सेप्टेम्बर')
+        .replace('Oct', 'अक्टोबर')
+        .replace('Nov', 'नोभेम्बर')
+        .replace('Dec', 'डिसेम्बर');
+      formattedDate = toNepaliNumber(formattedDate);
+    }
+    return formattedDate;
+  };
+
+  // Helper function to get translated source name
+  const getTranslatedSource = (sourceName: string | undefined) => {
+    if (!sourceName) return '-';
+    const key = formatSourceName(sourceName);
+    const translationKey = `reports.sources.${key}`;
+    const translation = t(translationKey);
+    console.log('Source translation:', {
+      original: sourceName,
+      key,
+      translationKey,
+      currentLanguage: i18n.language,
+      translation,
+      fallback: translation === translationKey ? sourceName : translation
+    });
+    return translation === translationKey ? sourceName : translation;
+  };
+
+  // Helper function to get translated grant type
+  const getTranslatedGrantType = (grantTypeName: string | undefined) => {
+    if (!grantTypeName) return '-';
+    const key = formatGrantTypeName(grantTypeName);
+    const translationKey = `reports.grantTypes.${key}`;
+    const translation = t(translationKey);
+    console.log('Grant type translation:', {
+      original: grantTypeName,
+      key,
+      translationKey,
+      currentLanguage: i18n.language,
+      translation,
+      fallback: translation === translationKey ? grantTypeName : translation
+    });
+    return translation === translationKey ? grantTypeName : translation;
+  };
+
+  // Helper function to format user name for Nepali (if it contains numbers)
+  const formatUserName = (name: string | undefined) => {
+    if (!name) return '-';
+    return i18n.language === 'ne' ? toNepaliNumber(name) : name;
+  };
+
+  // Helper function to format last modified date
+  const formatLastModified = (date: Date | string | undefined) => {
+    if (!date) return '-';
+    return formatDate(new Date(date));
+  };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -218,14 +313,14 @@ const DriveTable = ({ folders, files, onFolderClick, onFileClick, onRefresh, cur
                       {isUploading ? (
                         <>
                           <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary-500"></div>
-                          <span><TranslatedText text="Uploading..." /></span>
+                          <span><TranslatedText text="files.upload.messages.uploading" /></span>
                         </>
                       ) : (
                         <>
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
                           </svg>
-                          <span><TranslatedText text="Add Files" /></span>
+                          <span><TranslatedText text="files.upload.buttons.upload" /></span>
                         </>
                       )}
                     </button>
@@ -261,36 +356,31 @@ const DriveTable = ({ folders, files, onFolderClick, onFileClick, onRefresh, cur
                   ) : (
                     <button
                       onClick={() => onFolderClick(folder)}
-                      className="flex items-center space-x-2 text-dark-100 hover:text-primary-400 w-full"
+                      className="flex items-center text-dark-100 hover:text-primary-500 transition-colors"
                     >
-                      <svg className="w-5 h-5 text-yellow-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                      </svg>
-                      <span className="truncate max-w-[calc(100%-2rem)]">
-                        <TranslatedText text={folder.name} />
-                      </span>
+                      {getFileOrFolderIcon(folder, true)}
+                      <span className="truncate">{folder.name}</span>
                     </button>
                   )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-dark-300">
-                  <TranslatedText text={folder.fiscalYear?.name || '-'} />
+                <td className="px-6 py-4 whitespace-nowrap text-dark-100">
+                  {i18n.language === 'ne' ? toNepaliNumber(folder.fiscalYear?.name ?? '') : folder.fiscalYear?.name}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-dark-300">
-                  <TranslatedText text={folder.source?.name || '-'} />
+                <td className="px-6 py-4 whitespace-nowrap text-dark-100">
+                  {getTranslatedSource(folder.source?.name)}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-dark-300">
-                  <TranslatedText text={folder.grantType?.name || '-'} />
+                <td className="px-6 py-4 whitespace-nowrap text-dark-100">
+                  {getTranslatedGrantType(folder.grantType?.name)}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-dark-300">
-                  {format(new Date(folder.createdAt), 'MMM d, yyyy')}
+                <td className="px-6 py-4 whitespace-nowrap text-dark-100">
+                  {formatDate(new Date(folder.createdAt))}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium overflow-visible relative">
+                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <FileActions
                     item={folder}
-                    isFolder
-                    onOpen={() => onFolderClick(folder)}
+                    isFolder={true}
                     onRename={() => handleRename(folder, true)}
-                    onDelete={onRefresh ?? (() => {})}
+                    onRefresh={onRefresh}
                   />
                 </td>
               </tr>
@@ -323,35 +413,37 @@ const DriveTable = ({ folders, files, onFolderClick, onFileClick, onRefresh, cur
                   ) : (
                     <button
                       onClick={() => onFileClick(file)}
-                      className="flex items-center space-x-2 text-dark-100 hover:text-primary-400 w-full"
+                      className="flex items-center text-dark-100 hover:text-primary-500 transition-colors"
                     >
-                      <div className="w-5 h-5 flex-shrink-0">
-                        {getFileOrFolderIcon(file, false, 'w-5 h-5')}
-                      </div>
-                      <span className="truncate max-w-[calc(100%-2rem)]">
-                        <TranslatedText text={file.name} />
-                      </span>
+                      {getFileOrFolderIcon(file)}
+                      <span className="truncate">{file.name}</span>
                     </button>
                   )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-dark-300">
-                  <TranslatedText text={file.fiscalYear?.name || '-'} />
+                <td className="px-6 py-4 whitespace-nowrap text-dark-100">
+                  {i18n.language === 'ne' ? toNepaliNumber(file.fiscalYear?.name ?? '') : file.fiscalYear?.name}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-dark-300">
-                  <TranslatedText text={file.source?.name || '-'} />
+                <td className="px-6 py-4 whitespace-nowrap text-dark-100">
+                  {getTranslatedSource(file.source?.name)}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-dark-300">
-                  <TranslatedText text={file.grantType?.name || '-'} />
+                <td className="px-6 py-4 whitespace-nowrap text-dark-100">
+                  {getTranslatedGrantType(file.grantType?.name)}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-dark-300">
-                  {format(new Date(file.uploadedAt), 'MMM d, yyyy')}
+                <td className="px-6 py-4 whitespace-nowrap text-dark-100">
+                  {formatDate(new Date(file.uploadedAt))}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium overflow-visible relative">
+                <td className="px-6 py-4 whitespace-nowrap text-dark-100">
+                  {formatUserName(file.user?.name)}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-dark-100">
+                  {formatLastModified(file.lastModifiedAt)}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <FileActions
                     item={file}
-                    onOpen={() => onFileClick(file)}
+                    isFolder={false}
                     onRename={() => handleRename(file, false)}
-                    onDelete={onRefresh ?? (() => {})}
+                    onRefresh={onRefresh}
                   />
                 </td>
               </tr>

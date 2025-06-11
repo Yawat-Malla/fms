@@ -8,6 +8,7 @@ import DriveTable, { getFileOrFolderIcon } from '@/components/DriveTable';
 import FileActions from '@/components/FileActions';
 import { TranslatedText } from '@/components/TranslatedText';
 import { useApp } from '@/contexts/AppContext';
+import { useTranslation } from 'react-i18next';
 
 interface File {
   id: number;
@@ -93,6 +94,7 @@ const Dashboard = () => {
   const [historyIndex, setHistoryIndex] = useState(0);
   const [view, setView] = useState<'grid' | 'list'>('list');
   const [renamingGridItem, setRenamingGridItem] = useState<{ id: number; name: string; isFolder: boolean } | null>(null);
+  const { i18n } = useTranslation();
 
   // Separate useEffect for stats - runs only once
   useEffect(() => {
@@ -283,6 +285,13 @@ const Dashboard = () => {
   // Add a useEffect to re-render on language change
   useEffect(() => {}, [language, mounted]);
 
+  // Utility to convert English numbers to Nepali
+  const toNepaliNumber = (input: string | number) => {
+    if (typeof input !== 'string') input = String(input);
+    const nepaliDigits = ['०','१','२','३','४','५','६','७','८','९'];
+    return input.replace(/[0-9]/g, d => nepaliDigits[d as any]);
+  };
+
   return (
     <div className="p-6">
       {/* Stats Cards */}
@@ -296,7 +305,9 @@ const Dashboard = () => {
               {statsLoading ? (
                 <div className="h-8 w-24 bg-dark-600 animate-pulse rounded mt-1"></div>
               ) : (
-                <p className="text-2xl font-bold text-dark-100">{stats.totalFiles}</p>
+                <p className="text-2xl font-bold text-dark-100">
+                  {i18n.language === 'ne' ? toNepaliNumber(stats.totalFiles) : stats.totalFiles}
+                </p>
               )}
             </div>
             <div className="bg-primary-500/10 p-2 rounded-md">
@@ -315,7 +326,9 @@ const Dashboard = () => {
               {statsLoading ? (
                 <div className="h-8 w-24 bg-dark-600 animate-pulse rounded mt-1"></div>
               ) : (
-                <p className="text-2xl font-bold text-green-400">{stats.availableFiles}</p>
+                <p className="text-2xl font-bold text-green-400">
+                  {i18n.language === 'ne' ? toNepaliNumber(stats.availableFiles) : stats.availableFiles}
+                </p>
               )}
             </div>
             <div className="bg-green-500/10 p-2 rounded-md">
@@ -334,7 +347,9 @@ const Dashboard = () => {
               {statsLoading ? (
                 <div className="h-8 w-24 bg-dark-600 animate-pulse rounded mt-1"></div>
               ) : (
-                <p className="text-2xl font-bold text-red-400">{stats.deletedFiles}</p>
+                <p className="text-2xl font-bold text-red-400">
+                  {i18n.language === 'ne' ? toNepaliNumber(stats.deletedFiles) : stats.deletedFiles}
+                </p>
               )}
             </div>
             <div className="bg-red-500/10 p-2 rounded-md">
