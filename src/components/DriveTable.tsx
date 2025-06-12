@@ -57,13 +57,17 @@ const DriveTable = ({ folders, files, onFolderClick, onFileClick, onRefresh, cur
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const { t, i18n } = useTranslation();
+  const [loading, setLoading] = useState(false);
+  const [currentFolderState, setCurrentFolder] = useState<any | null>(null);
+  const [filesState, setFiles] = useState<any[]>([]);
+  const [foldersState, setFolders] = useState<any[]>([]);
+  const [breadcrumbs, setBreadcrumbs] = useState<{ id: number; name: string }[]>([]);
 
   // Helper function to format source name for translation
   const formatSourceName = (sourceName: string | undefined) => {
     if (!sourceName) return '-';
     // Convert to lowercase and replace spaces with underscores
     const formatted = sourceName.toLowerCase().replace(/\s+/g, '_');
-    console.log('Formatted source name:', { original: sourceName, formatted });
     return formatted;
   };
 
@@ -72,7 +76,6 @@ const DriveTable = ({ folders, files, onFolderClick, onFileClick, onRefresh, cur
     if (!grantTypeName) return '-';
     // Convert to lowercase and replace spaces with underscores
     const formatted = grantTypeName.toLowerCase().replace(/\s+/g, '_');
-    console.log('Formatted grant type name:', { original: grantTypeName, formatted });
     return formatted;
   };
 
@@ -84,25 +87,34 @@ const DriveTable = ({ folders, files, onFolderClick, onFileClick, onRefresh, cur
   };
 
   // Helper function to format date based on current language
-  const formatDate = (date: Date) => {
-    let formattedDate = format(date, 'MMM d, yyyy');
-    if (i18n.language === 'ne') {
-      formattedDate = formattedDate
-        .replace('Jan', 'जनवरी')
-        .replace('Feb', 'फेब्रुअरी')
-        .replace('Mar', 'मार्च')
-        .replace('Apr', 'अप्रिल')
-        .replace('May', 'मे')
-        .replace('Jun', 'जुन')
-        .replace('Jul', 'जुलाई')
-        .replace('Aug', 'अगस्ट')
-        .replace('Sep', 'सेप्टेम्बर')
-        .replace('Oct', 'अक्टोबर')
-        .replace('Nov', 'नोभेम्बर')
-        .replace('Dec', 'डिसेम्बर');
-      formattedDate = toNepaliNumber(formattedDate);
+  const formatDate = (date: Date | string | null | undefined) => {
+    if (!date) return '-';
+    try {
+      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      if (isNaN(dateObj.getTime())) return '-';
+      
+      let formattedDate = format(dateObj, 'MMM d, yyyy');
+      if (i18n.language === 'ne') {
+        formattedDate = formattedDate
+          .replace('Jan', 'जनवरी')
+          .replace('Feb', 'फेब्रुअरी')
+          .replace('Mar', 'मार्च')
+          .replace('Apr', 'अप्रिल')
+          .replace('May', 'मे')
+          .replace('Jun', 'जुन')
+          .replace('Jul', 'जुलाई')
+          .replace('Aug', 'अगस्ट')
+          .replace('Sep', 'सेप्टेम्बर')
+          .replace('Oct', 'अक्टोबर')
+          .replace('Nov', 'नोभेम्बर')
+          .replace('Dec', 'डिसेम्बर');
+        formattedDate = toNepaliNumber(formattedDate);
+      }
+      return formattedDate;
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return '-';
     }
-    return formattedDate;
   };
 
   // Helper function to get translated source name
@@ -111,14 +123,6 @@ const DriveTable = ({ folders, files, onFolderClick, onFileClick, onRefresh, cur
     const key = formatSourceName(sourceName);
     const translationKey = `reports.sources.${key}`;
     const translation = t(translationKey);
-    console.log('Source translation:', {
-      original: sourceName,
-      key,
-      translationKey,
-      currentLanguage: i18n.language,
-      translation,
-      fallback: translation === translationKey ? sourceName : translation
-    });
     return translation === translationKey ? sourceName : translation;
   };
 
@@ -128,14 +132,6 @@ const DriveTable = ({ folders, files, onFolderClick, onFileClick, onRefresh, cur
     const key = formatGrantTypeName(grantTypeName);
     const translationKey = `reports.grantTypes.${key}`;
     const translation = t(translationKey);
-    console.log('Grant type translation:', {
-      original: grantTypeName,
-      key,
-      translationKey,
-      currentLanguage: i18n.language,
-      translation,
-      fallback: translation === translationKey ? grantTypeName : translation
-    });
     return translation === translationKey ? grantTypeName : translation;
   };
 
@@ -265,29 +261,99 @@ const DriveTable = ({ folders, files, onFolderClick, onFileClick, onRefresh, cur
 
   const handleRenameCancel = () => setRenamingItem(null);
 
+  const handleFolderClick = async (folder: any) => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/folders?parentId=${folder.id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch folder contents');
+      }
+      const data = await response.json();
+      setCurrentFolder(folder);
+      setFiles(data.files || []);
+      setFolders(data.folders || []);
+      setBreadcrumbs(prev => [...prev, { id: folder.id, name: folder.name }]);
+    } catch (error) {
+      console.error('Error fetching folder contents:', error);
+      toast.error('Failed to load folder contents');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBreadcrumbClick = async (index: number) => {
+    try {
+      setLoading(true);
+      const targetBreadcrumb = breadcrumbs[index];
+      const response = await fetch(`/api/folders?parentId=${targetBreadcrumb.id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch folder contents');
+      }
+      const data = await response.json();
+      setCurrentFolder(targetBreadcrumb);
+      setFiles(data.files || []);
+      setFolders(data.folders || []);
+      setBreadcrumbs(breadcrumbs.slice(0, index + 1));
+    } catch (error) {
+      console.error('Error fetching folder contents:', error);
+      toast.error('Failed to load folder contents');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNewFolder = async () => {
+    try {
+      const name = prompt('Enter folder name:');
+      if (!name) return;
+
+      const response = await fetch('/api/folders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          parentId: currentFolder?.id || null,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create folder');
+      }
+
+      const newFolder = await response.json();
+      setFolders(prev => [...prev, newFolder]);
+      toast.success('Folder created successfully');
+    } catch (error) {
+      console.error('Error creating folder:', error);
+      toast.error('Failed to create folder');
+    }
+  };
+
   return (
     <div className="bg-dark-800 rounded-lg shadow-lg">
       <div className="overflow-x-auto">
         <table className="w-full table-fixed divide-y divide-dark-700">
           <thead className="bg-dark-700">
             <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider w-[30%]">
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider w-1/3">
                 <TranslatedText text="files.table.name" />
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider w-[15%]">
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider w-1/6">
                 <TranslatedText text="files.table.fiscalYear" />
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider w-[15%]">
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider w-1/6">
                 <TranslatedText text="files.table.source" />
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider w-[15%]">
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider w-1/6">
                 <TranslatedText text="files.table.grantType" />
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider w-[15%]">
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider w-1/6">
                 <TranslatedText text="files.table.created" />
               </th>
-              <th scope="col" className="relative px-6 py-3 w-[10%]">
-                <span className="sr-only"><TranslatedText text="files.table.actions" /></span>
+              <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-dark-300 uppercase tracking-wider w-1/12">
+                <TranslatedText text="files.table.actions" />
               </th>
             </tr>
           </thead>
@@ -330,7 +396,7 @@ const DriveTable = ({ folders, files, onFolderClick, onFileClick, onRefresh, cur
             )}
             {folders.map((folder) => (
               <tr key={folder.id} className="hover:bg-dark-700 static overflow-visible">
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-6 py-4">
                   {renamingItem?.id === folder.id ? (
                     <form onSubmit={handleRenameSubmit} className="flex items-center space-x-2">
                       <input
@@ -356,38 +422,47 @@ const DriveTable = ({ folders, files, onFolderClick, onFileClick, onRefresh, cur
                   ) : (
                     <button
                       onClick={() => onFolderClick(folder)}
-                      className="flex items-center text-dark-100 hover:text-primary-500 transition-colors"
+                      className="flex items-center text-dark-100 hover:text-primary-500 transition-colors w-full"
                     >
                       {getFileOrFolderIcon(folder, true)}
                       <span className="truncate">{folder.name}</span>
                     </button>
                   )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-dark-100">
-                  {i18n.language === 'ne' ? toNepaliNumber(folder.fiscalYear?.name ?? '') : folder.fiscalYear?.name}
+                <td className="px-6 py-4">
+                  <span className="truncate block">
+                    {i18n.language === 'ne' ? toNepaliNumber(folder.fiscalYear?.name ?? '') : folder.fiscalYear?.name}
+                  </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-dark-100">
-                  {getTranslatedSource(folder.source?.name)}
+                <td className="px-6 py-4">
+                  <span className="truncate block">
+                    {getTranslatedSource(folder.source?.name)}
+                  </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-dark-100">
-                  {getTranslatedGrantType(folder.grantType?.name)}
+                <td className="px-6 py-4">
+                  <span className="truncate block">
+                    {getTranslatedGrantType(folder.grantType?.name)}
+                  </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-dark-100">
-                  {formatDate(new Date(folder.createdAt))}
+                <td className="px-6 py-4">
+                  <span className="truncate block">
+                    {formatDate(new Date(folder.createdAt))}
+                  </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <td className="px-6 py-4 text-right text-sm font-medium">
                   <FileActions
                     item={folder}
                     isFolder={true}
+                    onOpen={() => onFolderClick(folder)}
                     onRename={() => handleRename(folder, true)}
-                    onRefresh={onRefresh}
+                    onDelete={onRefresh || (() => {})}
                   />
                 </td>
               </tr>
             ))}
             {files.map((file) => (
               <tr key={file.id} className="hover:bg-dark-700 static overflow-visible">
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-6 py-4">
                   {renamingItem?.id === file.id ? (
                     <form onSubmit={handleRenameSubmit} className="flex items-center space-x-2">
                       <input
@@ -413,37 +488,40 @@ const DriveTable = ({ folders, files, onFolderClick, onFileClick, onRefresh, cur
                   ) : (
                     <button
                       onClick={() => onFileClick(file)}
-                      className="flex items-center text-dark-100 hover:text-primary-500 transition-colors"
+                      className="flex items-center text-dark-100 hover:text-primary-500 transition-colors w-full"
                     >
                       {getFileOrFolderIcon(file)}
                       <span className="truncate">{file.name}</span>
                     </button>
                   )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-dark-100">
-                  {i18n.language === 'ne' ? toNepaliNumber(file.fiscalYear?.name ?? '') : file.fiscalYear?.name}
+                <td className="px-6 py-4">
+                  <span className="truncate block">
+                    {i18n.language === 'ne' ? toNepaliNumber(file.fiscalYear?.name ?? '') : file.fiscalYear?.name}
+                  </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-dark-100">
-                  {getTranslatedSource(file.source?.name)}
+                <td className="px-6 py-4">
+                  <span className="truncate block">
+                    {getTranslatedSource(file.source?.name)}
+                  </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-dark-100">
-                  {getTranslatedGrantType(file.grantType?.name)}
+                <td className="px-6 py-4">
+                  <span className="truncate block">
+                    {getTranslatedGrantType(file.grantType?.name)}
+                  </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-dark-100">
-                  {formatDate(new Date(file.uploadedAt))}
+                <td className="px-6 py-4">
+                  <span className="truncate block">
+                    {formatDate(file.uploadedAt)}
+                  </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-dark-100">
-                  {formatUserName(file.user?.name)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-dark-100">
-                  {formatLastModified(file.lastModifiedAt)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <td className="px-6 py-4 text-right text-sm font-medium">
                   <FileActions
                     item={file}
                     isFolder={false}
+                    onOpen={() => onFileClick(file)}
                     onRename={() => handleRename(file, false)}
-                    onRefresh={onRefresh}
+                    onDelete={onRefresh || (() => {})}
                   />
                 </td>
               </tr>

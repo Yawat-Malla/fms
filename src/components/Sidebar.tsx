@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { TranslatedText } from '@/components/TranslatedText';
+import { useApp } from '@/contexts/AppContext';
 
 interface SidebarProps {
   onPreferencesClick: () => void;
@@ -9,9 +10,17 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ onPreferencesClick }) => {
   const pathname = usePathname();
+  const { language } = useApp();
 
   const isActive = (path: string) => {
     return pathname === path;
+  };
+
+  // Utility to convert English numbers to Nepali
+  const toNepaliNumber = (input: string | number) => {
+    if (typeof input !== 'string') input = String(input);
+    const nepaliDigits = ['०','१','२','३','४','५','६','७','८','९'];
+    return input.replace(/[0-9]/g, d => nepaliDigits[d as any]);
   };
 
   return (

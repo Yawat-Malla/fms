@@ -202,6 +202,7 @@
       "images": "तस्बिरहरू"
     },
     "selectSource": "स्रोत चयन गर्नुहोस्",
+    "selectGrantType": "अनुदान प्रकार चयन गर्नुहोस्",
     "emptyState": {
       "noFiles": "कुनै फाइल फेला परेन।",
       "noFilesForFiscalYear": "यो आर्थिक वर्षका लागि कुनै फाइल छैन।",
@@ -227,7 +228,11 @@
     "upload": {
       "title": "फाइलहरू अपलोड गर्नुहोस्",
       "subtitle": "आफ्ना फाइलहरू अपलोड गर्नुहोस्",
-      "steps": ["फाइल चयन गर्नुहोस्", "मेटाडाटा थप्नुहोस्", "अपलोड गर्नुहोस्"],
+      "steps": [
+        "फाइल चयन गर्नुहोस्",
+        "मेटाडाटा थप्नुहोस्",
+        "अपलोड गर्नुहोस्"
+      ],
       "metadata": {
         "title": "शीर्षक",
         "description": "विवरण",
@@ -297,17 +302,11 @@
     "selectSource": "स्रोत चयन गर्नुहोस्",
     "selectGrantType": "अनुदान प्रकार चयन गर्नुहोस्",
     "sources": {
-      "federal_government": "संघीय सरकार",
-      "provincial_government": "प्रदेश सरकार",
-      "local_municipality": "स्थानीय सरकार",
-      "other": "अन्य"
+      "lollolol": "asdf",
+      "test0": "sadf"
     },
     "grantTypes": {
-      "current_expenditure": "चालू खर्च",
-      "capital_expenditure": "पूँजीगत खर्च",
-      "supplementary_grant": "पूरक अनुदान",
-      "special_grant": "विशेष अनुदान",
-      "other_grant": "अन्य कार्यक्रमहरू"
+      "test1": "asdfsadf"
     },
     "types": {
       "missing_uploads": "अपलोडहरू हराइरहेका छन्",
@@ -369,4 +368,4 @@
   "date": {
     "format": "{{date}}"
   }
-} 
+}

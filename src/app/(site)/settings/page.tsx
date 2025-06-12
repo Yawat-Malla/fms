@@ -12,6 +12,7 @@ import Avatar from '@/components/ui/Avatar';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
 import { TranslatedText } from '@/components/TranslatedText';
 import { translations } from '@/translations';
+import { useTranslation } from 'react-i18next';
 
 interface ProfileSettings {
   fullName: string;
@@ -40,6 +41,7 @@ export default function SettingsPage() {
   const { theme, language, toggleTheme, setLanguage } = useApp();
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
+  const { t } = useTranslation();
 
   // Profile Settings
   const [profileSettings, setProfileSettings] = useState<ProfileSettings>({
@@ -88,6 +90,14 @@ export default function SettingsPage() {
     onConfirm: () => {},
     variant: 'danger'
   });
+
+  // State for sources and grant types
+  const [sources, setSources] = useState([]);
+  const [grantTypes, setGrantTypes] = useState([]);
+  const [sourceForm, setSourceForm] = useState({ key: '', name: '', en: '', ne: '' });
+  const [grantTypeForm, setGrantTypeForm] = useState({ key: '', name: '', en: '', ne: '' });
+  const [editingSourceId, setEditingSourceId] = useState<number | null>(null);
+  const [editingGrantTypeId, setEditingGrantTypeId] = useState<number | null>(null);
 
   // Update useEffect to sync with session changes
   useEffect(() => {
@@ -157,6 +167,92 @@ export default function SettingsPage() {
 
     loadNotificationSettings();
   }, [session?.user?.id]);
+
+  useEffect(() => {
+    if (session?.user?.role === 'admin') {
+      fetchSources();
+      fetchGrantTypes();
+    }
+  }, [session?.user?.role]);
+
+  const fetchSources = async () => {
+    const res = await fetch('/api/admin/sources');
+    const data = await res.json();
+    setSources(data);
+  };
+  const fetchGrantTypes = async () => {
+    const res = await fetch('/api/admin/grant-types');
+    const data = await res.json();
+    setGrantTypes(data);
+  };
+
+  // CRUD handlers for sources
+  const handleSourceSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const method = editingSourceId ? 'PUT' : 'POST';
+    const url = editingSourceId ? `/api/admin/sources/${editingSourceId}` : '/api/admin/sources';
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(sourceForm),
+    });
+    if (res.ok) {
+      setSourceForm({ key: '', name: '', en: '', ne: '' });
+      setEditingSourceId(null);
+      fetchSources();
+      toast.success('Source saved');
+    } else {
+      toast.error('Failed to save source');
+    }
+  };
+  const handleSourceEdit = (src: any) => {
+    setSourceForm({ key: src.key, name: src.name, en: src.en, ne: src.ne });
+    setEditingSourceId(src.id);
+  };
+  const handleSourceDelete = async (id: number) => {
+    if (!confirm('Delete this source?')) return;
+    const res = await fetch(`/api/admin/sources/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      fetchSources();
+      toast.success('Source deleted');
+    } else {
+      toast.error('Failed to delete source');
+    }
+  };
+
+  // CRUD handlers for grant types
+  const handleGrantTypeSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const method = editingGrantTypeId ? 'PUT' : 'POST';
+    const url = editingGrantTypeId ? `/api/admin/grant-types/${editingGrantTypeId}` : '/api/admin/grant-types';
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(grantTypeForm),
+    });
+    if (res.ok) {
+      setGrantTypeForm({ key: '', name: '', en: '', ne: '' });
+      setEditingGrantTypeId(null);
+      fetchGrantTypes();
+      toast.success('Grant type saved');
+    } else {
+      toast.error('Failed to save grant type');
+    }
+  };
+  const handleGrantTypeEdit = (gt: any) => {
+    setGrantTypeForm({ key: gt.key, name: gt.name, en: gt.en, ne: gt.ne });
+    setEditingGrantTypeId(gt.id);
+  };
+  const handleGrantTypeDelete = async (id: number) => {
+    if (!confirm('Delete this grant type?')) return;
+    const res = await fetch(`/api/admin/grant-types/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      fetchGrantTypes();
+      toast.success('Grant type deleted');
+    } else {
+      toast.error('Failed to delete grant type');
+    }
+  };
 
   // Memoize the tab button classes to prevent hydration mismatch
   const getTabButtonClasses = useCallback((isActive: boolean) => {
@@ -823,6 +919,102 @@ export default function SettingsPage() {
                   className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-dark-600 rounded"
                 />
               </div>
+
+              {/* Source Types Management */}
+              <Card className="p-6 mt-8">
+                <h2 className="text-xl font-semibold mb-4">Source Types</h2>
+                <form onSubmit={handleSourceSave} className="space-y-2 mb-4">
+                  <div className="flex gap-2 flex-wrap">
+                    <input value={sourceForm.name} onChange={e => {
+                      const name = e.target.value;
+                      const key = name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+                      setSourceForm(f => ({ ...f, name, key }));
+                    }} placeholder="Admin Label" required className="input flex-1 min-w-[180px]" />
+                    <input value={sourceForm.key} disabled placeholder="Generated Key" className="input flex-1 min-w-[180px] bg-gray-100" />
+                    <input value={sourceForm.en} onChange={e => setSourceForm(f => ({ ...f, en: e.target.value }))} placeholder="English Translation" required className="input flex-1 min-w-[180px]" />
+                    <input value={sourceForm.ne} onChange={e => setSourceForm(f => ({ ...f, ne: e.target.value }))} placeholder="Nepali Translation" required className="input flex-1 min-w-[180px]" />
+                    <Button type="submit" className="h-10 px-6">{editingSourceId ? 'Update' : 'Add'}</Button>
+                    {editingSourceId && <Button type="button" onClick={() => { setSourceForm({ key: '', name: '', en: '', ne: '' }); setEditingSourceId(null); }} className="h-10 px-6">Cancel</Button>}
+                  </div>
+                </form>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm border-separate border-spacing-y-2">
+                    <thead>
+                      <tr className="text-left text-dark-400">
+                        <th className="px-2 py-1">Key</th>
+                        <th className="px-2 py-1">Label</th>
+                        <th className="px-2 py-1">EN</th>
+                        <th className="px-2 py-1">NE</th>
+                        <th className="px-2 py-1 text-center">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sources.map((src: any) => (
+                        <tr key={src.id} className="bg-white rounded shadow-sm">
+                          <td className="px-2 py-1 font-mono text-xs text-dark-700">{src.key}</td>
+                          <td className="px-2 py-1">{src.name}</td>
+                          <td className="px-2 py-1">{src.translations?.en || src.en}</td>
+                          <td className="px-2 py-1">{src.translations?.ne || src.ne}</td>
+                          <td className="px-2 py-1 text-center">
+                            <div className="flex gap-2 justify-center">
+                              <button type="button" onClick={() => handleSourceEdit(src)} className="bg-white border border-blue-500 text-blue-600 px-3 py-1 rounded hover:bg-blue-50 transition">Edit</button>
+                              <button type="button" onClick={() => handleSourceDelete(src.id)} className="bg-white border border-red-500 text-red-600 px-3 py-1 rounded hover:bg-red-50 transition">Delete</button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </Card>
+
+              {/* Grant Types Management */}
+              <Card className="p-6 mt-8">
+                <h2 className="text-xl font-semibold mb-4">Grant Types</h2>
+                <form onSubmit={handleGrantTypeSave} className="space-y-2 mb-4">
+                  <div className="flex gap-2 flex-wrap">
+                    <input value={grantTypeForm.name} onChange={e => {
+                      const name = e.target.value;
+                      const key = name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+                      setGrantTypeForm(f => ({ ...f, name, key }));
+                    }} placeholder="Admin Label" required className="input flex-1 min-w-[180px]" />
+                    <input value={grantTypeForm.key} disabled placeholder="Generated Key" className="input flex-1 min-w-[180px] bg-gray-100" />
+                    <input value={grantTypeForm.en} onChange={e => setGrantTypeForm(f => ({ ...f, en: e.target.value }))} placeholder="English Translation" required className="input flex-1 min-w-[180px]" />
+                    <input value={grantTypeForm.ne} onChange={e => setGrantTypeForm(f => ({ ...f, ne: e.target.value }))} placeholder="Nepali Translation" required className="input flex-1 min-w-[180px]" />
+                    <Button type="submit" className="h-10 px-6">{editingGrantTypeId ? 'Update' : 'Add'}</Button>
+                    {editingGrantTypeId && <Button type="button" onClick={() => { setGrantTypeForm({ key: '', name: '', en: '', ne: '' }); setEditingGrantTypeId(null); }} className="h-10 px-6">Cancel</Button>}
+                  </div>
+                </form>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm border-separate border-spacing-y-2">
+                    <thead>
+                      <tr className="text-left text-dark-400">
+                        <th className="px-2 py-1">Key</th>
+                        <th className="px-2 py-1">Label</th>
+                        <th className="px-2 py-1">EN</th>
+                        <th className="px-2 py-1">NE</th>
+                        <th className="px-2 py-1 text-center">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {grantTypes.map((gt: any) => (
+                        <tr key={gt.id} className="bg-white rounded shadow-sm">
+                          <td className="px-2 py-1 font-mono text-xs text-dark-700">{gt.key}</td>
+                          <td className="px-2 py-1">{gt.name}</td>
+                          <td className="px-2 py-1">{gt.translations?.en || gt.en}</td>
+                          <td className="px-2 py-1">{gt.translations?.ne || gt.ne}</td>
+                          <td className="px-2 py-1 text-center">
+                            <div className="flex gap-2 justify-center">
+                              <button type="button" onClick={() => handleGrantTypeEdit(gt)} className="bg-white border border-blue-500 text-blue-600 px-3 py-1 rounded hover:bg-blue-50 transition">Edit</button>
+                              <button type="button" onClick={() => handleGrantTypeDelete(gt.id)} className="bg-white border border-red-500 text-red-600 px-3 py-1 rounded hover:bg-red-50 transition">Delete</button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </Card>
 
               {/* Save Button */}
               <div className="mt-6 flex justify-end">

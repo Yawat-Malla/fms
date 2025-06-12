@@ -121,35 +121,62 @@ async function main() {
     // Create sources
   const sources = await Promise.all([
     prisma.source.create({
-      data: { name: 'Federal Government' },
+      data: { 
+        name: 'Federal Government',
+        key: 'federal_government'
+      },
     }),
     prisma.source.create({
-      data: { name: 'Provincial Government' },
+      data: { 
+        name: 'Provincial Government',
+        key: 'provincial_government'
+      },
     }),
     prisma.source.create({
-      data: { name: 'Local Municipality' },
+      data: { 
+        name: 'Local Municipality',
+        key: 'local_municipality'
+      },
     }),
     prisma.source.create({
-      data: { name: 'Other' },
+      data: { 
+        name: 'Other',
+        key: 'other'
+      },
     }),
   ]);
 
     // Create grant types
   const grantTypes = await Promise.all([
     prisma.grantType.create({
-      data: { name: 'Current Expenditure' },
+      data: { 
+        name: 'Current Expenditure',
+        key: 'current_expenditure'
+      },
     }),
     prisma.grantType.create({
-      data: { name: 'Capital Expenditure' },
+      data: { 
+        name: 'Capital Expenditure',
+        key: 'capital_expenditure'
+      },
     }),
     prisma.grantType.create({
-      data: { name: 'Supplementary Grant' },
+      data: { 
+        name: 'Supplementary Grant',
+        key: 'supplementary_grant'
+      },
     }),
     prisma.grantType.create({
-      data: { name: 'Special Grant' },
+      data: { 
+        name: 'Special Grant',
+        key: 'special_grant'
+      },
     }),
     prisma.grantType.create({
-      data: { name: 'Other Grant' },
+      data: { 
+        name: 'Other',
+        key: 'other'
+      },
     }),
   ]);
 

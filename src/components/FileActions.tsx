@@ -76,11 +76,11 @@ const FileActions: React.FC<FileActionsProps> = ({
               className="fixed inset-0 z-[9998]" 
               onClick={() => setIsOpen(false)}
             />
-            <div className="fixed right-0 mt-2 w-48 rounded-md shadow-lg bg-dark-800 ring-1 ring-black ring-opacity-5 z-[9999] transform origin-top-right">
+            <div className="fixed right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-[9999] transform origin-top-right">
               <div className="py-1" role="menu" aria-orientation="vertical">
                 <button
                   onClick={handleOpen}
-                  className="flex items-center w-full px-4 py-2 text-sm text-dark-100 hover:bg-dark-700 transition-transform duration-150"
+                  className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-transform duration-150"
                   role="menuitem"
                 >
                   <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -94,7 +94,7 @@ const FileActions: React.FC<FileActionsProps> = ({
                     onRename();
                     setIsOpen(false);
                   }}
-                  className="flex items-center w-full px-4 py-2 text-sm text-dark-100 hover:bg-dark-700 transition-transform duration-150"
+                  className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-transform duration-150"
                   role="menuitem"
                 >
                   <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -104,7 +104,7 @@ const FileActions: React.FC<FileActionsProps> = ({
                 </button>
                 <button
                   onClick={handleDelete}
-                  className="flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-dark-700 transition-transform duration-150"
+                  className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-transform duration-150"
                   role="menuitem"
                 >
                   <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

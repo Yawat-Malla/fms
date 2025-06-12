@@ -99,16 +99,18 @@ model FiscalYear {
 }
 
 model Source {
-  id      Int      @id @default(autoincrement())
-  name    String   @unique
-  files   File[]
+  id    Int    @id @default(autoincrement())
+  key   String @unique // e.g., "local_municipality"
+  name  String         // fallback or admin label
+  files File[]
   folders Folder[]
 }
 
 model GrantType {
-  id      Int      @id @default(autoincrement())
-  name    String   @unique
-  files   File[]
+  id    Int    @id @default(autoincrement())
+  key   String @unique // e.g., "supplementary_grant"
+  name  String         // fallback or admin label
+  files File[]
   folders Folder[]
 }
 

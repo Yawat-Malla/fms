@@ -202,6 +202,7 @@
       "images": "Images"
     },
     "selectSource": "Select source",
+    "selectGrantType": "Select grant type",
     "emptyState": {
       "noFiles": "No files found.",
       "noFilesForFiscalYear": "No files for this fiscal year.",
@@ -227,7 +228,11 @@
     "upload": {
       "title": "Upload Files",
       "subtitle": "Upload your files",
-      "steps": ["Select Files", "Add Metadata", "Upload"],
+      "steps": [
+        "Select Files",
+        "Add Metadata",
+        "Upload"
+      ],
       "metadata": {
         "title": "Title",
         "description": "Description",
@@ -297,20 +302,18 @@
     "selectSource": "Select source",
     "selectGrantType": "Select grant type",
     "sources": {
-      "federal_government": "Federal Government",
-      "provincial_government": "Provincial Government",
-      "local_municipality": "Local Municipality",
-      "other": "Other"
+      "lollolol": "asdf",
+      "test0": "test"
     },
     "grantTypes": {
-      "current_expenditure": "Current Expenditure",
-      "capital_expenditure": "Capital Expenditure",
-      "supplementary_grant": "Supplementary Grant",
-      "special_grant": "Special Grant",
-      "other_grant": "Other Grant"
+      "test1": "test1"
     },
     "types": {
-      "missing_uploads": "Missing Uploads"
+      "fileCount": "File Count",
+      "file_count": "File Count",
+      "missingUploads": "Missing Uploads",
+      "missing_uploads": "Missing Uploads",
+      "custom": "Custom Report"
     },
     "generateReport": "Generate Report",
     "reportType": "Report Type",
@@ -331,11 +334,6 @@
     "confirmDeleteAll": "Are you sure you want to delete all reports?",
     "confirmDeleteMessage": "This will delete the selected report.",
     "confirmDeleteAllMessage": "This will delete all reports.",
-    "types": {
-      "fileCount": "File Count",
-      "missingUploads": "Missing Uploads",
-      "custom": "Custom Report"
-    },
     "formats": {
       "pdf": "PDF",
       "excel": "Excel"
@@ -371,4 +369,4 @@
   "date": {
     "format": "{{date}}"
   }
-} 
+}

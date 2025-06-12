@@ -2,6 +2,12 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { join } from 'path';
+import { mkdir } from 'fs/promises';
+import { existsSync } from 'fs';
+
+const UPLOAD_DIR = join(process.cwd(), 'uploads');
+const USER_FOLDERS_DIR = join(UPLOAD_DIR, 'user_folders');
 
 export async function GET(request: Request) {
   try {
@@ -115,7 +121,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { name, parentId, path, createdBy } = body;
+    const { name, parentId, fiscalYearId, sourceId, grantTypeId } = body;
 
     // Check if a folder with the same name already exists at the same level
     const existingFolder = await prisma.folder.findFirst({
@@ -134,12 +140,41 @@ export async function POST(request: Request) {
     }
 
     try {
+      // Get parent folder if it exists
+      let parentFolder = null;
+      if (parentId) {
+        parentFolder = await prisma.folder.findUnique({
+          where: { id: parentId }
+        });
+        if (!parentFolder) {
+          return NextResponse.json(
+            { error: 'Parent folder not found' },
+            { status: 404 }
+          );
+        }
+      }
+
+      // Create the physical folder path
+      const folderPath = parentFolder 
+        ? join(parentFolder.path, name)
+        : join(USER_FOLDERS_DIR, name);
+
+      // Ensure the user_folders directory exists
+      await mkdir(USER_FOLDERS_DIR, { recursive: true });
+
+      // Create the physical folder
+      await mkdir(folderPath, { recursive: true });
+
+      // Create the folder record in the database
       const folder = await prisma.folder.create({
         data: {
           name,
+          path: folderPath,
           parentId: parentId || null,
-          path: path || '/',
-          createdBy: createdBy || null,
+          createdBy: session.user.id,
+          fiscalYearId,
+          sourceId,
+          grantTypeId,
         },
         include: {
           files: true,
@@ -148,20 +183,17 @@ export async function POST(request: Request) {
       });
 
       return NextResponse.json(folder);
-    } catch (error: any) {
-      // Check if the error is due to a unique constraint violation
-      if (error.code === 'P2002' && error.meta?.target?.includes('name')) {
-        return NextResponse.json(
-          { error: 'A folder with this name already exists in this location' },
-          { status: 409 }
-        );
-      }
-      throw error; // Re-throw other errors
+    } catch (error) {
+      console.error('Error creating folder:', error);
+      return NextResponse.json(
+        { error: 'Failed to create folder' },
+        { status: 500 }
+      );
     }
   } catch (error) {
-    console.error('Error creating folder:', error);
+    console.error('Error in folder creation:', error);
     return NextResponse.json(
-      { error: 'Failed to create folder' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

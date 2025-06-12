@@ -9,6 +9,7 @@ import { createHash } from 'crypto';
 import { notifyFileUpdate } from '@/lib/notifications';
 
 const UPLOAD_DIR = join(process.cwd(), 'uploads');
+const USER_FOLDERS_DIR = join(UPLOAD_DIR, 'user_folders');
 
 function generateFileHash(fileName: string, size: number, timestamp: number): string {
   const hash = createHash('sha256');
@@ -145,11 +146,35 @@ export async function POST(request: Request) {
     }
 
     const formData = await request.formData();
-    const title = formData.get('title') as string;
-    const fiscalYear = formData.get('fiscalYear') as string;
-    const source = formData.get('source') as string;
-    const grantType = formData.get('grantType') as string;
-    const remarks = formData.get('remarks') as string;
+    const title = formData.get('title');
+    const fiscalYear = formData.get('fiscalYear');
+    const source = formData.get('source');
+    const grantType = formData.get('grantType');
+    const remarks = formData.get('remarks');
+
+    // Runtime type checks for string values
+    if (
+      typeof title !== 'string' ||
+      typeof fiscalYear !== 'string' ||
+      typeof source !== 'string' ||
+      typeof grantType !== 'string' ||
+      (remarks && typeof remarks !== 'string')
+    ) {
+      return NextResponse.json({ error: 'Invalid form data' }, { status: 400 });
+    }
+
+    // Debug log for received values
+    console.log('[Upload API] Received:', {
+      title,
+      fiscalYear,
+      source,
+      grantType,
+      remarks
+    });
+
+    if (!title || !fiscalYear || !source || !grantType) {
+      return NextResponse.json({ error: 'Fiscal year, source, and grant type are required.' }, { status: 400 });
+    }
 
     // Get files from each section
     const a4Files = formData.getAll('a4Files') as File[];
@@ -179,28 +204,49 @@ export async function POST(request: Request) {
     }
 
     // Get or create source
+    const sourceKey = source.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
     let sourceRecord = await prisma.source.findFirst({
-      where: { name: source }
+      where: {
+        OR: [
+          { name: source },
+          { key: sourceKey }
+        ]
+      }
     });
     if (!sourceRecord) {
       sourceRecord = await prisma.source.create({
-        data: { name: source }
+        data: {
+          name: source,
+          key: sourceKey
+        }
       });
     }
 
     // Get or create grant type
+    const grantTypeKey = grantType.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
     let grantTypeRecord = await prisma.grantType.findFirst({
-      where: { name: grantType }
+      where: {
+        OR: [
+          { name: grantType },
+          { key: grantTypeKey }
+        ]
+      }
     });
     if (!grantTypeRecord) {
       grantTypeRecord = await prisma.grantType.create({
-        data: { name: grantType }
+        data: {
+          name: grantType,
+          key: grantTypeKey
+        }
       });
     }
 
     // Create main folder for this upload
-    const mainFolderPath = join(UPLOAD_DIR, title);
+    const mainFolderPath = join(USER_FOLDERS_DIR, title);
     
+    // Ensure the user_folders directory exists
+    await mkdir(USER_FOLDERS_DIR, { recursive: true });
+
     // Check if a folder with the same name already exists at the root level (including deleted ones)
     const existingFolder = await prisma.folder.findFirst({
       where: {
@@ -256,7 +302,7 @@ export async function POST(request: Request) {
           fiscalYearId: fiscalYearRecord.id,
           sourceId: sourceRecord.id,
           grantTypeId: grantTypeRecord.id,
-          remarks
+          remarks: remarks || undefined
         },
         session.user.id,
         mainFolder
@@ -272,7 +318,7 @@ export async function POST(request: Request) {
           fiscalYearId: fiscalYearRecord.id,
           sourceId: sourceRecord.id,
           grantTypeId: grantTypeRecord.id,
-          remarks
+          remarks: remarks || undefined
         },
         session.user.id,
         mainFolder
@@ -288,7 +334,7 @@ export async function POST(request: Request) {
           fiscalYearId: fiscalYearRecord.id,
           sourceId: sourceRecord.id,
           grantTypeId: grantTypeRecord.id,
-          remarks
+          remarks: remarks || undefined
         },
         session.user.id,
         mainFolder
@@ -304,7 +350,7 @@ export async function POST(request: Request) {
           fiscalYearId: fiscalYearRecord.id,
           sourceId: sourceRecord.id,
           grantTypeId: grantTypeRecord.id,
-          remarks
+          remarks: remarks || undefined
         },
         session.user.id,
         mainFolder

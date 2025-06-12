@@ -11,6 +11,8 @@ import { format } from 'date-fns';
 import { toast } from 'react-hot-toast';
 import { generateFiscalYears } from '@/utils/fiscalYears';
 import { TranslatedText } from '@/components/TranslatedText';
+import SearchableSelect from '@/components/ui/SearchableSelect';
+import { useApp } from '@/contexts/AppContext';
 
 export default function FilesPage() {
   const { data: session, status } = useSession();
@@ -34,75 +36,30 @@ export default function FilesPage() {
     grantTypes: []
   });
   const [showFilters, setShowFilters] = useState(false);
+  const [sourceOptions, setSourceOptions] = useState<{ id: string; translationKey: string; translations: any; }[]>([]);
+  const [grantTypeOptions, setGrantTypeOptions] = useState<{ id: string; translationKey: string; translations: any; }[]>([]);
+  const { language } = useApp();
 
-  // Filter tabs
-  const tabs = [
-    { id: 'view-all', name: <TranslatedText text="files.filters.viewAll" /> },
-    { id: 'by-fiscal-year', name: <TranslatedText text="files.filters.byFiscalYear" /> },
-    { id: 'by-source', name: <TranslatedText text="files.filters.bySource.title" /> },
-    { id: 'pdfs', name: <TranslatedText text="files.filters.pdfs" /> },
-    { id: 'images', name: <TranslatedText text="files.filters.images" /> },
-  ];
-
-  // Get fiscal years using the utility function
-  const fiscalYearOptions = generateFiscalYears();
-
-  // Source filter options
-  const sourceFilters = [
-    { id: 'federal', name: 'Federal' },
-    { id: 'provincial', name: 'Provincial' },
-    { id: 'local', name: 'Local' },
-    { id: 'other', name: 'Other' },
-  ];
-
-  // Filter files based on current URL parameters and active tab
+  // Insert filteredFiles definition here
   const filteredFiles = files.filter((file) => {
-    // Get current URL parameters for filtering
-    const currentFiscalYear = searchParams.get('fiscal-year');
-    const currentSource = searchParams.get('source');
-    const currentGrantType = searchParams.get('grant-type');
-
-    console.log('Filtering file:', {
-      fileName: file.name,
-      fileSource: file.source?.name,
-      currentSource,
-      selectedSource,
-      activeTab
-    });
-
-    // First apply the URL parameter filters
-    if (currentFiscalYear) {
+    // Fiscal year filter
+    if (selectedFiscalYear) {
       const normalizedFileFiscalYear = file.fiscalYear?.name?.replace('FY ', '');
-      if (normalizedFileFiscalYear !== currentFiscalYear) return false;
+      if (normalizedFileFiscalYear !== selectedFiscalYear) return false;
     }
-
-    // Fix source filtering
-    if (currentSource) {
-      console.log('Checking source match:', {
-        fileSource: file.source?.name,
-        currentSource
-      });
-      if (file.source?.name !== currentSource) return false;
+    // Source filter
+    if (selectedSource) {
+      if (file.source?.name !== selectedSource) return false;
     }
-
-    // Fix grant type filtering
-    if (currentGrantType) {
-      if (file.grantType?.name !== currentGrantType) return false;
+    // Grant type filter
+    if (selectedGrantType) {
+      if (file.grantType?.name !== selectedGrantType) return false;
     }
-
-    // Then apply the tab filters
+    // Tab filters
     const type = file.type.toLowerCase();
     switch (activeTab) {
       case 'by-source':
-        // If we're in the by-source tab, only show files matching the selected source
-        if (selectedSource && file.source?.name !== selectedSource) {
-          console.log('Filtering out file due to source mismatch:', {
-            fileName: file.name,
-            fileSource: file.source?.name,
-            selectedSource
-          });
-          return false;
-        }
+        if (selectedSource && file.source?.name !== selectedSource) return false;
         return true;
       case 'documents':
         return [
@@ -125,13 +82,47 @@ export default function FilesPage() {
     }
   });
 
-  // Add log for filtered files count
-  console.log('Filtered files count:', filteredFiles.length);
+  // Add recentFiles definition here
+  const recentFiles = files.slice(0, 5); // Example: Get the 5 most recent files
 
-  // Recently modified files (last 3)
-  const recentFiles = [...files]
-    .sort((a, b) => new Date(b.lastModifiedAt).getTime() - new Date(a.lastModifiedAt).getTime())
-    .slice(0, 3);
+  // Filter tabs
+  const tabs = [
+    { id: 'view-all', name: <TranslatedText text="files.filters.viewAll" /> },
+    { id: 'by-fiscal-year', name: <TranslatedText text="files.filters.byFiscalYear" /> },
+    { id: 'by-source', name: <TranslatedText text="files.filters.bySource.title" /> },
+    { id: 'pdfs', name: <TranslatedText text="files.filters.pdfs" /> },
+    { id: 'images', name: <TranslatedText text="files.filters.images" /> },
+  ];
+
+  // Get fiscal years using the utility function
+  const fiscalYearOptions = generateFiscalYears();
+
+  // Fetch sources and grant types for sidebar dropdowns
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        const sourcesRes = await fetch('/api/admin/sources');
+        const sourcesData = await sourcesRes.json();
+        setSourceOptions(sourcesData.map((source: any) => ({
+          id: source.key,
+          translationKey: `reports.sources.${source.key}`,
+          translations: source.translations
+        })));
+
+        const grantTypesRes = await fetch('/api/admin/grant-types');
+        const grantTypesData = await grantTypesRes.json();
+        setGrantTypeOptions(grantTypesData.map((grant: any) => ({
+          id: grant.key,
+          translationKey: `reports.grantTypes.${grant.key}`,
+          translations: grant.translations
+        })));
+      } catch (error) {
+        console.error('Error fetching options:', error);
+        toast.error('Failed to load options');
+      }
+    };
+    fetchOptions();
+  }, []);
 
   // Fetch files when URL parameters or session changes
   useEffect(() => {
@@ -178,6 +169,26 @@ export default function FilesPage() {
 
     fetchFiles();
   }, [session, selectedFiscalYear, selectedSource, selectedGrantType]);
+
+  // Handle URL parameter changes
+  useEffect(() => {
+    const source = searchParams.get('source');
+    const grantType = searchParams.get('grant-type');
+    const fiscalYear = searchParams.get('fiscal-year');
+
+    if (source) {
+      setSelectedSource(source);
+      setActiveTab('by-source');
+    }
+    if (grantType) {
+      setSelectedGrantType(grantType);
+      setActiveTab('by-grant-type');
+    }
+    if (fiscalYear) {
+      setSelectedFiscalYear(fiscalYear);
+      setActiveTab('by-fiscal-year');
+    }
+  }, [searchParams]);
 
   // Handle file selection
   const handleSelectFile = (file: IFile) => {
@@ -474,6 +485,12 @@ export default function FilesPage() {
     setSelectedSource(source);
   };
 
+  // Handle grant type selection
+  const handleGrantTypeChange = (grantType: string | null) => {
+    console.log('Grant type changed:', grantType);
+    setSelectedGrantType(grantType);
+  };
+
   return (
     <div>
       <div className="mb-6">
@@ -636,9 +653,9 @@ export default function FilesPage() {
                   onChange={(e) => handleFilterChange('source', e.target.value || null)}
                   className="w-full bg-dark-600 border border-dark-500 rounded-md py-2 px-3 text-sm"
                 >
-                  <option value=""><TranslatedText text="files.filters.allSources" /></option>
-                  {sourceFilters.map((source) => (
-                    <option key={source.id} value={source.id}>{source.name}</option>
+                  <option value="">All Sources</option>
+                  {sourceOptions.map((source) => (
+                    <option key={source.id} value={source.id}>{source.id}</option>
                   ))}
                 </select>
               </div>
@@ -651,9 +668,9 @@ export default function FilesPage() {
                   onChange={(e) => handleFilterChange('grantType', e.target.value || null)}
                   className="w-full bg-dark-600 border border-dark-500 rounded-md py-2 px-3 text-sm"
                 >
-                  <option value=""><TranslatedText text="files.filters.allGrantTypes" /></option>
-                  {filterOptions.grantTypes.map((type) => (
-                    <option key={type} value={type}>{type}</option>
+                  <option value="">All Grant Types</option>
+                  {grantTypeOptions.map((type) => (
+                    <option key={type.id} value={type.translations?.en || type.id}>{type.translations?.en || type.id}</option>
                   ))}
                 </select>
               </div>
@@ -683,17 +700,40 @@ export default function FilesPage() {
         {/* By Source tab dropdown */}
         {activeTab === 'by-source' && (
           <div className="mb-6 flex items-center space-x-4">
-            <label className="block text-sm font-medium text-dark-200"><TranslatedText text="files.selectSource" /></label>
-            <select
-              value={selectedSource || ''}
-              onChange={e => handleSourceChange(e.target.value || null)}
-              className="bg-dark-600 border border-dark-500 rounded-md py-2 px-3 text-sm"
-            >
-              <option value="">All Sources</option>
-              {filterOptions.sources.map((source) => (
-                <option key={source} value={source}>{source}</option>
-              ))}
-            </select>
+            <label className="block text-sm font-medium text-dark-200">
+              <TranslatedText text="files.selectSource" />
+            </label>
+            <SearchableSelect
+              options={sourceOptions}
+              value={selectedSource ? { 
+                id: selectedSource, 
+                translationKey: `reports.sources.${selectedSource}`,
+                translations: sourceOptions.find(opt => opt.id === selectedSource)?.translations
+              } : null}
+              onChange={(option) => handleSourceChange(option?.id || null)}
+              placeholderTranslationKey="files.selectSource"
+              language={language}
+            />
+          </div>
+        )}
+
+        {/* By Grant Type tab dropdown */}
+        {activeTab === 'by-grant-type' && (
+          <div className="mb-6 flex items-center space-x-4">
+            <label className="block text-sm font-medium text-dark-200">
+              <TranslatedText text="files.selectGrantType" />
+            </label>
+            <SearchableSelect
+              options={grantTypeOptions}
+              value={selectedGrantType ? { 
+                id: selectedGrantType, 
+                translationKey: `reports.grantTypes.${selectedGrantType}`,
+                translations: grantTypeOptions.find(opt => opt.id === selectedGrantType)?.translations
+              } : null}
+              onChange={(option) => handleGrantTypeChange(option?.id || null)}
+              placeholderTranslationKey="files.selectGrantType"
+              language={language}
+            />
           </div>
         )}
 

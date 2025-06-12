@@ -13,8 +13,12 @@ import { generateFiscalYears } from '@/utils/fiscalYears';
 import { TranslatedText } from '@/components/TranslatedText';
 
 interface Option {
-  value: string;
-  label: string;
+  id: string;
+  translationKey: string;
+  translations?: {
+    en: string;
+    ne: string;
+  };
 }
 
 // Define sources to match exactly with database records
@@ -59,6 +63,8 @@ const UploadPage = () => {
   const [remarks, setRemarks] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [sourceOptions, setSourceOptions] = useState<{ id: string; translationKey: string; translations: any; }[]>([]);
+  const [grantTypeOptions, setGrantTypeOptions] = useState<{ id: string; translationKey: string; translations: any; }[]>([]);
 
   // Animation variants
   const containerVariants = {
@@ -80,21 +86,43 @@ const UploadPage = () => {
 
   // Get fiscal years
   const fiscalYears = generateFiscalYears().map(year => ({
-    value: year.id,
-    label: year.name
+    id: year.id,
+    translationKey: `reports.fiscalYears.${year.id}`,
+    translations: {
+      en: year.name,
+      ne: year.name
+    }
   }));
 
-  // Convert sources to options
-  const sourceOptions = SOURCES.map(source => ({
-    value: source.id,
-    label: source.name
-  }));
+  // Fetch sources and grant types
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        const sourcesRes = await fetch('/api/admin/sources');
+        const sourcesData = await sourcesRes.json();
+        setSourceOptions(sourcesData.map((source: any) => ({
+          id: source.key,
+          translationKey: `reports.sources.${source.key}`,
+          translations: source.translations
+        })));
 
-  // Convert grant types to options
-  const grantTypeOptions = GRANT_TYPES.map(grant => ({
-    value: grant.id,
-    label: grant.name
-  }));
+        const grantTypesRes = await fetch('/api/admin/grant-types');
+        const grantTypesData = await grantTypesRes.json();
+        setGrantTypeOptions(grantTypesData.map((grant: any) => ({
+          id: grant.key,
+          translationKey: `reports.grantTypes.${grant.key}`,
+          translations: grant.translations
+        })));
+      } catch (error) {
+        console.error('Error fetching options:', error);
+        toast.error('Failed to load options');
+      }
+    };
+    fetchOptions();
+  }, []);
+
+  // Convert fiscal years to options
+  const fiscalYearOptions = fiscalYears;
 
   const canGoNext = () => {
     if (step === 0) {
@@ -107,17 +135,28 @@ const UploadPage = () => {
     return false;
   };
 
+  const isFormValid = title && fiscalYear && source && grantType && (a4Files.length > 0 || nepaliFiles.length > 0 || extraFiles.length > 0 || otherFiles.length > 0);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
       const formData = new FormData();
       formData.append('title', title);
-      formData.append('fiscalYear', fiscalYear?.value || '');
-      formData.append('source', source?.value || '');
-      formData.append('grantType', grantType?.value || '');
+      formData.append('fiscalYear', fiscalYear?.id || '');
+      formData.append('source', source?.id || '');
+      formData.append('grantType', grantType?.id || '');
       formData.append('remarks', remarks);
       
+      // Debug log for values being sent
+      console.log('Uploading with:', {
+        title,
+        fiscalYear: fiscalYear?.id,
+        source: source?.id,
+        grantType: grantType?.id,
+        remarks
+      });
+
       // Append files with their section-specific keys
       a4Files.forEach(file => {
         formData.append('a4Files', file);
@@ -282,10 +321,10 @@ const UploadPage = () => {
                             <TranslatedText text="files.upload.metadata.fiscalYearLabel" /> <span className="text-primary-500">*</span>
                             </label>
                             <SearchableSelect
-                              options={fiscalYears}
-                            value={fiscalYear}
-                            onChange={setFiscalYear}
-                            placeholder="Select fiscal year"
+                              options={fiscalYearOptions}
+                              value={fiscalYear}
+                              onChange={setFiscalYear}
+                              placeholderTranslationKey="files.upload.metadata.fiscalYearLabel"
                             />
                           </div>
                           <div className="space-y-2">
@@ -296,7 +335,7 @@ const UploadPage = () => {
                             options={sourceOptions}
                               value={source}
                             onChange={setSource}
-                            placeholder="Select source"
+                            placeholderTranslationKey="files.upload.metadata.sourceLabel"
                           />
                         </div>
                           <div className="space-y-2">
@@ -307,7 +346,7 @@ const UploadPage = () => {
                             options={grantTypeOptions}
                               value={grantType}
                             onChange={setGrantType}
-                            placeholder="Select grant type"
+                            placeholderTranslationKey="files.upload.metadata.grantTypeLabel"
                           />
                           </div>
                           <div className="space-y-2">
@@ -404,10 +443,10 @@ const UploadPage = () => {
                 ) : (
                   <Button
                     type="submit"
-                    disabled={!canGoNext() || isSubmitting}
-                    className="flex items-center ml-auto"
+                    className="w-48 mt-8"
+                    disabled={!isFormValid || isSubmitting}
                   >
-                    <TranslatedText text="files.upload.buttons.upload" />
+                    {isSubmitting ? <span>Uploading...</span> : <TranslatedText text="files.upload.buttons.upload" />}
                   </Button>
                 )}
               </div>

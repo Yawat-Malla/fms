@@ -1,134 +1,125 @@
 'use client';
 
-import { Fragment, useState } from 'react';
-import { Listbox, Transition } from '@headlessui/react';
-import { ChevronUpDownIcon } from '@heroicons/react/20/solid';
+import React, { useState, useRef, useEffect } from 'react';
+import { useApp } from '@/contexts/AppContext';
 import { TranslatedText } from '@/components/TranslatedText';
+import { translations } from '@/translations';
 
 interface Option {
-  id?: string;
-  name?: string;
-  value?: string;
-  label?: string;
-  translationKey?: string;
+  id: string;
+  translationKey: string;
+  translations?: {
+    [key: string]: string;
+    en: string;
+    ne: string;
+  };
 }
 
 interface SearchableSelectProps {
   options: Option[];
   value: Option | null;
-  onChange: (value: Option) => void;
-  placeholder?: string;
-  placeholderTranslationKey?: string;
+  onChange: (option: Option | null) => void;
+  placeholderTranslationKey: string;
   disabled?: boolean;
+  language?: string;
 }
 
 export default function SearchableSelect({
   options,
   value,
   onChange,
-  placeholder = 'Select an option...',
   placeholderTranslationKey,
   disabled = false,
+  language
 }: SearchableSelectProps) {
-  const [query, setQuery] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const { language: contextLanguage } = useApp();
+  const currentLanguage = language || contextLanguage;
 
   const getOptionLabel = (option: Option) => {
-    if (option.translationKey) {
-      return <TranslatedText text={option.translationKey} />;
+    if (!option) return '';
+    
+    if (option.translations) {
+      return option.translations[currentLanguage as 'en' | 'ne'] || option.translations.en || option.id;
     }
-    return option.name || option.label || '';
+    
+    // Fallback to global translations
+    const reports: any = translations[currentLanguage as 'en' | 'ne']?.reports;
+    const sourceTranslation = reports?.source?.[option.id];
+    const grantTypeTranslation = reports?.grantType?.[option.id];
+    
+    return sourceTranslation || grantTypeTranslation || option.id;
   };
 
-  const getOptionValue = (option: Option) => {
-    return option.id || option.value || '';
-  };
+  const filteredOptions = options.filter(option => {
+    const label = getOptionLabel(option);
+    return label.toLowerCase().includes(searchTerm.toLowerCase());
+  });
 
-  const filteredOptions =
-    query === ''
-      ? options
-      : options.filter((option) => {
-          const label = option.name || option.label || '';
-          return label
-            .toLowerCase()
-            .replace(/\s+/g, '')
-            .includes(query.toLowerCase().replace(/\s+/g, ''));
-        });
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
-    <div className="relative">
-      <Listbox value={value} onChange={onChange} disabled={disabled}>
-        <div className="relative">
-          <Listbox.Button className="relative w-full bg-white border border-gray-200 rounded-lg shadow-sm pl-4 pr-10 py-2.5 text-left cursor-default focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-            <span className="block truncate text-gray-900">
-              {value ? (
-                getOptionLabel(value)
-              ) : placeholderTranslationKey ? (
-                <TranslatedText text={placeholderTranslationKey} />
-              ) : (
-                placeholder
-              )}
-            </span>
-            <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-              <ChevronUpDownIcon
-                className="h-5 w-5 text-gray-400"
-                aria-hidden="true"
-              />
-            </span>
-          </Listbox.Button>
+    <div className="relative" ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        className={`w-full px-3 py-2 text-left border rounded-md ${
+          disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white cursor-pointer'
+        } ${isOpen ? 'border-blue-500' : 'border-gray-300'}`}
+        disabled={disabled}
+      >
+        {value ? (
+          <span className="block truncate">{getOptionLabel(value)}</span>
+        ) : (
+          <span className="block truncate text-gray-500">
+            <TranslatedText text={placeholderTranslationKey} />
+          </span>
+        )}
+      </button>
 
-          <Transition
-            as={Fragment}
-            leave="transition ease-in duration-100"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <Listbox.Options className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-              <div className="sticky top-0 z-10 bg-white px-3 py-2">
-                <input
-                  type="text"
-                  className="w-full rounded-md border border-gray-200 bg-white py-1.5 pl-3 pr-10 text-gray-900 focus:ring-2 focus:ring-primary-500 sm:text-sm sm:leading-6"
-                  placeholder="Search..."
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                />
-              </div>
-
-              {filteredOptions.length === 0 ? (
-                <div className="relative cursor-default select-none py-2 pl-10 pr-4 text-gray-500">
-                  <TranslatedText text="common.noOptionsFound" />
-                </div>
-              ) : (
-                filteredOptions.map((option) => (
-                <Listbox.Option
-                    key={getOptionValue(option)}
-                  className={({ active }) =>
-                    `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                        active ? 'bg-primary-50 text-primary-900' : 'text-gray-900'
-                    }`
-                  }
-                  value={option}
+      {isOpen && !disabled && (
+        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
+          <div className="p-2">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div className="max-h-60 overflow-auto">
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map((option) => (
+                <div
+                  key={option.id}
+                  onClick={() => {
+                    onChange(option);
+                    setIsOpen(false);
+                    setSearchTerm('');
+                  }}
+                  className="px-3 py-2 cursor-pointer hover:bg-gray-100"
                 >
-                  {({ selected, active }) => (
-                      <div className="flex items-center">
-                        <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-                          {selected && (
-                            <svg className="h-5 w-5 text-primary-600" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          )}
-                        </span>
-                        <span className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}>
-                          {getOptionLabel(option)}
-                      </span>
-                      </div>
-                  )}
-                </Listbox.Option>
-                ))
-              )}
-            </Listbox.Options>
-          </Transition>
+                  {getOptionLabel(option)}
+                </div>
+              ))
+            ) : (
+              <div className="px-3 py-2 text-gray-500">No options found</div>
+            )}
+          </div>
         </div>
-    </Listbox>
+      )}
     </div>
   );
 } 

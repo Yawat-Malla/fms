@@ -9,6 +9,7 @@ import { createHash } from 'crypto';
 import { notifyFileUpdate } from '@/lib/notifications';
 
 const UPLOAD_DIR = join(process.cwd(), 'uploads');
+const USER_FOLDERS_DIR = join(UPLOAD_DIR, 'user_folders');
 
 function generateFileHash(fileName: string, size: number, timestamp: number): string {
   const hash = createHash('sha256');

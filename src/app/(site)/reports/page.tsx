@@ -25,23 +25,6 @@ interface Report {
   };
 }
 
-// Define sources to match exactly with database records
-const SOURCES = [
-  { id: 'federal_government', name: 'Federal Government' },
-  { id: 'provincial_government', name: 'Provincial Government' },
-  { id: 'local_municipality', name: 'Local Municipality' },
-  { id: 'other', name: 'Other' },
-];
-
-// Define grant types to match exactly with database records
-const GRANT_TYPES = [
-  { id: 'current_expenditure', name: 'Current Expenditure' },
-  { id: 'capital_expenditure', name: 'Capital Expenditure' },
-  { id: 'supplementary_grant', name: 'Supplementary Grant' },
-  { id: 'special_grant', name: 'Special Grant' },
-  { id: 'other_grant', name: 'Other Grant' },
-];
-
 export default function ReportsPage() {
   const { data: session } = useSession();
   const { language } = useApp();
@@ -57,6 +40,8 @@ export default function ReportsPage() {
   const [loading, setLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const [fiscalYears, setFiscalYears] = useState<{ id: string; name: string; }[]>([]);
+  const [sourceOptions, setSourceOptions] = useState<{ id: string; translationKey: string; translations: any; }[]>([]);
+  const [grantTypeOptions, setGrantTypeOptions] = useState<{ id: string; translationKey: string; translations: any; }[]>([]);
 
   const reportTypes = [
     { id: 'file_count', name: 'reports.types.fileCount' },
@@ -67,6 +52,33 @@ export default function ReportsPage() {
   // Initialize fiscal years
   useEffect(() => {
     setFiscalYears(generateFiscalYears());
+  }, []);
+
+  // Fetch sources and grant types
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        const sourcesRes = await fetch('/api/admin/sources');
+        const sourcesData = await sourcesRes.json();
+        setSourceOptions(sourcesData.map((source: any) => ({
+          id: source.key,
+          translationKey: `reports.sources.${source.key}`,
+          translations: source.translations
+        })));
+
+        const grantTypesRes = await fetch('/api/admin/grant-types');
+        const grantTypesData = await grantTypesRes.json();
+        setGrantTypeOptions(grantTypesData.map((grant: any) => ({
+          id: grant.key,
+          translationKey: `reports.grantTypes.${grant.key}`,
+          translations: grant.translations
+        })));
+      } catch (error) {
+        console.error('Error fetching options:', error);
+        toast.error('Failed to load options');
+      }
+    };
+    fetchOptions();
   }, []);
 
   // Fetch reports on mount
@@ -355,14 +367,12 @@ export default function ReportsPage() {
                 <TranslatedText text="reports.source" />
               </label>
               <SearchableSelect
-                options={SOURCES.map(source => ({
-                  id: source.id,
-                  translationKey: `reports.sources.${source.id}`
-                }))}
+                options={sourceOptions}
                 value={selectedSource ? { id: selectedSource, translationKey: `reports.sources.${selectedSource}` } : null}
                 onChange={(option) => setSelectedSource(option?.id || '')}
                 placeholderTranslationKey="reports.selectSource"
                 disabled={selectedReportType !== 'custom'}
+                language={language}
               />
             </div>
 
@@ -372,14 +382,12 @@ export default function ReportsPage() {
                 <TranslatedText text="reports.grantType" />
               </label>
               <SearchableSelect
-                options={GRANT_TYPES.map(grant => ({
-                  id: grant.id,
-                  translationKey: `reports.grantTypes.${grant.id}`
-                }))}
+                options={grantTypeOptions}
                 value={selectedGrantType ? { id: selectedGrantType, translationKey: `reports.grantTypes.${selectedGrantType}` } : null}
                 onChange={(option) => setSelectedGrantType(option?.id || '')}
                 placeholderTranslationKey="reports.selectGrantType"
                 disabled={selectedReportType !== 'custom'}
+                language={language}
               />
             </div>
 
@@ -533,7 +541,7 @@ export default function ReportsPage() {
                       {report.name}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
-                      <TranslatedText text={`reports.types.${report.type === 'file_count' ? 'fileCount' : report.type}`} />
+                      <TranslatedText text={`reports.types.${report.type}`} />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
                       {report.user.name}

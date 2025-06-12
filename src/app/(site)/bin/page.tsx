@@ -180,14 +180,14 @@ export default function BinPage() {
     setShowConfirm(null);
     setLoading(true);
     setTimeout(() => {
-    fetch('/api/bin')
-      .then(res => res.json())
-      .then(data => {
-        setDeletedFiles(data.files || []);
-        setDeletedFolders(data.folders || []);
-        setLoading(false);
+      fetch('/api/bin')
+        .then(res => res.json())
+        .then(data => {
+          setDeletedFiles(data.files || []);
+          setDeletedFolders(data.folders || []);
+          setLoading(false);
           window.dispatchEvent(new Event('refresh-folders'));
-      });
+        });
     }, 300);
   };
 
@@ -209,18 +209,18 @@ export default function BinPage() {
     setShowConfirm(null);
     setLoading(true);
     setTimeout(() => {
-    fetch('/api/bin')
-      .then(res => res.json())
-      .then(data => {
-        setDeletedFiles(data.files || []);
-        setDeletedFolders(data.folders || []);
-        setLoading(false);
+      fetch('/api/bin')
+        .then(res => res.json())
+        .then(data => {
+          setDeletedFiles(data.files || []);
+          setDeletedFolders(data.folders || []);
+          setLoading(false);
           // Check if any of the selected items are still present
           const stillPresent = selectedItems.some(item => {
             if (item.type === 'file') {
-              return (data.files || []).some(f => String(f.id) === item.id);
+              return (data.files || []).some((f: any) => String(f.id) === item.id);
             } else {
-              return (data.folders || []).some(f => String(f.id) === item.id);
+              return (data.folders || []).some((f: any) => String(f.id) === item.id);
             }
           });
           if (stillPresent) {
@@ -228,7 +228,7 @@ export default function BinPage() {
           } else {
             toast.success('Deleted forever');
           }
-      });
+        });
     }, 300);
   };
 
@@ -237,16 +237,16 @@ export default function BinPage() {
       {/* Confirmation Dialog */}
       {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-dark-800 rounded-lg shadow-lg p-6 w-full max-w-sm">
-            <h2 className="text-lg font-semibold text-dark-100 mb-2">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm">
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">
               <TranslatedText text={showConfirm === 'restore' ? 'bin.confirmRestore' : 'bin.confirmDelete'} />
             </h2>
-            <p className="text-dark-300 mb-4">
+            <p className="text-gray-600 mb-4">
               <TranslatedText text={showConfirm === 'restore' ? 'bin.confirmRestoreMessage' : 'bin.confirmDeleteMessage'} />
             </p>
             <div className="flex justify-end space-x-3">
               <button
-                className="px-4 py-2 text-sm font-medium text-dark-100 bg-dark-700 hover:bg-dark-600 rounded-md"
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
                 onClick={() => setShowConfirm(null)}
                 disabled={actionLoading}
               >
@@ -298,119 +298,6 @@ export default function BinPage() {
           )}
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-wrap gap-3 mb-6">
-          <div className="filter-dropdown relative">
-            <button
-              className="px-4 py-2 text-sm font-medium text-dark-100 bg-dark-700 hover:bg-dark-600 rounded-md"
-              onClick={() => toggleDropdown('type')}
-            >
-              <TranslatedText text="bin.filters.type" />
-            </button>
-            {openDropdown === 'type' && (
-              <div className="absolute z-10 mt-2 w-48 bg-dark-800 rounded-md shadow-lg">
-                  {typeOptions.map((option) => (
-                    <button
-                      key={option}
-                    className="block w-full text-left px-4 py-2 text-sm text-dark-100 hover:bg-dark-700"
-                      onClick={() => handleFilterSelect('type', option)}
-                    >
-                      {option}
-                    </button>
-                  ))}
-              </div>
-            )}
-          </div>
-
-          <div className="filter-dropdown relative">
-            <button
-              className="px-4 py-2 text-sm font-medium text-dark-100 bg-dark-700 hover:bg-dark-600 rounded-md"
-              onClick={() => toggleDropdown('modified')}
-            >
-              <TranslatedText text="bin.filters.modified" />
-            </button>
-            {openDropdown === 'modified' && (
-              <div className="absolute z-10 mt-2 w-48 bg-dark-800 rounded-md shadow-lg">
-                  {modifiedOptions.map((option) => (
-                    <button
-                      key={option}
-                    className="block w-full text-left px-4 py-2 text-sm text-dark-100 hover:bg-dark-700"
-                      onClick={() => handleFilterSelect('modified', option)}
-                    >
-                    <TranslatedText text={`bin.filters.options.${option.toLowerCase().replace(/\s+/g, '')}`} />
-                    </button>
-                  ))}
-              </div>
-            )}
-          </div>
-
-          <div className="filter-dropdown relative">
-            <button
-              className="px-4 py-2 text-sm font-medium text-dark-100 bg-dark-700 hover:bg-dark-600 rounded-md"
-              onClick={() => toggleDropdown('source')}
-            >
-              <TranslatedText text="bin.filters.source" />
-            </button>
-            {openDropdown === 'source' && (
-              <div className="absolute z-10 mt-2 w-48 bg-dark-800 rounded-md shadow-lg">
-                  {sourceOptions.map((option) => (
-                    <button
-                      key={option}
-                    className="block w-full text-left px-4 py-2 text-sm text-dark-100 hover:bg-dark-700"
-                      onClick={() => handleFilterSelect('source', option)}
-                    >
-                      {option}
-                    </button>
-                  ))}
-              </div>
-            )}
-          </div>
-
-          <div className="filter-dropdown relative">
-            <button
-              className="px-4 py-2 text-sm font-medium text-dark-100 bg-dark-700 hover:bg-dark-600 rounded-md"
-              onClick={() => toggleDropdown('fiscalYear')}
-            >
-              <TranslatedText text="bin.filters.fiscalYear" />
-            </button>
-            {openDropdown === 'fiscalYear' && (
-              <div className="absolute z-10 mt-2 w-48 bg-dark-800 rounded-md shadow-lg">
-                  {fiscalYearOptions.map((option) => (
-                    <button
-                      key={option}
-                    className="block w-full text-left px-4 py-2 text-sm text-dark-100 hover:bg-dark-700"
-                      onClick={() => handleFilterSelect('fiscalYear', option)}
-                    >
-                      {option}
-                    </button>
-                  ))}
-              </div>
-            )}
-          </div>
-
-          <div className="filter-dropdown relative">
-            <button
-              className="px-4 py-2 text-sm font-medium text-dark-100 bg-dark-700 hover:bg-dark-600 rounded-md"
-              onClick={() => toggleDropdown('grantType')}
-            >
-              <TranslatedText text="bin.filters.grantType" />
-            </button>
-            {openDropdown === 'grantType' && (
-              <div className="absolute z-10 mt-2 w-48 bg-dark-800 rounded-md shadow-lg">
-                  {grantTypeOptions.map((option) => (
-                    <button
-                      key={option}
-                    className="block w-full text-left px-4 py-2 text-sm text-dark-100 hover:bg-dark-700"
-                      onClick={() => handleFilterSelect('grantType', option)}
-                    >
-                      {option}
-                    </button>
-                  ))}
-              </div>
-            )}
-          </div>
-        </div>
-
         {/* Content */}
         {loading ? (
           <div className="flex justify-center items-center h-64">
@@ -421,59 +308,59 @@ export default function BinPage() {
             <p className="text-dark-300">
               <TranslatedText text={selectedType || selectedModified || selectedSource || selectedFiscalYear || selectedGrantType ? 'bin.emptyState.noItemsForFilter' : 'bin.emptyState.noItems'} />
             </p>
-      </div>
+          </div>
         ) : (
-      <Card>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                className="h-4 w-4 text-primary-500 rounded border-dark-500 bg-dark-700 focus:ring-primary-500"
-                checked={selectedItems.length === filteredFiles.length + filteredFolders.length}
-                onChange={handleSelectAll}
-              />
-              <span className="ml-2 text-sm text-dark-300">
+          <Card>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 text-primary-500 rounded border-dark-500 bg-dark-700 focus:ring-primary-500"
+                    checked={selectedItems.length === filteredFiles.length + filteredFolders.length}
+                    onChange={handleSelectAll}
+                  />
+                  <span className="ml-2 text-sm text-dark-300">
                     {selectedItems.length} <TranslatedText text="files.found" />
-              </span>
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <button 
+                  onClick={() => setView('list')}
+                  className={`p-2 rounded-md transition-colors ${view === 'list' ? 'bg-dark-700' : 'hover:bg-dark-700'}`}
+                >
+                  <svg className="w-5 h-5 text-dark-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                  </svg>
+                </button>
+                <button 
+                  onClick={() => setView('grid')}
+                  className={`p-2 rounded-md transition-colors ${view === 'grid' ? 'bg-dark-700' : 'hover:bg-dark-700'}`}
+                >
+                  <svg className="w-5 h-5 text-dark-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                  </svg>
+                </button>
+              </div>
             </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            <button 
-              onClick={() => setView('list')}
-              className={`p-2 rounded-md transition-colors ${view === 'list' ? 'bg-dark-700' : 'hover:bg-dark-700'}`}
-            >
-              <svg className="w-5 h-5 text-dark-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-              </svg>
-            </button>
-            <button 
-              onClick={() => setView('grid')}
-              className={`p-2 rounded-md transition-colors ${view === 'grid' ? 'bg-dark-700' : 'hover:bg-dark-700'}`}
-            >
-              <svg className="w-5 h-5 text-dark-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-              </svg>
-            </button>
-          </div>
-        </div>
 
-        {view === 'list' ? (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-dark-600">
-              <thead className="bg-dark-800">
-                <tr>
-                  <th scope="col" className="w-12 px-6 py-3">
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4 text-primary-500 rounded border-dark-500 bg-dark-700 focus:ring-primary-500"
-                        checked={selectedItems.length === filteredFiles.length + filteredFolders.length}
-                        onChange={handleSelectAll}
-                      />
-                    </div>
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
+            {view === 'list' ? (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-dark-600">
+                  <thead className="bg-dark-800">
+                    <tr>
+                      <th scope="col" className="w-12 px-6 py-3">
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4 text-primary-500 rounded border-dark-500 bg-dark-700 focus:ring-primary-500"
+                            checked={selectedItems.length === filteredFiles.length + filteredFolders.length}
+                            onChange={handleSelectAll}
+                          />
+                        </div>
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
                         <TranslatedText text="files.table.name" />
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
@@ -481,126 +368,126 @@ export default function BinPage() {
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
                         <TranslatedText text="files.table.lastModified" />
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
                         <TranslatedText text="files.table.fiscalYear" />
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
                         <TranslatedText text="files.table.source" />
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
                         <TranslatedText text="files.table.grantType" />
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-dark-700 divide-y divide-dark-600">
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-dark-700 divide-y divide-dark-600">
                     {filteredFiles.map((file) => (
-                    <tr
-                      key={file.id}
-                      className="hover:bg-dark-600 transition-colors"
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <input
-                            type="checkbox"
-                            className="h-4 w-4 text-primary-500 rounded border-dark-500 bg-dark-700 focus:ring-primary-500"
-                            checked={selectedItems.some(item => item.id === String(file.id) && item.type === 'file')}
-                            onChange={() => handleSelectItem(String(file.id), 'file')}
-                          />
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <FileIcon />
-                          <span className="text-sm font-medium text-dark-100">{file.name}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
-                        {file.type}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
-                        {file.deletedAt}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
-                        {file.fiscalYear?.name || '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
-                        {file.source?.name || '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
-                        {file.grantType?.name || '-'}
-                      </td>
-                    </tr>
-                  ))}
+                      <tr
+                        key={file.id}
+                        className="hover:bg-dark-600 transition-colors"
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 text-primary-500 rounded border-dark-500 bg-dark-700 focus:ring-primary-500"
+                              checked={selectedItems.some(item => item.id === String(file.id) && item.type === 'file')}
+                              onChange={() => handleSelectItem(String(file.id), 'file')}
+                            />
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <FileIcon />
+                            <span className="text-sm font-medium text-dark-100">{file.name}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                          {file.type}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                          {file.deletedAt}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                          {file.fiscalYear?.name || '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                          {file.source?.name || '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                          {file.grantType?.name || '-'}
+                        </td>
+                      </tr>
+                    ))}
                     {filteredFolders.map((folder) => (
-                    <tr
-                      key={folder.id}
-                      className="hover:bg-dark-600 transition-colors"
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <input
-                            type="checkbox"
-                            className="h-4 w-4 text-primary-500 rounded border-dark-500 bg-dark-700 focus:ring-primary-500"
-                            checked={selectedItems.some(item => item.id === String(folder.id) && item.type === 'folder')}
-                            onChange={() => handleSelectItem(String(folder.id), 'folder')}
-                          />
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <FolderIcon />
-                          <span className="text-sm font-medium text-dark-100">{folder.name}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
-                        {folder.type}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
-                        {folder.deletedAt}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
-                        {folder.fiscalYear?.name || '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
-                        {folder.source?.name || '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
-                        {folder.grantType?.name || '-'}
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
+                      <tr
+                        key={folder.id}
+                        className="hover:bg-dark-600 transition-colors"
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 text-primary-500 rounded border-dark-500 bg-dark-700 focus:ring-primary-500"
+                              checked={selectedItems.some(item => item.id === String(folder.id) && item.type === 'folder')}
+                              onChange={() => handleSelectItem(String(folder.id), 'folder')}
+                            />
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <FolderIcon />
+                            <span className="text-sm font-medium text-dark-100">{folder.name}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                          {folder.type}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                          {folder.deletedAt}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                          {folder.fiscalYear?.name || '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                          {folder.source?.name || '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                          {folder.grantType?.name || '-'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredFiles.map((file) => (
-                <motion.div
-                  key={file.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="relative p-4 bg-dark-700 rounded-lg border border-dark-600"
-                >
-                  <div className="absolute top-2 left-2">
-                    <input
-                      type="checkbox"
-                      className="h-4 w-4 text-primary-500 rounded border-dark-500 bg-dark-700 focus:ring-primary-500"
-                      checked={selectedItems.some(item => item.id === String(file.id) && item.type === 'file')}
-                      onChange={() => handleSelectItem(String(file.id), 'file')}
-                    />
-                  </div>
-                  <div className="flex flex-col space-y-3 mt-4">
-                    <div className="flex items-center space-x-3">
-                      <FileIcon />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-dark-100 truncate">
-                          {file.name}
-                        </p>
-                      </div>
+                  <motion.div
+                    key={file.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="relative p-4 bg-dark-700 rounded-lg border border-dark-600"
+                  >
+                    <div className="absolute top-2 left-2">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 text-primary-500 rounded border-dark-500 bg-dark-700 focus:ring-primary-500"
+                        checked={selectedItems.some(item => item.id === String(file.id) && item.type === 'file')}
+                        onChange={() => handleSelectItem(String(file.id), 'file')}
+                      />
                     </div>
-                    <div className="text-xs text-dark-400 space-y-1">
+                    <div className="flex flex-col space-y-3 mt-4">
+                      <div className="flex items-center space-x-3">
+                        <FileIcon />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-dark-100 truncate">
+                            {file.name}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-xs text-dark-400 space-y-1">
                         <p>
                           <TranslatedText text="files.table.type" />: {file.type}
                         </p>
@@ -621,31 +508,31 @@ export default function BinPage() {
                   </motion.div>
                 ))}
                 {filteredFolders.map((folder) => (
-                <motion.div
-                  key={folder.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="relative p-4 bg-dark-700 rounded-lg border border-dark-600"
-                >
-                  <div className="absolute top-2 left-2">
-                    <input
-                      type="checkbox"
-                      className="h-4 w-4 text-primary-500 rounded border-dark-500 bg-dark-700 focus:ring-primary-500"
-                      checked={selectedItems.some(item => item.id === String(folder.id) && item.type === 'folder')}
-                      onChange={() => handleSelectItem(String(folder.id), 'folder')}
-                    />
-                  </div>
-                  <div className="flex flex-col space-y-3 mt-4">
-                    <div className="flex items-center space-x-3">
-                      <FolderIcon />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-dark-100 truncate">
-                          {folder.name}
-                        </p>
-                      </div>
+                  <motion.div
+                    key={folder.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="relative p-4 bg-dark-700 rounded-lg border border-dark-600"
+                  >
+                    <div className="absolute top-2 left-2">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 text-primary-500 rounded border-dark-500 bg-dark-700 focus:ring-primary-500"
+                        checked={selectedItems.some(item => item.id === String(folder.id) && item.type === 'folder')}
+                        onChange={() => handleSelectItem(String(folder.id), 'folder')}
+                      />
                     </div>
-                    <div className="text-xs text-dark-400 space-y-1">
+                    <div className="flex flex-col space-y-3 mt-4">
+                      <div className="flex items-center space-x-3">
+                        <FolderIcon />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-dark-100 truncate">
+                            {folder.name}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-xs text-dark-400 space-y-1">
                         <p>
                           <TranslatedText text="files.table.type" />: {folder.type}
                         </p>
@@ -661,9 +548,9 @@ export default function BinPage() {
                         <p>
                           <TranslatedText text="files.table.grantType" />: {folder.grantType?.name || '-'}
                         </p>
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
+                  </motion.div>
                 ))}
               </div>
             )}
