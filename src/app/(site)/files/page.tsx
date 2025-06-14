@@ -7,21 +7,40 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { IFile } from '@/types/index';
 import FileRow from '@/components/files/FileRow';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 import { toast } from 'react-hot-toast';
 import { generateFiscalYears } from '@/utils/fiscalYears';
 import { TranslatedText } from '@/components/TranslatedText';
 import SearchableSelect from '@/components/ui/SearchableSelect';
 import { useApp } from '@/contexts/AppContext';
+import FileActions from '@/components/FileActions';
+import { motion, AnimatePresence } from 'framer-motion';
+import { getFileOrFolderIcon } from '@/components/DriveTable';
+
+// Helper function to safely format dates
+const safeFormatDate = (date: string | Date | null | undefined) => {
+  if (!date) return '-';
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  return isValid(dateObj) ? format(dateObj, 'MMM d, yyyy') : '-';
+};
+
+// Helper function to format file size
+const formatFileSize = (bytes: number) => {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+};
 
 export default function FilesPage() {
   const { data: session, status } = useSession();
   const searchParams = useSearchParams();
-  const [files, setFiles] = useState<IFile[]>([]);
+  const [folders, setFolders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('view-all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedFiles, setSelectedFiles] = useState<IFile[]>([]);
+  const [selectedFolders, setSelectedFolders] = useState<any[]>([]);
   const [viewType, setViewType] = useState<'grid' | 'list'>('list');
   const [selectedFiscalYear, setSelectedFiscalYear] = useState<string | null>(null);
   const [selectedSource, setSelectedSource] = useState<string | null>(null);
@@ -36,139 +55,202 @@ export default function FilesPage() {
     grantTypes: []
   });
   const [showFilters, setShowFilters] = useState(false);
-  const [sourceOptions, setSourceOptions] = useState<{ id: string; translationKey: string; translations: any; }[]>([]);
-  const [grantTypeOptions, setGrantTypeOptions] = useState<{ id: string; translationKey: string; translations: any; }[]>([]);
   const { language } = useApp();
 
-  // Insert filteredFiles definition here
-  const filteredFiles = files.filter((file) => {
+  // Add new state for folder navigation
+  const [currentPath, setCurrentPath] = useState<string[]>([]);
+  const [history, setHistory] = useState<string[][]>([]);
+  const [historyIndex, setHistoryIndex] = useState(0);
+  const [currentFolder, setCurrentFolder] = useState<any | null>(null);
+  const [prevFolders, setPrevFolders] = useState<any[]>([]);
+  const [prevFiles, setPrevFiles] = useState<any[]>([]);
+  const [renamingGridItem, setRenamingGridItem] = useState<{ id: number; name: string; isFolder: boolean } | null>(null);
+  const [recentlyModifiedFolders, setRecentlyModifiedFolders] = useState<any[]>([]);
+
+  // Add state for files
+  const [files, setFiles] = useState<any[]>([]);
+
+  // Insert filteredFolders definition here
+  const filteredFolders = folders.filter((folder) => {
     // Fiscal year filter
     if (selectedFiscalYear) {
-      const normalizedFileFiscalYear = file.fiscalYear?.name?.replace('FY ', '');
-      if (normalizedFileFiscalYear !== selectedFiscalYear) return false;
+      const normalizedFolderFiscalYear = folder.fiscalYear?.name?.replace('FY ', '');
+      if (normalizedFolderFiscalYear !== selectedFiscalYear) return false;
     }
     // Source filter
     if (selectedSource) {
-      if (file.source?.name !== selectedSource) return false;
+      if (folder.source?.name !== selectedSource) return false;
     }
     // Grant type filter
     if (selectedGrantType) {
-      if (file.grantType?.name !== selectedGrantType) return false;
+      if (folder.grantType?.name !== selectedGrantType) return false;
     }
     // Tab filters
-    const type = file.type.toLowerCase();
     switch (activeTab) {
       case 'by-source':
-        if (selectedSource && file.source?.name !== selectedSource) return false;
+        if (selectedSource && folder.source?.name !== selectedSource) return false;
         return true;
-      case 'documents':
-        return [
-          'doc', 'docx', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          'application/vnd.oasis.opendocument.text', 'odt', 'rtf', 'txt', 'application/rtf', 'application/txt', 'text/plain'
-        ].some(ext => type.includes(ext));
-      case 'spreadsheets':
-        return [
-          'xls', 'xlsx', 'csv', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          'application/vnd.oasis.opendocument.spreadsheet', 'ods', 'text/csv'
-        ].some(ext => type.includes(ext));
-      case 'pdfs':
-        return type.includes('pdf');
-      case 'images':
-        return [
-          'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 'image/svg+xml'
-        ].some(ext => type.includes(ext));
       default:
         return true;
     }
   });
 
-  // Add recentFiles definition here
-  const recentFiles = files.slice(0, 5); // Example: Get the 5 most recent files
+  // Helper to fetch folder by path from backend
+  const fetchFolderByPath = async (pathArr: string[]) => {
+    if (pathArr.length === 0) return null;
+    const res = await fetch(`/api/folders/by-path?path=${encodeURIComponent(pathArr.join('/'))}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data;
+  };
 
-  // Filter tabs
-  const tabs = [
-    { id: 'view-all', name: <TranslatedText text="files.filters.viewAll" /> },
-    { id: 'by-fiscal-year', name: <TranslatedText text="files.filters.byFiscalYear" /> },
-    { id: 'by-source', name: <TranslatedText text="files.filters.bySource.title" /> },
-    { id: 'pdfs', name: <TranslatedText text="files.filters.pdfs" /> },
-    { id: 'images', name: <TranslatedText text="files.filters.images" /> },
-  ];
+  // Fetch recently modified folders
+  const fetchRecentlyModifiedFolders = async () => {
+    try {
+      const response = await fetch('/api/folders');
+      if (!response.ok) throw new Error('Failed to fetch recently modified folders');
+      const data = await response.json();
+      const recentFolders = [...data]
+        .filter(f => !!f.lastModifiedAt)
+        .sort((a, b) => new Date(b.lastModifiedAt).getTime() - new Date(a.lastModifiedAt).getTime())
+        .slice(0, 5);
+      setRecentlyModifiedFolders(recentFolders);
+    } catch (error) {
+      console.error('Error fetching recently modified folders:', error);
+    }
+  };
 
-  // Get fiscal years using the utility function
-  const fiscalYearOptions = generateFiscalYears();
+  // Update fetchFolders to handle files
+  const fetchFolders = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Don't fetch if not authenticated
+      if (!session?.user?.email) return;
 
-  // Fetch sources and grant types for sidebar dropdowns
-  useEffect(() => {
-    const fetchOptions = async () => {
-      try {
-        const sourcesRes = await fetch('/api/admin/sources');
-        const sourcesData = await sourcesRes.json();
-        setSourceOptions(sourcesData.map((source: any) => ({
-          id: source.key,
-          translationKey: `reports.sources.${source.key}`,
-          translations: source.translations
-        })));
+      // Build the query URL with current filters
+      const queryParams = new URLSearchParams();
+      if (selectedFiscalYear) queryParams.append('fiscal-year', selectedFiscalYear);
+      if (selectedSource) queryParams.append('source', selectedSource);
+      if (selectedGrantType) queryParams.append('grant-type', selectedGrantType);
 
-        const grantTypesRes = await fetch('/api/admin/grant-types');
-        const grantTypesData = await grantTypesRes.json();
-        setGrantTypeOptions(grantTypesData.map((grant: any) => ({
-          id: grant.key,
-          translationKey: `reports.grantTypes.${grant.key}`,
-          translations: grant.translations
-        })));
-      } catch (error) {
-        console.error('Error fetching options:', error);
-        toast.error('Failed to load options');
-      }
-    };
-    fetchOptions();
-  }, []);
-
-  // Fetch files when URL parameters or session changes
-  useEffect(() => {
-    const fetchFiles = async () => {
-      try {
-        setIsLoading(true);
-        
-        // Don't fetch if not authenticated
-        if (!session?.user?.email) return;
-
-        // Build the query URL with current filters
-        const queryParams = new URLSearchParams();
-        if (selectedFiscalYear) queryParams.append('fiscal-year', selectedFiscalYear);
-        if (selectedSource) queryParams.append('source', selectedSource);
-        if (selectedGrantType) queryParams.append('grant-type', selectedGrantType);
-
-        console.log('Fetching files with params:', {
-          selectedFiscalYear,
-          selectedSource,
-          selectedGrantType,
-          queryString: queryParams.toString()
-        });
-
-        const response = await fetch(`/api/files?${queryParams.toString()}`);
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch files');
+      let response;
+      if (currentPath.length === 0) {
+        // Fetch root folders only
+        response = await fetch(`/api/folders?${queryParams.toString()}`);
+        setFiles([]); // Clear files at root level
+      } else {
+        // Fetch folder by path
+        const folder = await fetchFolderByPath(currentPath);
+        if (folder) {
+          setCurrentFolder(folder);
+          // Store the files from the current folder
+          setFiles(folder.files || []);
+          response = await fetch(`/api/folders?parentId=${folder.id}&${queryParams.toString()}`);
+        } else {
+          setCurrentFolder(null);
+          setFolders([]);
+          setFiles([]);
+          setIsLoading(false);
+          return;
         }
-
-        const data = await response.json();
-        console.log('Received files:', {
-          count: data.files.length,
-          sources: data.files.map((f: IFile) => f.source?.name)
-        });
-        setFiles(data.files);
-        setFilterOptions(data.filterOptions);
-      } catch (error) {
-        console.error('Error fetching files:', error);
-        toast.error('Failed to load files');
-      } finally {
-        setIsLoading(false);
       }
-    };
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch folders');
+      }
 
-    fetchFiles();
-  }, [session, selectedFiscalYear, selectedSource, selectedGrantType]);
+      const data = await response.json();
+      setFolders(data);
+      setFilterOptions({
+        fiscalYears: [...new Set(data.map((f: any) => f.fiscalYear?.name).filter(Boolean))] as string[],
+        sources: [...new Set(data.map((f: any) => f.source?.name).filter(Boolean))] as string[],
+        grantTypes: [...new Set(data.map((f: any) => f.grantType?.name).filter(Boolean))] as string[]
+      });
+    } catch (error) {
+      console.error('Error fetching folders:', error);
+      toast.error('Failed to load folders');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Update useEffect to handle path changes and fetch recently modified folders
+  useEffect(() => {
+    fetchFolders();
+  }, [session, selectedFiscalYear, selectedSource, selectedGrantType, currentPath]);
+
+  // Fetch recently modified folders on initial load
+  useEffect(() => {
+    fetchRecentlyModifiedFolders();
+  }, [session]);
+
+  // Add navigation handlers
+  const goBack = () => {
+    if (historyIndex > 0) {
+      setHistoryIndex(historyIndex - 1);
+      setCurrentPath(history[historyIndex - 1]);
+    }
+  };
+
+  const goForward = () => {
+    if (historyIndex < history.length - 1) {
+      setHistoryIndex(historyIndex + 1);
+      setCurrentPath(history[historyIndex + 1]);
+    }
+  };
+
+  const handleFolderClick = (folder: any) => {
+    const newPath = [...currentPath, folder.name];
+    setCurrentPath(newPath);
+    setHistory([...history.slice(0, historyIndex + 1), newPath]);
+    setHistoryIndex(historyIndex + 1);
+    // Store current files before navigation
+    setPrevFiles(folders);
+  };
+
+  const handleBreadcrumbClick = (path: string[]) => {
+    setCurrentPath(path);
+    setHistory([...history.slice(0, historyIndex + 1), path]);
+    setHistoryIndex(historyIndex + 1);
+    // Store current files before navigation
+    setPrevFiles(folders);
+  };
+
+  // Add handlers for grid view rename
+  const handleGridRename = (item: any, isFolder: boolean) => {
+    setRenamingGridItem({ id: item.id, name: item.name, isFolder });
+  };
+
+  const handleGridRenameSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!renamingGridItem) return;
+    const formData = new FormData(e.currentTarget);
+    const newName = formData.get('name');
+    try {
+      const response = await fetch(`/api/${renamingGridItem.isFolder ? 'folders' : 'files'}/${renamingGridItem.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName }),
+      });
+      if (!response.ok) throw new Error('Failed to rename');
+      setRenamingGridItem(null);
+      fetchFolders();
+    } catch {
+      // Optionally show error
+    }
+  };
+
+  const handleGridRenameCancel = () => setRenamingGridItem(null);
+
+  // Add breadcrumbs
+  const breadcrumbs = [
+    { name: 'Root', path: [] },
+    ...currentPath.map((name, idx) => ({
+      name,
+      path: currentPath.slice(0, idx + 1),
+    })),
+  ];
 
   // Handle URL parameter changes
   useEffect(() => {
@@ -190,174 +272,51 @@ export default function FilesPage() {
     }
   }, [searchParams]);
 
-  // Handle file selection
-  const handleSelectFile = (file: IFile) => {
-    setSelectedFiles((prevSelectedFiles) => {
-      const fileIndex = prevSelectedFiles.findIndex((f) => f.id === file.id);
-      if (fileIndex >= 0) {
-        return prevSelectedFiles.filter((f) => f.id !== file.id);
+  // Handle folder selection
+  const handleSelectFolder = (folder: any) => {
+    setSelectedFolders((prevSelectedFolders) => {
+      const folderIndex = prevSelectedFolders.findIndex((f) => f.id === folder.id);
+      if (folderIndex >= 0) {
+        return prevSelectedFolders.filter((f) => f.id !== folder.id);
       } else {
-        return [...prevSelectedFiles, file];
+        return [...prevSelectedFolders, folder];
       }
     });
   };
 
-  // Handle delete file
-  const handleDeleteFile = async (file: IFile) => {
+  // Handle delete folder
+  const handleDeleteFolder = async (folder: any) => {
     try {
-      const response = await fetch(`/api/files/${file.id}`, {
+      const response = await fetch(`/api/folders/${folder.id}`, {
         method: 'DELETE',
       });
       
-      if (!response.ok) throw new Error('Failed to delete file');
+      if (!response.ok) throw new Error('Failed to delete folder');
       
-    setFiles((prevFiles) => prevFiles.filter((f) => f.id !== file.id));
-    setSelectedFiles((prevSelected) => prevSelected.filter((f) => f.id !== file.id));
-      toast.success('File deleted successfully');
+      setFolders((prevFolders) => prevFolders.filter((f) => f.id !== folder.id));
+      setSelectedFolders((prevSelected) => prevSelected.filter((f) => f.id !== folder.id));
+      toast.success('Folder deleted successfully');
     } catch (error) {
-      console.error('Failed to delete file:', error);
-      toast.error('Failed to delete file');
+      console.error('Failed to delete folder:', error);
+      toast.error('Failed to delete folder');
     }
   };
 
-  // Format file size (e.g., 1.2 MB)
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 B';
-    
-    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${units[i]}`;
-  };
-
-  // File card for grid view
-  const renderFileCard = (file: IFile) => {
-    const getFileIcon = () => {
-      const fileType = file.type.toLowerCase();
-      
-      const iconClasses = "h-10 w-10 rounded flex items-center justify-center";
-      
-      switch (fileType) {
-        case 'pdf':
-        case 'application/pdf':
-          return (
-            <div className={`${iconClasses} bg-red-100/10 text-red-400`}>
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12H9M9 16h6" />
-              </svg>
-            </div>
-          );
-        case 'doc':
-        case 'docx':
-          return (
-            <div className={`${iconClasses} bg-blue-100/10 text-blue-400`}>
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 11h3m-3 4h3m-6-4h.01M9 15h.01" />
-              </svg>
-            </div>
-          );
-        case 'xls':
-        case 'xlsx':
-        case 'csv':
-          return (
-            <div className={`${iconClasses} bg-emerald-100/10 text-emerald-400`}>
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12H9M9 8h6M15 16H9" />
-              </svg>
-            </div>
-          );
-        case 'jpg':
-        case 'jpeg':
-        case 'png':
-        case 'gif':
-        case 'webp':
-        case 'image/jpeg':
-        case 'image/png':
-        case 'image/gif':
-        case 'image/webp':
-          return (
-            <div className={`${iconClasses} bg-purple-100/10 text-purple-400`}>
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </div>
-          );
-        case 'mp4':
-        case 'mov':
-        case 'avi':
-        case 'mkv':
-        case 'video/mp4':
-        case 'video/quicktime':
-        case 'video/x-msvideo':
-        case 'video/x-matroska':
-          return (
-            <div className={`${iconClasses} bg-pink-100/10 text-pink-400`}>
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-            </div>
-          );
-        case 'mp3':
-        case 'wav':
-        case 'ogg':
-        case 'audio/mpeg':
-        case 'audio/wav':
-        case 'audio/ogg':
-          return (
-            <div className={`${iconClasses} bg-yellow-100/10 text-yellow-400`}>
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-              </svg>
-            </div>
-          );
-        case 'zip':
-        case 'rar':
-        case '7z':
-        case 'application/zip':
-        case 'application/x-rar-compressed':
-        case 'application/x-7z-compressed':
-          return (
-            <div className={`${iconClasses} bg-amber-100/10 text-amber-400`}>
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-              </svg>
-            </div>
-          );
-        case 'ppt':
-        case 'pptx':
-        case 'application/vnd.ms-powerpoint':
-        case 'application/vnd.openxmlformats-officedocument.presentationml.presentation':
-          return (
-            <div className={`${iconClasses} bg-orange-100/10 text-orange-400`}>
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v8m-4-4h8" />
-              </svg>
-            </div>
-          );
-        default:
-          return (
-            <div className={`${iconClasses} bg-gray-100/10 text-gray-400`}>
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 11v.01M12 15v.01" />
-              </svg>
-            </div>
-          );
-      }
-    };
-
+  // Folder card for grid view
+  const renderFolderCard = (folder: any) => {
     return (
       <Card
-        key={file.id}
+        key={folder.id}
         className="cursor-pointer h-full hover:scale-105 hover:shadow-dark-md"
-        onClick={() => handleSelectFile(file)}
+        onClick={() => handleFolderClick(folder)}
       >
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between mb-4">
-            {getFileIcon()}
+            <div className="h-10 w-10 rounded flex items-center justify-center bg-yellow-100/10 text-yellow-400">
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+              </svg>
+            </div>
             <button
               type="button"
               className="text-dark-400 hover:text-dark-100"
@@ -374,28 +333,25 @@ export default function FilesPage() {
           
           <div className="flex-grow">
             <div className="font-medium text-dark-100 truncate">
-              {file.name}
+              {folder.name}
             </div>
             <div className="text-xs text-dark-400 mt-1">
-              {formatFileSize(file.size)}
+              <span>{folder.files?.length || 0} files</span>
               <span className="ml-1 text-dark-500">•</span>
-              <span className="ml-1">{file.type}</span>
+              <span className="ml-1">{folder.subfolders?.length || 0} subfolders</span>
             </div>
-            {file.description && (
-              <p className="text-dark-300 text-sm mt-2 line-clamp-2">{file.description}</p>
-            )}
           </div>
 
           <div className="flex items-center justify-between mt-4 pt-4 border-t border-dark-600">
             <div className="flex items-center">
-              <span className="text-xs text-dark-300">{file.user?.name || 'Unknown User'}</span>
+              <span className="text-xs text-dark-300">{folder.user?.name || 'Unknown User'}</span>
             </div>
             <span className="text-xs text-dark-400">
-              {format(new Date(file.lastModifiedAt), 'MMM d, yyyy')}
+              {safeFormatDate(folder.lastModifiedAt)}
             </span>
           </div>
 
-          {selectedFiles.some(f => f.id === file.id) && (
+          {selectedFolders.some(f => f.id === folder.id) && (
             <div className="absolute top-2 right-2 h-6 w-6 rounded-full bg-primary-600 flex items-center justify-center">
               <svg className="h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -407,19 +363,58 @@ export default function FilesPage() {
     );
   };
 
+  // Recently modified folder card (without navigation)
+  const renderRecentFolderCard = (folder: any) => {
+    return (
+      <Card
+        key={folder.id}
+        className="h-full"
+      >
+        <div className="flex flex-col h-full">
+          <div className="flex items-center justify-between mb-4">
+            <div className="h-10 w-10 rounded flex items-center justify-center bg-yellow-100/10 text-yellow-400">
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+              </svg>
+            </div>
+          </div>
+          
+          <div className="flex-grow">
+            <div className="font-medium text-dark-100 truncate">
+              {folder.name}
+            </div>
+            <div className="text-xs text-dark-400 mt-1">
+              <span>{folder.files?.length || 0} files</span>
+              <span className="ml-1 text-dark-500">•</span>
+              <span className="ml-1">{folder.subfolders?.length || 0} subfolders</span>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between mt-4 pt-4 border-t border-dark-600">
+            <div className="flex items-center">
+              <span className="text-xs text-dark-300">{folder.user?.name || 'Unknown User'}</span>
+            </div>
+            <span className="text-xs text-dark-400">
+              {safeFormatDate(folder.lastModifiedAt)}
+            </span>
+          </div>
+        </div>
+      </Card>
+    );
+  };
+
   // Render empty state
   const renderEmptyState = () => (
     <div className="flex flex-col items-center justify-center py-12 bg-dark-700 border border-dark-600 rounded-lg">
       <svg className="h-16 w-16 text-dark-400 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
       </svg>
-      <h3 className="text-lg font-medium text-dark-200"><TranslatedText text="files.emptyState.noFiles" /></h3>
+      <h3 className="text-lg font-medium text-dark-200"><TranslatedText text="files.emptyState.noFolders" /></h3>
       <p className="text-dark-400 mt-1">
-        {/* Use translation keys for filter messages if available, else fallback to original */}
-        {selectedFiscalYear && <TranslatedText text="files.emptyState.noFilesForFiscalYear" />}
-        {selectedSource && <TranslatedText text="files.emptyState.noFilesForSource" />}
-        {selectedGrantType && <TranslatedText text="files.emptyState.noFilesForGrantType" />}
-        {!selectedFiscalYear && !selectedSource && !selectedGrantType && <TranslatedText text="files.emptyState.noFilesMatchFilters" />}
+        {selectedFiscalYear && <TranslatedText text="files.emptyState.noFoldersForFiscalYear" />}
+        {selectedSource && <TranslatedText text="files.emptyState.noFoldersForSource" />}
+        {selectedGrantType && <TranslatedText text="files.emptyState.noFoldersForGrantType" />}
+        {!selectedFiscalYear && !selectedSource && !selectedGrantType && <TranslatedText text="files.emptyState.noFoldersMatchFilters" />}
       </p>
       <button
         onClick={clearFilters}
@@ -473,10 +468,10 @@ export default function FilesPage() {
     const source = searchParams.get('source');
     const grantType = searchParams.get('grant-type');
 
-    if (fiscalYear) return `Files from Fiscal Year ${fiscalYear}`;
-    if (source) return `Files from ${source}`;
-    if (grantType) return `${grantType} Files`;
-    return 'All Files';
+    if (fiscalYear) return `Folders from Fiscal Year ${fiscalYear}`;
+    if (source) return `Folders from ${source}`;
+    if (grantType) return `${grantType} Folders`;
+    return 'All Folders';
   };
 
   // Handle source selection
@@ -491,313 +486,402 @@ export default function FilesPage() {
     setSelectedGrantType(grantType);
   };
 
+  // Helper function to format source name for translation
+  const formatSourceName = (sourceName: string | undefined) => {
+    if (!sourceName) return '-';
+    // Convert to lowercase and replace spaces with underscores
+    const formatted = sourceName.toLowerCase().replace(/\s+/g, '_');
+    return formatted;
+  };
+
+  // Helper function to format grant type name for translation
+  const formatGrantTypeName = (grantTypeName: string | undefined) => {
+    if (!grantTypeName) return '-';
+    // Convert to lowercase and replace spaces with underscores
+    const formatted = grantTypeName.toLowerCase().replace(/\s+/g, '_');
+    return formatted;
+  };
+
+  // Helper function to get translated source name
+  const getTranslatedSource = (sourceName: string | undefined) => {
+    if (!sourceName) return '-';
+    const key = formatSourceName(sourceName);
+    const translationKey = `reports.sources.${key}`;
+    return translationKey;
+  };
+
+  // Helper function to get translated grant type
+  const getTranslatedGrantType = (grantTypeName: string | undefined) => {
+    if (!grantTypeName) return '-';
+    const key = formatGrantTypeName(grantTypeName);
+    const translationKey = `reports.grantTypes.${key}`;
+    return translationKey;
+  };
+
+  // Update the filter options to use the correct type
+  const fiscalYearOptions = filterOptions.fiscalYears.map(year => ({
+    id: year,
+    translationKey: `fiscalYears.${year}`
+  }));
+
+  // Add file click handler
+  const handleFileClick = (file: any) => {
+    // TODO: Implement file preview/download
+    console.log('File clicked:', file);
+  };
+
+  // Add file delete handler
+  const handleDeleteFile = async (file: any) => {
+    try {
+      const response = await fetch(`/api/files/${file.id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Failed to delete file');
+      toast.success('File deleted successfully');
+      // Refresh the current folder to update the file list
+      fetchFolders();
+    } catch (error) {
+      console.error('Error deleting file:', error);
+      toast.error('Failed to delete file');
+    }
+  };
+
+  // Add handler for creating subfolder
+  const handleCreateSubfolder = async () => {
+    if (!currentFolder) return;
+
+    const folderName = prompt('Enter folder name:');
+    if (!folderName) return;
+
+    try {
+      const response = await fetch('/api/folders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: folderName,
+          parentId: currentFolder.id,
+          fiscalYearId: currentFolder.fiscalYear?.id,
+          sourceId: currentFolder.source?.id,
+          grantTypeId: currentFolder.grantType?.id,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create subfolder');
+      }
+
+      await fetchFolders();
+      toast.success('Subfolder created successfully');
+    } catch (error) {
+      console.error('Error creating subfolder:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to create subfolder');
+    }
+  };
+
   return (
     <div>
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-dark-100"><TranslatedText text="files.heading" /></h1>
         <p className="mt-1 text-dark-300">
-          {filteredFiles.length} {filteredFiles.length === 1 ? <TranslatedText text="files.file" /> : <TranslatedText text="files.files" />} <TranslatedText text="files.found" />
+          {filteredFolders.length} {filteredFolders.length === 1 ? <TranslatedText text="files.folder" /> : <TranslatedText text="files.folders" />} <TranslatedText text="files.found" />
         </p>
       </div>
 
-      {/* Only show file creation cards when no filters are active */}
-      {!selectedFiscalYear && !selectedSource && !selectedGrantType && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Card 
-            className="bg-dark-700 border border-dark-600 hover:bg-dark-600 transition-colors cursor-pointer"
-            onClick={() => window.location.href = '/upload'}
-          >
-            <div className="flex flex-col items-center justify-center py-4">
-              <div className="w-12 h-12 bg-primary-500/10 text-primary-500 rounded-lg flex items-center justify-center mb-3">
-                <svg className="h-6 w-6" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M10 5V15M5 10H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <h3 className="text-dark-100 font-medium text-lg"><TranslatedText text="files.newDocument" /></h3>
-            </div>
-          </Card>
-          
-          <Card 
-            className="bg-dark-700 border border-dark-600 hover:bg-dark-600 transition-colors cursor-pointer"
-            onClick={() => window.location.href = '/upload'}
-          >
-            <div className="flex flex-col items-center justify-center py-4">
-              <div className="w-12 h-12 bg-primary-500/10 text-primary-500 rounded-lg flex items-center justify-center mb-3">
-                <svg className="h-6 w-6" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M5 15H15M5 10H15M5 5H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <h3 className="text-dark-100 font-medium text-lg"><TranslatedText text="files.newFile" /></h3>
-            </div>
-          </Card>
-          
-          <Card 
-            className="bg-dark-700 border border-dark-600 hover:bg-dark-600 transition-colors cursor-pointer"
-            onClick={() => window.location.href = '/upload'}
-          >
-            <div className="flex flex-col items-center justify-center py-4">
-              <div className="w-12 h-12 bg-primary-500/10 text-primary-500 rounded-lg flex items-center justify-center mb-3">
-                <svg className="h-6 w-6" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M13 5H5C3.89543 5 3 5.89543 3 7V15C3 16.1046 3.89543 17 5 17H15C16.1046 17 17 16.1046 17 15V9M13 5L17 9M13 5V9H17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <h3 className="text-dark-100 font-medium text-lg"><TranslatedText text="files.newFolder" /></h3>
-            </div>
-          </Card>
-        </div>
-      )}
-
-      {/* Only show recently modified section when no filters are active */}
-      {!selectedFiscalYear && !selectedSource && !selectedGrantType && activeTab === 'view-all' && (
+      {/* Recently Modified Folders Section */}
+      {recentlyModifiedFolders.length > 0 && (
         <div className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-medium text-dark-100"><TranslatedText text="files.recentlyModified" /></h2>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => {
-                clearFilters();
-                setActiveTab('view-all');
-                window.history.pushState({}, '', '/files');
-                window.dispatchEvent(new Event('urlchange'));
-              }}
-              rightIcon={
-                <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M8 5L13 10L8 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              }
-            >
-              <TranslatedText text="files.viewAll" />
-            </Button>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {recentFiles.map(file => renderFileCard(file))}
+          <h2 className="text-lg font-semibold text-dark-200 mb-4 flex items-center">
+            <svg className="h-5 w-5 mr-2 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
+            <TranslatedText text="files.recentlyModified" />
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            {recentlyModifiedFolders.map(folder => renderRecentFolderCard(folder))}
           </div>
         </div>
       )}
 
-      {/* All files section */}
-      <div>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-medium text-dark-100">
-            {selectedFiscalYear || selectedSource || selectedGrantType ? (
-              <TranslatedText text="files.filteredResults" />
-            ) : (
-              <TranslatedText text="files.heading" />
-            )}
-          </h2>
-          <div className="flex items-center space-x-2">
-            {/* View toggle */}
-            <div className="flex items-center bg-dark-700 border border-dark-600 rounded-md p-1">
-              <button 
-                className={viewType === 'grid' ? 'p-1 rounded bg-dark-600 text-dark-100' : 'p-1 rounded text-dark-400'}
-                onClick={() => setViewType('grid')}
-              >
-                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M3 5C3 3.89543 3.89543 3 5 3H7C8.10457 3 9 3.89543 9 5V7C9 8.10457 8.10457 9 7 9H5C3.89543 9 3 8.10457 3 7V5Z" stroke="currentColor" strokeWidth="1.5" />
-                  <path d="M11 5C11 3.89543 11.8954 3 13 3H15C16.1046 3 17 3.89543 17 5V7C17 8.10457 16.1046 9 15 9H13C11.8954 9 11 8.10457 11 7V5Z" stroke="currentColor" strokeWidth="1.5" />
-                  <path d="M3 13C3 11.8954 3.89543 11 5 11H7C8.10457 11 9 11.8954 9 13V15C9 16.1046 8.10457 17 7 17H5C3.89543 17 3 16.1046 3 15V13Z" stroke="currentColor" strokeWidth="1.5" />
-                  <path d="M11 13C11 11.8954 11.8954 11 13 11H15C16.1046 11 17 11.8954 17 13V15C17 16.1046 16.1046 17 15 17H13C11.8954 17 11 16.1046 11 15V13Z" stroke="currentColor" strokeWidth="1.5" />
-                </svg>
-              </button>
-              <button 
-                className={viewType === 'list' ? 'p-1 rounded bg-dark-600 text-dark-100' : 'p-1 rounded text-dark-400'}
-                onClick={() => setViewType('list')}
-              >
-                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M5 5H15M5 10H15M5 15H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Filters button */}
-            <Button 
-              variant="secondary" 
-              size="sm"
-              leftIcon={
-                <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M5 10H15M3 5H17M7 15H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              }
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <TranslatedText text="files.filters.title" />
-            </Button>
-          </div>
-        </div>
-
+      {/* Show all folders and files with filter panel */}
+      <div className="mt-8">
         {/* Filter panel */}
         {showFilters && (
-          <div className="mb-6 p-4 bg-dark-700 rounded-lg border border-dark-600">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Fiscal Year Filter */}
-              <div>
-                <label className="block text-sm font-medium text-dark-200 mb-2"><TranslatedText text="files.table.fiscalYear" /></label>
-                <select
-                  value={selectedFiscalYear || ''}
-                  onChange={(e) => handleFilterChange('fiscalYear', e.target.value || null)}
-                  className="w-full bg-dark-600 border border-dark-500 rounded-md py-2 px-3 text-sm"
-                >
-                  <option value=""><TranslatedText text="files.filters.allFiscalYears" /></option>
-                  {fiscalYearOptions.map((year) => (
-                    <option key={year.id} value={year.id}>{year.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Source Filter */}
-              <div>
-                <label className="block text-sm font-medium text-dark-200 mb-2"><TranslatedText text="files.table.source" /></label>
-                <select
-                  value={selectedSource || ''}
-                  onChange={(e) => handleFilterChange('source', e.target.value || null)}
-                  className="w-full bg-dark-600 border border-dark-500 rounded-md py-2 px-3 text-sm"
-                >
-                  <option value="">All Sources</option>
-                  {sourceOptions.map((source) => (
-                    <option key={source.id} value={source.id}>{source.id}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Grant Type Filter */}
-              <div>
-                <label className="block text-sm font-medium text-dark-200 mb-2"><TranslatedText text="files.table.grantType" /></label>
-                <select
-                  value={selectedGrantType || ''}
-                  onChange={(e) => handleFilterChange('grantType', e.target.value || null)}
-                  className="w-full bg-dark-600 border border-dark-500 rounded-md py-2 px-3 text-sm"
-                >
-                  <option value="">All Grant Types</option>
-                  {grantTypeOptions.map((type) => (
-                    <option key={type.id} value={type.translations?.en || type.id}>{type.translations?.en || type.id}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
+          <div className="mb-6 p-4 bg-dark-800 rounded-lg border border-dark-700">
+            {/* ... existing filter panel code ... */}
           </div>
         )}
 
-        {/* File filter tabs */}
-        <div className="border-b border-dark-600 mb-4">
-          <nav className="-mb-px flex space-x-6" aria-label="Tabs">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => handleTabChange(tab.id)}
-                className={
-                  activeTab === tab.id
-                    ? 'whitespace-nowrap border-b-2 py-3 px-1 text-sm font-medium border-primary-500 text-primary-500'
-                    : 'whitespace-nowrap border-b-2 py-3 px-1 text-sm font-medium border-transparent text-dark-400 hover:border-dark-500 hover:text-dark-200'
-                }
-              >
-                {tab.name}
-              </button>
-            ))}
-          </nav>
-        </div>
-
-        {/* By Source tab dropdown */}
-        {activeTab === 'by-source' && (
-          <div className="mb-6 flex items-center space-x-4">
-            <label className="block text-sm font-medium text-dark-200">
-              <TranslatedText text="files.selectSource" />
-            </label>
-            <SearchableSelect
-              options={sourceOptions}
-              value={selectedSource ? { 
-                id: selectedSource, 
-                translationKey: `reports.sources.${selectedSource}`,
-                translations: sourceOptions.find(opt => opt.id === selectedSource)?.translations
-              } : null}
-              onChange={(option) => handleSourceChange(option?.id || null)}
-              placeholderTranslationKey="files.selectSource"
-              language={language}
-            />
-          </div>
-        )}
-
-        {/* By Grant Type tab dropdown */}
-        {activeTab === 'by-grant-type' && (
-          <div className="mb-6 flex items-center space-x-4">
-            <label className="block text-sm font-medium text-dark-200">
-              <TranslatedText text="files.selectGrantType" />
-            </label>
-            <SearchableSelect
-              options={grantTypeOptions}
-              value={selectedGrantType ? { 
-                id: selectedGrantType, 
-                translationKey: `reports.grantTypes.${selectedGrantType}`,
-                translations: grantTypeOptions.find(opt => opt.id === selectedGrantType)?.translations
-              } : null}
-              onChange={(option) => handleGrantTypeChange(option?.id || null)}
-              placeholderTranslationKey="files.selectGrantType"
-              language={language}
-            />
-          </div>
-        )}
-
-        {/* Files display (grid or list) */}
+        {/* Loading state */}
         {isLoading ? (
-          <div className="flex justify-center items-center py-20">
-            <svg className="animate-spin h-8 w-8 text-primary-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          </div>
-        ) : filteredFiles.length === 0 ? (
-          renderEmptyState()
-        ) : viewType === 'grid' ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filteredFiles.map((file) => renderFileCard(file))}
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
           </div>
         ) : (
-          <div className="bg-dark-700 border border-dark-600 rounded-lg overflow-visible">
-            <table className="min-w-full divide-y divide-dark-600">
-              <thead className="bg-dark-800">
-                <tr>
-                  <th scope="col" className="px-4 py-3 w-12">
-                    <div className="flex items-center">
-                      <input
-                        id="select-all"
-                        type="checkbox"
-                        className="h-4 w-4 text-primary-600 border-dark-400 rounded focus:ring-primary-500 focus:ring-offset-dark-800"
-                        checked={selectedFiles.length === filteredFiles.length && filteredFiles.length > 0}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedFiles(filteredFiles);
-                          } else {
-                            setSelectedFiles([]);
-                          }
-                        }}
-                      />
-                    </div>
-                  </th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
-                    <TranslatedText text="files.table.name" />
-                  </th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
-                    <TranslatedText text="files.table.uploadedBy" />
-                  </th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
-                    <TranslatedText text="files.table.lastModified" />
-                  </th>
-                  <th scope="col" className="px-4 py-3 w-12">
-                    <span className="sr-only"><TranslatedText text="files.table.actions" /></span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-dark-600">
-                {filteredFiles.map((file) => (
-                  <FileRow
+          <div>
+            {viewType === 'grid' ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Show folders */}
+                {filteredFolders.map(folder => renderFolderCard(folder))}
+                
+                {/* Show files from current folder */}
+                {files.map((file: any) => (
+                  <Card
                     key={file.id}
-                    file={file}
-                    onSelect={handleSelectFile}
-                    onDelete={handleDeleteFile}
-                  />
+                    className="cursor-pointer h-full hover:scale-105 hover:shadow-dark-md"
+                    onClick={() => handleFileClick(file)}
+                  >
+                    <div className="flex flex-col h-full">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="h-10 w-10 rounded flex items-center justify-center bg-primary-100/10 text-primary-400">
+                          {getFileOrFolderIcon(file, false, 'h-6 w-6')}
+                        </div>
+                        <button
+                          type="button"
+                          className="text-dark-400 hover:text-dark-100"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Toggle dropdown
+                          }}
+                        >
+                          <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
+                          </svg>
+                        </button>
+                      </div>
+                      
+                      <div className="flex-grow">
+                        <div className="font-medium text-dark-100 truncate">
+                          {file.name}
+                        </div>
+                        <div className="text-xs text-dark-400 mt-1">
+                          <span>{formatFileSize(file.size)}</span>
+                          <span className="ml-1 text-dark-500">•</span>
+                          <span className="ml-1">{file.type}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between mt-4 pt-4 border-t border-dark-600">
+                        <div className="flex items-center">
+                          <span className="text-xs text-dark-300">{file.user?.name || 'Unknown User'}</span>
+                        </div>
+                        <span className="text-xs text-dark-400">
+                          {safeFormatDate(file.lastModifiedAt)}
+                        </span>
+                      </div>
+                    </div>
+                  </Card>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            ) : (
+              <>
+                {/* Navigation and view controls */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-2">
+                    <button 
+                      onClick={goBack} 
+                      disabled={historyIndex === 0} 
+                      className="p-2 rounded text-dark-300 hover:text-dark-100 disabled:opacity-50"
+                    >
+                      &#8592;
+                    </button>
+                    <button 
+                      onClick={goForward} 
+                      disabled={historyIndex === history.length - 1} 
+                      className="p-2 rounded text-dark-300 hover:text-dark-100 disabled:opacity-50"
+                    >
+                      &#8594;
+                    </button>
+                    <nav className="flex items-center space-x-1">
+                      {breadcrumbs.map((crumb, idx) => (
+                        <span key={idx} className="flex items-center">
+                          {idx > 0 && <span className="mx-1 text-dark-400">/</span>}
+                          <button 
+                            onClick={() => handleBreadcrumbClick(crumb.path)} 
+                            className="text-dark-300 hover:text-dark-100 text-sm font-medium"
+                          >
+                            <TranslatedText text={crumb.name} />
+                          </button>
+                        </span>
+                      ))}
+                    </nav>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    {/* Add Create Subfolder button when in a subfolder */}
+                    {currentFolder && (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        leftIcon={
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                          </svg>
+                        }
+                        onClick={handleCreateSubfolder}
+                      >
+                        <TranslatedText text="files.createSubfolder" />
+                      </Button>
+                    )}
+                    {/* View toggle */}
+                    <div className="flex items-center bg-dark-700 border border-dark-600 rounded-md p-1">
+                      <button 
+                        className={viewType === 'grid' ? 'p-1 rounded bg-dark-600 text-dark-100' : 'p-1 rounded text-dark-400'}
+                        onClick={() => setViewType('grid')}
+                      >
+                        <svg className="h-5 w-5" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M3 5C3 3.89543 3.89543 3 5 3H7C8.10457 3 9 3.89543 9 5V7C9 8.10457 8.10457 9 7 9H5C3.89543 9 3 8.10457 3 7V5Z" stroke="currentColor" strokeWidth="1.5" />
+                          <path d="M11 5C11 3.89543 11.8954 3 13 3H15C16.1046 3 17 3.89543 17 5V7C17 8.10457 16.1046 9 15 9H13C11.8954 9 11 8.10457 11 7V5Z" stroke="currentColor" strokeWidth="1.5" />
+                          <path d="M3 13C3 11.8954 3.89543 11 5 11H7C8.10457 11 9 11.8954 9 13V15C9 16.1046 8.10457 17 7 17H5C3.89543 17 3 16.1046 3 15V13Z" stroke="currentColor" strokeWidth="1.5" />
+                          <path d="M11 13C11 11.8954 11.8954 11 13 11H15C16.1046 11 17 11.8954 17 13V15C17 16.1046 16.1046 17 15 17H13C11.8954 17 11 16.1046 11 15V13Z" stroke="currentColor" strokeWidth="1.5" />
+                        </svg>
+                      </button>
+                      <button 
+                        className={viewType === 'list' ? 'p-1 rounded bg-dark-600 text-dark-100' : 'p-1 rounded text-dark-400'}
+                        onClick={() => setViewType('list')}
+                      >
+                        <svg className="h-5 w-5" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M5 5H15M5 10H15M5 15H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </button>
+                    </div>
+
+                    {/* Filters button */}
+                    <Button 
+                      variant="secondary" 
+                      size="sm"
+                      leftIcon={
+                        <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M5 10H15M3 5H17M7 15H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      }
+                      onClick={() => setShowFilters(!showFilters)}
+                    >
+                      <TranslatedText text="files.filters.title" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="bg-dark-800 rounded-lg border border-dark-700 overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-dark-700">
+                      <thead className="bg-dark-700">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
+                            <TranslatedText text="files.table.name" />
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
+                            <TranslatedText text="files.table.fiscalYear" />
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
+                            <TranslatedText text="files.table.source" />
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
+                            <TranslatedText text="files.table.grantType" />
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
+                            <TranslatedText text="files.table.created" />
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
+                            <TranslatedText text="files.table.actions" />
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-dark-700">
+                        {/* Show folders */}
+                        {filteredFolders.map((folder) => (
+                          <tr key={folder.id} className="hover:bg-dark-700 static overflow-visible">
+                            <td className="px-6 py-4">
+                              <button
+                                onClick={() => handleFolderClick(folder)}
+                                className="flex items-center text-dark-100 hover:text-primary-500 transition-colors w-full"
+                              >
+                                <svg className="w-5 h-5 mr-2 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                                </svg>
+                                <span className="truncate">{folder.name}</span>
+                              </button>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="truncate block">
+                                {folder.fiscalYear?.name || '-'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="truncate block">
+                                {folder.source?.name || '-'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="truncate block">
+                                {folder.grantType?.name || '-'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="truncate block">
+                                {safeFormatDate(folder.createdAt)}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-right text-sm font-medium">
+                              <FileActions
+                                item={folder}
+                                isFolder={true}
+                                onOpen={() => handleFolderClick(folder)}
+                                onRename={() => handleGridRename(folder, true)}
+                                onDelete={() => handleDeleteFolder(folder)}
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                        
+                        {/* Show files from current folder */}
+                        {files.map((file: any) => (
+                          <tr key={file.id} className="hover:bg-dark-700 static overflow-visible">
+                            <td className="px-6 py-4">
+                              <button
+                                onClick={() => handleFileClick(file)}
+                                className="flex items-center text-dark-100 hover:text-primary-500 transition-colors w-full"
+                              >
+                                {getFileOrFolderIcon(file, false, 'w-5 h-5 mr-2 text-primary-400')}
+                                <span className="truncate">{file.name}</span>
+                              </button>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="truncate block">
+                                {file.fiscalYear?.name || '-'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="truncate block">
+                                {file.source?.name || '-'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="truncate block">
+                                {file.grantType?.name || '-'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="truncate block">
+                                {safeFormatDate(file.createdAt)}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-right text-sm font-medium">
+                              <FileActions
+                                item={file}
+                                isFolder={false}
+                                onOpen={() => handleFileClick(file)}
+                                onRename={() => handleGridRename(file, false)}
+                                onDelete={() => handleDeleteFile(file)}
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>

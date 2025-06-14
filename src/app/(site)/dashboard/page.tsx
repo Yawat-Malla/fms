@@ -9,6 +9,7 @@ import FileActions from '@/components/FileActions';
 import { TranslatedText } from '@/components/TranslatedText';
 import { useApp } from '@/contexts/AppContext';
 import { useTranslation } from 'react-i18next';
+import DashboardStats from '@/components/DashboardStats';
 
 interface File {
   id: number;
@@ -75,6 +76,25 @@ interface Folder {
   };
 }
 
+interface Stats {
+  totalFiles: number;
+  totalFolders: number;
+  totalSize: number;
+  recentFiles: Array<{
+    id: string;
+    name: string;
+    size: number;
+    updatedAt: string;
+  }>;
+}
+
+const defaultStats: Stats = {
+  totalFiles: 0,
+  totalFolders: 0,
+  totalSize: 0,
+  recentFiles: []
+};
+
 const Dashboard = () => {
   const { data: session } = useSession();
   const { language, mounted } = useApp();
@@ -82,11 +102,7 @@ const Dashboard = () => {
   const [statsLoading, setStatsLoading] = useState(true);
   const [prevFolders, setPrevFolders] = useState<Folder[]>([]);
   const [prevFiles, setPrevFiles] = useState<File[]>([]);
-  const [stats, setStats] = useState({
-    totalFiles: 0,
-    availableFiles: 0,
-    deletedFiles: 0,
-  });
+  const [stats, setStats] = useState<Stats>(defaultStats);
   const [currentPath, setCurrentPath] = useState<string[]>([]);
   const [folders, setFolders] = useState<Folder[]>([]);
   const [currentFolder, setCurrentFolder] = useState<Folder | null>(null);
@@ -94,26 +110,36 @@ const Dashboard = () => {
   const [historyIndex, setHistoryIndex] = useState(0);
   const [view, setView] = useState<'grid' | 'list'>('list');
   const [renamingGridItem, setRenamingGridItem] = useState<{ id: number; name: string; isFolder: boolean } | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const { i18n } = useTranslation();
 
-  // Separate useEffect for stats - runs only once
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        setStatsLoading(true);
-        const res = await fetch('/api/files/stats');
-        const data = await res.json();
+        setLoading(true);
+        setError(null);
+        const response = await fetch('/api/stats');
+        if (!response.ok) {
+          throw new Error('Failed to fetch stats');
+        }
+        const data = await response.json();
+        // Ensure all required fields are present
         setStats({
-          totalFiles: data.totalFiles,
-          availableFiles: data.availableFiles,
-          deletedFiles: data.deletedFiles,
+          totalFiles: data.totalFiles ?? 0,
+          totalFolders: data.totalFolders ?? 0,
+          totalSize: data.totalSize ?? 0,
+          recentFiles: Array.isArray(data.recentFiles) ? data.recentFiles : []
         });
-        setStatsLoading(false);
       } catch (error) {
         console.error('Error fetching stats:', error);
-        setStatsLoading(false);
+        setError(error instanceof Error ? error.message : 'Failed to fetch stats');
+        // Reset to default stats on error
+        setStats(defaultStats);
+      } finally {
+        setLoading(false);
       }
     };
+
     fetchStats();
   }, []);
 
@@ -292,226 +318,167 @@ const Dashboard = () => {
     return input.replace(/[0-9]/g, d => nepaliDigits[d as any]);
   };
 
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <Card className="p-6">
+          <div className="text-center text-red-500">
+            <p>Error: {error}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+            >
+              Retry
+            </button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-6">
+    <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
-        <Card interactive>
-          <div className="flex justify-between items-start">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-dark-300">
+              <p className="text-sm text-dark-400">
                 <TranslatedText text="dashboard.stats.totalFiles" />
               </p>
-              {statsLoading ? (
-                <div className="h-8 w-24 bg-dark-600 animate-pulse rounded mt-1"></div>
-              ) : (
-                <p className="text-2xl font-bold text-dark-100">
-                  {i18n.language === 'ne' ? toNepaliNumber(stats.totalFiles) : stats.totalFiles}
-                </p>
-              )}
+              <h3 className="text-2xl font-bold text-dark-100 mt-1">
+                {loading ? '...' : stats.totalFiles}
+              </h3>
             </div>
-            <div className="bg-primary-500/10 p-2 rounded-md">
-              <svg className="w-6 h-6 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            <div className="p-3 bg-blue-500/10 rounded-lg">
+              <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
           </div>
         </Card>
-        <Card interactive>
-          <div className="flex justify-between items-start">
+
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-dark-300">
-                <TranslatedText text="dashboard.stats.availableFiles" />
+              <p className="text-sm text-dark-400">
+                <TranslatedText text="dashboard.stats.totalFolders" />
               </p>
-              {statsLoading ? (
-                <div className="h-8 w-24 bg-dark-600 animate-pulse rounded mt-1"></div>
-              ) : (
-                <p className="text-2xl font-bold text-green-400">
-                  {i18n.language === 'ne' ? toNepaliNumber(stats.availableFiles) : stats.availableFiles}
-                </p>
-              )}
+              <h3 className="text-2xl font-bold text-dark-100 mt-1">
+                {loading ? '...' : stats.totalFolders}
+              </h3>
             </div>
-            <div className="bg-green-500/10 p-2 rounded-md">
+            <div className="p-3 bg-green-500/10 rounded-lg">
               <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
               </svg>
             </div>
           </div>
         </Card>
-        <Card interactive>
-          <div className="flex justify-between items-start">
+
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-dark-300">
-                <TranslatedText text="dashboard.stats.deletedFiles" />
+              <p className="text-sm text-dark-400">
+                <TranslatedText text="dashboard.stats.totalSize" />
               </p>
-              {statsLoading ? (
-                <div className="h-8 w-24 bg-dark-600 animate-pulse rounded mt-1"></div>
-              ) : (
-                <p className="text-2xl font-bold text-red-400">
-                  {i18n.language === 'ne' ? toNepaliNumber(stats.deletedFiles) : stats.deletedFiles}
-                </p>
-              )}
+              <h3 className="text-2xl font-bold text-dark-100 mt-1">
+                {loading ? '...' : formatFileSize(stats.totalSize)}
+              </h3>
             </div>
-            <div className="bg-red-500/10 p-2 rounded-md">
-              <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            <div className="p-3 bg-purple-500/10 rounded-lg">
+              <svg className="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+              </svg>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-dark-400">
+                <TranslatedText text="dashboard.stats.recentUploads" />
+              </p>
+              <h3 className="text-2xl font-bold text-dark-100 mt-1">
+                {loading ? '...' : stats.recentFiles.length}
+              </h3>
+            </div>
+            <div className="p-3 bg-yellow-500/10 rounded-lg">
+              <svg className="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
           </div>
         </Card>
       </div>
-      {/* Breadcrumbs and Navigation */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-2">
-          <button onClick={goBack} disabled={historyIndex === 0} className="p-2 rounded text-dark-300 hover:text-dark-100 disabled:opacity-50">&#8592;</button>
-          <button onClick={goForward} disabled={historyIndex === history.length - 1} className="p-2 rounded text-dark-300 hover:text-dark-100 disabled:opacity-50">&#8594;</button>
-          <nav className="flex items-center space-x-1">
-            {breadcrumbs.map((crumb, idx) => (
-              <span key={idx} className="flex items-center">
-                {idx > 0 && <span className="mx-1 text-dark-400">/</span>}
-                <button onClick={() => handleBreadcrumbClick(crumb.path)} className="text-dark-300 hover:text-dark-100 text-sm font-medium">
-                  <TranslatedText text={crumb.name} />
-                </button>
-              </span>
-            ))}
-          </nav>
-        </div>
-        {/* Grid/List Toggle */}
-        <div className="flex items-center space-x-2">
-          <button onClick={() => setView('list')} className={`p-2 rounded-md transition-colors ${view === 'list' ? 'bg-dark-600 text-dark-100' : 'text-dark-300 hover:text-dark-100'}`}>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-          <button onClick={() => setView('grid')} className={`p-2 rounded-md transition-colors ${view === 'grid' ? 'bg-dark-600 text-dark-100' : 'text-dark-300 hover:text-dark-100'}`}>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-            </svg>
-          </button>
-        </div>
-      </div>
-      {/* File/Folder Table or Grid with loading overlay */}
-      <div className="relative">
-        {loading && (
-          <div className="absolute inset-0 bg-dark-800/50 backdrop-blur-sm z-10 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
-          </div>
-        )}
-        {view === 'list' ? (
-          <DriveTable
-            folders={displayFolders}
-            files={displayFiles}
-            onFolderClick={handleFolderClick}
-            onFileClick={file => {/* handle file click */}}
-            onRefresh={handleRefresh}
-            currentFolder={currentFolder}
-          />
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 p-4">
-            {displayFolders.map(folder => (
-              <div key={folder.id} className="flex flex-col items-center group relative">
-                {/* Three-dot menu top right */}
-                <div className="absolute top-2 right-2 z-20">
-                  <FileActions
-                    item={folder}
-                    isFolder
-                    onOpen={() => handleFolderClick(folder)}
-                    onRename={() => handleGridRename(folder, true)}
-                    onDelete={handleRefresh}
-                  />
-                </div>
-                {renamingGridItem?.id === folder.id ? (
-                  <form onSubmit={handleGridRenameSubmit} className="flex flex-col items-center w-full">
-                    <input
-                      type="text"
-                      name="name"
-                      defaultValue={folder.name}
-                      className="bg-dark-600 text-dark-100 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary-500 text-center"
-                      autoFocus
-                    />
-                    <div className="flex space-x-2 mt-2">
-                      <button type="submit" className="text-green-400 hover:text-green-300">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                      </button>
-                      <button type="button" onClick={handleGridRenameCancel} className="text-red-400 hover:text-red-300">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                  </form>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => handleFolderClick(folder)}
-                      className="p-4 rounded-full hover:bg-dark-600 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-dark-800"
-                    >
-                      <svg className="w-16 h-16 text-yellow-400 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                      </svg>
-                    </button>
-                    <span className="mt-2 font-medium text-dark-100 truncate w-full text-center group-hover:text-primary-400 transition-colors">
-                      <TranslatedText text={folder.name} />
-                    </span>
-                  </>
-                )}
-              </div>
-            ))}
-            {displayFiles.map(file => (
-              <div key={file.id} className="flex flex-col items-center group relative">
-                {/* Three-dot menu top right */}
-                <div className="absolute top-2 right-2 z-20">
-                  <FileActions
-                    item={file}
-                    onOpen={() => {/* handle file click */}}
-                    onRename={() => handleGridRename(file, false)}
-                    onDelete={handleRefresh}
-                  />
-                </div>
-                {renamingGridItem?.id === file.id ? (
-                  <form onSubmit={handleGridRenameSubmit} className="flex flex-col items-center w-full">
-                    <input
-                      type="text"
-                      name="name"
-                      defaultValue={file.name}
-                      className="bg-dark-600 text-dark-100 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary-500 text-center"
-                      autoFocus
-                    />
-                    <div className="flex space-x-2 mt-2">
-                      <button type="submit" className="text-green-400 hover:text-green-300">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                      </button>
-                      <button type="button" onClick={handleGridRenameCancel} className="text-red-400 hover:text-red-300">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                  </form>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => {/* handle file click */}}
-                      className="p-4 rounded-full hover:bg-dark-600 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-dark-800"
-                    >
-                      <div className="w-16 h-16 group-hover:scale-110 transition-transform">
-                        {getFileOrFolderIcon(file, false, 'w-16 h-16')}
+
+      {/* Charts */}
+      <DashboardStats />
+
+      {/* Recent Files */}
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold text-dark-100 mb-4">
+          <TranslatedText text="dashboard.stats.recentUploads" />
+        </h3>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="text-left text-sm text-dark-400 border-b border-dark-700">
+                <th className="pb-3 font-medium">
+                  <TranslatedText text="files.table.name" />
+                </th>
+                <th className="pb-3 font-medium">
+                  <TranslatedText text="files.table.size" />
+                </th>
+                <th className="pb-3 font-medium">
+                  <TranslatedText text="files.table.lastModified" />
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={3} className="py-4 text-center text-dark-400">
+                    <TranslatedText text="common.loading" />
+                  </td>
+                </tr>
+              ) : !stats.recentFiles || stats.recentFiles.length === 0 ? (
+                <tr>
+                  <td colSpan={3} className="py-4 text-center text-dark-400">
+                    <TranslatedText text="files.emptyState.noFiles" />
+                  </td>
+                </tr>
+              ) : (
+                stats.recentFiles.map((file) => (
+                  <tr key={file.id} className="border-b border-dark-700 last:border-0">
+                    <td className="py-3">
+                      <div className="flex items-center space-x-3">
+                        {getFileOrFolderIcon(file)}
+                        <span className="text-dark-100">{file.name}</span>
                       </div>
-                    </button>
-                    <span className="mt-2 font-medium text-dark-100 truncate w-full text-center group-hover:text-primary-400 transition-colors">
-                      <TranslatedText text={file.name} />
-                    </span>
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+                    </td>
+                    <td className="py-3 text-dark-400">
+                      {formatFileSize(file.size)}
+                    </td>
+                    <td className="py-3 text-dark-400">
+                      {new Date(file.updatedAt).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
     </div>
   );
 };

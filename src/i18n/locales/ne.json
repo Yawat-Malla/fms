@@ -36,15 +36,22 @@
     "subtitle": "तपाईंको फाइल प्रणालीको अवलोकन",
     "stats": {
       "totalFiles": "कुल फाइलहरू",
+      "totalFolders": "कुल फोल्डरहरू",
       "totalSize": "कुल साइज",
       "recentUploads": "हालैका अपलोडहरू",
       "availableFiles": "उपलब्ध फाइलहरू",
-      "deletedFiles": "हटाइएका फाइलहरू"
+      "deletedFiles": "हटाइएका फाइलहरू",
+      "fiscalYearSummary": "आर्थिक वर्ष सारांश",
+      "grantTypeStats": "अनुदान प्रकार तथ्यांक"
     },
     "charts": {
       "filesByType": "प्रकार अनुसार फाइलहरू",
       "uploadTrend": "अपलोड ट्रेन्ड"
-    }
+    },
+    "name": "नाम",
+    "size": "साइज",
+    "modified": "परिमार्जित",
+    "noRecentFiles": "हालैका फाइलहरू फेला परेन"
   },
   "projects": {
     "title": "परियोजनाहरू",
@@ -175,6 +182,8 @@
     "found": "फेला पर्यो",
     "recentlyModified": "हालै परिमार्जन गरियो",
     "viewAll": "सबै हेर्नुहोस्",
+    "folder": "फोल्डर",
+    "folders": "फोल्डरहरू",
     "filters": {
       "title": "फिल्टरहरू",
       "allFiles": "सबै फाइलहरू",

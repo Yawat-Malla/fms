@@ -36,10 +36,13 @@
     "subtitle": "Overview of your file system",
     "stats": {
       "totalFiles": "Total Files",
+      "totalFolders": "Total Folders",
       "totalSize": "Total Size",
       "recentUploads": "Recent Uploads",
       "availableFiles": "Available Files",
-      "deletedFiles": "Deleted Files"
+      "deletedFiles": "Deleted Files",
+      "fiscalYearSummary": "Fiscal Year Summary",
+      "grantTypeStats": "Grant Type Statistics"
     },
     "charts": {
       "filesByType": "Files by Type",
@@ -175,6 +178,8 @@
     "found": "Found",
     "recentlyModified": "Recently Modified",
     "viewAll": "View All",
+    "folder": "Folder",
+    "folders": "Folders",
     "filters": {
       "title": "Filters",
       "allFiles": "All Files",

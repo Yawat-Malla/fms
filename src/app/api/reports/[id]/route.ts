@@ -16,6 +16,11 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Prevent viewers from deleting reports
+    if (session.user.role === 'viewer') {
+      return NextResponse.json({ error: 'Viewers cannot delete reports' }, { status: 403 });
+    }
+
     const reportId = parseInt(params.id, 10);
     if (isNaN(reportId)) {
       return NextResponse.json({ error: 'Invalid report ID' }, { status: 400 });

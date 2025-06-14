@@ -462,7 +462,7 @@ export default function ReportsPage() {
             >
               <TranslatedText text="reports.buttons.refresh" />
             </Button>
-            {reports.length > 0 && (
+            {reports.length > 0 && session?.user?.role !== 'viewer' && (
               <Button
                 variant="danger"
                 size="sm"
@@ -568,13 +568,15 @@ export default function ReportsPage() {
                         >
                           <TranslatedText text="reports.download" />
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="danger"
-                          onClick={() => handleDeleteReport(report)}
-                        >
-                          <TranslatedText text="reports.delete" />
-                        </Button>
+                        {session?.user?.role !== 'viewer' && (
+                          <Button
+                            size="sm"
+                            variant="danger"
+                            onClick={() => handleDeleteReport(report)}
+                          >
+                            <TranslatedText text="reports.delete" />
+                          </Button>
+                        )}
                       </div>
                     </td>
                   </tr>

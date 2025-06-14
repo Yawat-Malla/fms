@@ -99,6 +99,11 @@ export default function SettingsPage() {
   const [editingSourceId, setEditingSourceId] = useState<number | null>(null);
   const [editingGrantTypeId, setEditingGrantTypeId] = useState<number | null>(null);
 
+  // Add state for upload sections
+  const [uploadSections, setUploadSections] = useState([]);
+  const [uploadSectionForm, setUploadSectionForm] = useState({ name: '', key: '', en: '', ne: '' });
+  const [editingUploadSectionId, setEditingUploadSectionId] = useState<number | null>(null);
+
   // Update useEffect to sync with session changes
   useEffect(() => {
     if (session?.user) {
@@ -172,6 +177,7 @@ export default function SettingsPage() {
     if (session?.user?.role === 'admin') {
       fetchSources();
       fetchGrantTypes();
+      fetchUploadSections();
     }
   }, [session?.user?.role]);
 
@@ -251,6 +257,67 @@ export default function SettingsPage() {
       toast.success('Grant type deleted');
     } else {
       toast.error('Failed to delete grant type');
+    }
+  };
+
+  // Add useEffect to fetch upload sections
+  useEffect(() => {
+    if (session?.user?.role === 'admin') {
+      fetchUploadSections();
+    }
+  }, [session?.user?.role]);
+
+  const fetchUploadSections = async () => {
+    const res = await fetch('/api/admin/upload-sections');
+    const data = await res.json();
+    setUploadSections(data);
+  };
+
+  // Add CRUD handlers for upload sections
+  const handleUploadSectionSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const method = editingUploadSectionId ? 'PUT' : 'POST';
+    const url = editingUploadSectionId ? `/api/admin/upload-sections/${editingUploadSectionId}` : '/api/admin/upload-sections';
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: uploadSectionForm.name,
+        key: uploadSectionForm.key,
+        translations: {
+          en: uploadSectionForm.en,
+          ne: uploadSectionForm.ne
+        }
+      }),
+    });
+    if (res.ok) {
+      setUploadSectionForm({ name: '', key: '', en: '', ne: '' });
+      setEditingUploadSectionId(null);
+      fetchUploadSections();
+      toast.success('Upload section saved');
+    } else {
+      toast.error('Failed to save upload section');
+    }
+  };
+
+  const handleUploadSectionEdit = (section: any) => {
+    setUploadSectionForm({
+      name: section.name,
+      key: section.key,
+      en: section.translations?.en || '',
+      ne: section.translations?.ne || ''
+    });
+    setEditingUploadSectionId(section.id);
+  };
+
+  const handleUploadSectionDelete = async (id: number) => {
+    if (!confirm('Delete this upload section?')) return;
+    const res = await fetch(`/api/admin/upload-sections/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      fetchUploadSections();
+      toast.success('Upload section deleted');
+    } else {
+      toast.error('Failed to delete upload section');
     }
   };
 
@@ -1007,6 +1074,102 @@ export default function SettingsPage() {
                             <div className="flex gap-2 justify-center">
                               <button type="button" onClick={() => handleGrantTypeEdit(gt)} className="bg-white border border-blue-500 text-blue-600 px-3 py-1 rounded hover:bg-blue-50 transition">Edit</button>
                               <button type="button" onClick={() => handleGrantTypeDelete(gt.id)} className="bg-white border border-red-500 text-red-600 px-3 py-1 rounded hover:bg-red-50 transition">Delete</button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </Card>
+
+              {/* Upload Sections Management */}
+              <Card className="p-6 mt-8">
+                <h2 className="text-xl font-semibold mb-4">Upload Sections</h2>
+                <form onSubmit={handleUploadSectionSave} className="space-y-2 mb-4">
+                  <div className="flex gap-2 flex-wrap">
+                    <input
+                      value={uploadSectionForm.name}
+                      onChange={e => {
+                        const name = e.target.value;
+                        const key = name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+                        setUploadSectionForm(f => ({ ...f, name, key }));
+                      }}
+                      placeholder="Admin Label"
+                      required
+                      className="input flex-1 min-w-[180px]"
+                    />
+                    <input
+                      value={uploadSectionForm.key}
+                      disabled
+                      placeholder="Generated Key"
+                      className="input flex-1 min-w-[180px] bg-gray-100"
+                    />
+                    <input
+                      value={uploadSectionForm.en}
+                      onChange={e => setUploadSectionForm(f => ({ ...f, en: e.target.value }))}
+                      placeholder="English Translation"
+                      required
+                      className="input flex-1 min-w-[180px]"
+                    />
+                    <input
+                      value={uploadSectionForm.ne}
+                      onChange={e => setUploadSectionForm(f => ({ ...f, ne: e.target.value }))}
+                      placeholder="Nepali Translation"
+                      required
+                      className="input flex-1 min-w-[180px]"
+                    />
+                    <Button type="submit" className="h-10 px-6">
+                      {editingUploadSectionId ? 'Update' : 'Add'}
+                    </Button>
+                    {editingUploadSectionId && (
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          setUploadSectionForm({ name: '', key: '', en: '', ne: '' });
+                          setEditingUploadSectionId(null);
+                        }}
+                        className="h-10 px-6"
+                      >
+                        Cancel
+                      </Button>
+                    )}
+                  </div>
+                </form>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm border-separate border-spacing-y-2">
+                    <thead>
+                      <tr className="text-left text-dark-400">
+                        <th className="px-2 py-1">Key</th>
+                        <th className="px-2 py-1">Label</th>
+                        <th className="px-2 py-1">EN</th>
+                        <th className="px-2 py-1">NE</th>
+                        <th className="px-2 py-1 text-center">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {uploadSections.map((section: any) => (
+                        <tr key={section.id} className="bg-white rounded shadow-sm">
+                          <td className="px-2 py-1 font-mono text-xs text-dark-700">{section.key}</td>
+                          <td className="px-2 py-1">{section.name}</td>
+                          <td className="px-2 py-1">{section.translations?.en}</td>
+                          <td className="px-2 py-1">{section.translations?.ne}</td>
+                          <td className="px-2 py-1 text-center">
+                            <div className="flex gap-2 justify-center">
+                              <button
+                                type="button"
+                                onClick={() => handleUploadSectionEdit(section)}
+                                className="bg-white border border-blue-500 text-blue-600 px-3 py-1 rounded hover:bg-blue-50 transition"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleUploadSectionDelete(section.id)}
+                                className="bg-white border border-red-500 text-red-600 px-3 py-1 rounded hover:bg-red-50 transition"
+                              >
+                                Delete
+                              </button>
                             </div>
                           </td>
                         </tr>

@@ -52,6 +52,11 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Prevent viewers from updating files
+    if (session.user.role === 'viewer') {
+      return NextResponse.json({ error: 'Viewers cannot modify files' }, { status: 403 });
+    }
+
     const fileId = parseInt(params.id);
     const body = await request.json();
 
@@ -94,6 +99,11 @@ export async function DELETE(
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Prevent viewers from deleting files
+    if (session.user.role === 'viewer') {
+      return NextResponse.json({ error: 'Viewers cannot delete files' }, { status: 403 });
     }
 
     const fileId = parseInt(params.id);

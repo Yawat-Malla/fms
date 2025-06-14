@@ -6,6 +6,8 @@ import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { useApp } from '@/contexts/AppContext';
 import { TranslatedText } from '@/components/TranslatedText';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 const FolderIcon = () => (
   <svg className="w-5 h-5 text-yellow-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -20,6 +22,21 @@ const FileIcon = () => (
 
 export default function BinPage() {
   const { language } = useApp();
+  const { data: session } = useSession();
+  const router = useRouter();
+
+  // Redirect viewers away from bin page
+  useEffect(() => {
+    if (session?.user?.role === 'viewer') {
+      router.push('/files');
+    }
+  }, [session, router]);
+
+  // Don't render anything for viewers
+  if (session?.user?.role === 'viewer') {
+    return null;
+  }
+
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'list' | 'grid'>('list');
   const [selectedItems, setSelectedItems] = useState<{ id: string; type: 'file' | 'folder' }[]>([]);

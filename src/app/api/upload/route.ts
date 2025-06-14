@@ -1,15 +1,13 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import prisma from '@/lib/prisma';
-import { join } from 'path';
-import { mkdir, writeFile } from 'fs/promises';
-import { existsSync } from 'fs';
+import { PrismaClient } from '@prisma/client';
+import { writeFile, mkdir } from 'fs/promises';
+import path from 'path';
+import { v4 as uuidv4 } from 'uuid';
 import { createHash } from 'crypto';
-import { notifyFileUpdate } from '@/lib/notifications';
 
-const UPLOAD_DIR = join(process.cwd(), 'uploads');
-const USER_FOLDERS_DIR = join(UPLOAD_DIR, 'user_folders');
+const prisma = new PrismaClient();
 
 function generateFileHash(fileName: string, size: number, timestamp: number): string {
   const hash = createHash('sha256');
@@ -17,237 +15,122 @@ function generateFileHash(fileName: string, size: number, timestamp: number): st
   return hash.digest('hex');
 }
 
-async function saveSectionFiles(
-  files: File[],
-  sectionName: string,
-  metadata: {
-    fiscalYearId: number;
-    sourceId: number;
-    grantTypeId: number;
-    remarks?: string;
-  },
-  userId: number,
-  parentFolder: any
-) {
-  if (files.length === 0) return [];
-
-  // Create section subfolder path
-  const sectionDir = join(parentFolder.path, sectionName);
-  
-  // Check if a folder with the same name already exists in this parent folder (including deleted ones)
-  const existingSectionFolder = await prisma.folder.findFirst({
-    where: {
-      name: sectionName,
-      parentId: parentFolder.id,
-    },
-  });
-
-  if (existingSectionFolder) {
-    throw new Error(`A folder named "${sectionName}" already exists in this location (including in the bin). Please use a different name.`);
-  }
-
-  await mkdir(sectionDir, { recursive: true });
-
-  // Create a folder record for this section
-  const sectionFolder = await prisma.folder.create({
-    data: {
-      name: sectionName,
-      path: sectionDir,
-      user: {
-        connect: {
-          id: userId
-        }
-      },
-      fiscalYear: {
-        connect: {
-          id: metadata.fiscalYearId
-        }
-      },
-      source: {
-        connect: {
-          id: metadata.sourceId
-        }
-      },
-      grantType: {
-        connect: {
-          id: metadata.grantTypeId
-        }
-      },
-      parent: {
-        connect: {
-          id: parentFolder.id
-        }
-      }
-    },
-  });
-
-  const savedFiles = [];
-  for (const file of files) {
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const fileName = file.name;
-    const filePath = join(sectionDir, fileName);
-
-    await writeFile(filePath, buffer);
-
-    const savedFile = await prisma.file.create({
-      data: {
-        name: fileName,
-        path: filePath,
-        type: file.type,
-        size: file.size,
-        status: 'online',
-        description: metadata.remarks || null,
-        localHash: generateFileHash(fileName, file.size, Date.now()),
-        folder: {
-          connect: {
-            id: sectionFolder.id
-          }
-        },
-        user: {
-          connect: {
-            id: userId
-          }
-        },
-        fiscalYear: {
-          connect: {
-            id: metadata.fiscalYearId
-          }
-        },
-        source: {
-          connect: {
-            id: metadata.sourceId
-          }
-        },
-        grantType: {
-          connect: {
-            id: metadata.grantTypeId
-          }
-        }
-      },
-    });
-
-    // Create notification for file upload
-    await notifyFileUpdate(userId, fileName, 'uploaded');
-
-    savedFiles.push(savedFile);
-  }
-
-  return savedFiles;
-}
-
 export async function POST(request: Request) {
+  console.log('Upload API - Starting request processing');
+  
+  const session = await getServerSession(authOptions);
+  console.log('Upload API - Session check:', { 
+    isAuthenticated: !!session,
+    userId: session?.user?.id 
+  });
+
+  if (!session) {
+    console.log('Upload API - Unauthorized access attempt');
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
-    console.log('[Upload API] Starting file upload process...');
-    
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      console.error('[Upload API] No authenticated user found');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
+    console.log('Upload API - Parsing form data');
     const formData = await request.formData();
-    const title = formData.get('title');
-    const fiscalYear = formData.get('fiscalYear');
-    const source = formData.get('source');
-    const grantType = formData.get('grantType');
-    const remarks = formData.get('remarks');
+    const title = formData.get('title') as string;
+    const fiscalYearId = formData.get('fiscalYear') as string;
+    const sourceId = formData.get('source') as string;
+    const grantTypeId = formData.get('grantType') as string;
+    const remarks = formData.get('remarks') as string;
 
-    // Runtime type checks for string values
-    if (
-      typeof title !== 'string' ||
-      typeof fiscalYear !== 'string' ||
-      typeof source !== 'string' ||
-      typeof grantType !== 'string' ||
-      (remarks && typeof remarks !== 'string')
-    ) {
-      return NextResponse.json({ error: 'Invalid form data' }, { status: 400 });
-    }
-
-    // Debug log for received values
-    console.log('[Upload API] Received:', {
+    // Log received data for debugging
+    console.log('Upload API - Received form data:', {
       title,
-      fiscalYear,
-      source,
-      grantType,
-      remarks
+      fiscalYearId,
+      sourceId,
+      grantTypeId,
+      remarks,
+      formDataKeys: Array.from(formData.keys())
     });
 
-    if (!title || !fiscalYear || !source || !grantType) {
-      return NextResponse.json({ error: 'Fiscal year, source, and grant type are required.' }, { status: 400 });
-    }
-
-    // Get files from each section
-    const a4Files = formData.getAll('a4Files') as File[];
-    const nepaliFiles = formData.getAll('nepaliFiles') as File[];
-    const extraFiles = formData.getAll('extraFiles') as File[];
-    const otherFiles = formData.getAll('otherFiles') as File[];
-
-    console.log('[Upload API] Received files:', {
-      a4Files: a4Files.length,
-      nepaliFiles: nepaliFiles.length,
-      extraFiles: extraFiles.length,
-      otherFiles: otherFiles.length
-    });
-
-    // Get or create fiscal year
-    let fiscalYearRecord = await prisma.fiscalYear.findFirst({
-      where: { name: fiscalYear }
-    });
-    if (!fiscalYearRecord) {
-      fiscalYearRecord = await prisma.fiscalYear.create({
-        data: {
-          name: fiscalYear,
-          startDate: new Date('2022-04-14'), // TODO: Replace with correct start date
-          endDate: new Date('2023-04-13'),   // TODO: Replace with correct end date
-        }
+    // Validate required fields
+    if (!title || !fiscalYearId || !sourceId || !grantTypeId) {
+      console.log('Upload API - Missing required fields:', {
+        hasTitle: !!title,
+        hasFiscalYear: !!fiscalYearId,
+        hasSource: !!sourceId,
+        hasGrantType: !!grantTypeId
       });
+      return NextResponse.json({ 
+        error: 'Missing required fields',
+        details: {
+          title: !title,
+          fiscalYear: !fiscalYearId,
+          source: !sourceId,
+          grantType: !grantTypeId
+        }
+      }, { status: 400 });
     }
 
-    // Get or create source
-    const sourceKey = source.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-    let sourceRecord = await prisma.source.findFirst({
-      where: {
-        OR: [
-          { name: source },
-          { key: sourceKey }
-        ]
-      }
+    console.log('Upload API - Fetching reference records');
+    // Get the records by their keys instead of IDs
+    const [fiscalYear, source, grantType] = await Promise.all([
+      prisma.fiscalYear.findFirst({ 
+        where: { 
+          name: fiscalYearId
+        } 
+      }),
+      prisma.source.findFirst({ where: { key: sourceId } }),
+      prisma.grantType.findFirst({ where: { key: grantTypeId } })
+    ]);
+
+    console.log('Upload API - Reference records found:', {
+      fiscalYear: fiscalYear ? {
+        id: fiscalYear.id,
+        key: fiscalYear.key
+      } : null,
+      source: source ? {
+        id: source.id,
+        key: source.key
+      } : null,
+      grantType: grantType ? {
+        id: grantType.id,
+        key: grantType.key
+      } : null
     });
-    if (!sourceRecord) {
-      sourceRecord = await prisma.source.create({
-        data: {
-          name: source,
-          key: sourceKey
-        }
+
+    if (!fiscalYear || !source || !grantType) {
+      console.log('Upload API - Missing reference records:', {
+        fiscalYear: !fiscalYear,
+        source: !source,
+        grantType: !grantType,
+        fiscalYearId,
+        sourceId,
+        grantTypeId
       });
+      return NextResponse.json({ 
+        error: 'One or more referenced records not found',
+        details: {
+          fiscalYear: !fiscalYear,
+          source: !source,
+          grantType: !grantType,
+          fiscalYearId,
+          sourceId,
+          grantTypeId
+        }
+      }, { status: 400 });
     }
 
-    // Get or create grant type
-    const grantTypeKey = grantType.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-    let grantTypeRecord = await prisma.grantType.findFirst({
-      where: {
-        OR: [
-          { name: grantType },
-          { key: grantTypeKey }
-        ]
-      }
+    console.log('Upload API - Fetching upload sections');
+    // Get all upload sections
+    const uploadSections = await prisma.uploadSection.findMany({
+      where: { isActive: true },
+      orderBy: { order: 'asc' }
     });
-    if (!grantTypeRecord) {
-      grantTypeRecord = await prisma.grantType.create({
-        data: {
-          name: grantType,
-          key: grantTypeKey
-        }
-      });
-    }
+    console.log('Upload API - Found upload sections:', uploadSections.length);
 
     // Create main folder for this upload
-    const mainFolderPath = join(USER_FOLDERS_DIR, title);
-    
-    // Ensure the user_folders directory exists
-    await mkdir(USER_FOLDERS_DIR, { recursive: true });
+    const userFoldersDir = path.join(process.cwd(), 'uploads', 'user_folders');
+    const mainFolderPath = path.join(userFoldersDir, title);
+    console.log('Upload API - Main folder path:', mainFolderPath);
 
-    // Check if a folder with the same name already exists at the root level (including deleted ones)
+    // Check if a folder with the same name already exists (including deleted ones)
+    console.log('Upload API - Checking for existing folder');
     const existingFolder = await prisma.folder.findFirst({
       where: {
         name: title,
@@ -256,14 +139,17 @@ export async function POST(request: Request) {
     });
 
     if (existingFolder) {
-      return NextResponse.json(
-        { error: 'A folder with this name already exists (including in the bin). Please use a different name.' },
-        { status: 409 }
-      );
+      console.log('Upload API - Found existing folder with same name');
+      return NextResponse.json({
+        error: 'A folder with this name already exists (including in the bin). Please use a different name.'
+      }, { status: 409 });
     }
 
+    console.log('Upload API - Creating main folder');
+    // Create the main folder and its parent directories if they don't exist
     await mkdir(mainFolderPath, { recursive: true });
 
+    // Create the main folder record
     const mainFolder = await prisma.folder.create({
       data: {
         name: title,
@@ -275,108 +161,164 @@ export async function POST(request: Request) {
         },
         fiscalYear: {
           connect: {
-            id: fiscalYearRecord.id
+            id: fiscalYear.id
           }
         },
         source: {
           connect: {
-            id: sourceRecord.id
+            id: source.id
           }
         },
         grantType: {
           connect: {
-            id: grantTypeRecord.id
+            id: grantType.id
           }
         }
       }
     });
+    console.log('Upload API - Main folder created:', mainFolder.id);
 
-    // Save files for each section
-    const allSavedFiles = [];
-    
-    if (a4Files.length > 0) {
-      const savedFiles = await saveSectionFiles(
-        a4Files,
-        'A4',
-        {
-          fiscalYearId: fiscalYearRecord.id,
-          sourceId: sourceRecord.id,
-          grantTypeId: grantTypeRecord.id,
-          remarks: remarks || undefined
+    // Process files for each section
+    console.log('Upload API - Starting file processing');
+    const filePromises = uploadSections.map(async (section) => {
+      console.log(`Upload API - Processing section: ${section.name}`);
+      const files = formData.getAll(`${section.key}Files`) as File[];
+      console.log(`Upload API - Found ${files.length} files for section ${section.name}`);
+
+      if (files.length === 0) return [];
+
+      // Create section subfolder
+      const sectionFolderPath = path.join(mainFolderPath, section.name);
+      console.log(`Upload API - Section folder path: ${sectionFolderPath}`);
+
+      // Check if a subfolder with the same name already exists in this parent folder
+      console.log(`Upload API - Checking for existing section folder: ${section.name}`);
+      const existingSectionFolder = await prisma.folder.findFirst({
+        where: {
+          name: section.name,
+          parentId: mainFolder.id,
         },
-        session.user.id,
-        mainFolder
-      );
-      allSavedFiles.push(...savedFiles);
-    }
+      });
 
-    if (nepaliFiles.length > 0) {
-      const savedFiles = await saveSectionFiles(
-        nepaliFiles,
-        'Nepali',
-        {
-          fiscalYearId: fiscalYearRecord.id,
-          sourceId: sourceRecord.id,
-          grantTypeId: grantTypeRecord.id,
-          remarks: remarks || undefined
-        },
-        session.user.id,
-        mainFolder
-      );
-      allSavedFiles.push(...savedFiles);
-    }
+      if (existingSectionFolder) {
+        console.log(`Upload API - Found existing section folder: ${section.name}`);
+        return NextResponse.json({
+          error: `A folder named "${section.name}" already exists in this location (including in the bin). Please use a different name.`
+        }, { status: 409 });
+      }
 
-    if (extraFiles.length > 0) {
-      const savedFiles = await saveSectionFiles(
-        extraFiles,
-        'Extra',
-        {
-          fiscalYearId: fiscalYearRecord.id,
-          sourceId: sourceRecord.id,
-          grantTypeId: grantTypeRecord.id,
-          remarks: remarks || undefined
-        },
-        session.user.id,
-        mainFolder
-      );
-      allSavedFiles.push(...savedFiles);
-    }
+      console.log(`Upload API - Creating section folder: ${section.name}`);
+      await mkdir(sectionFolderPath, { recursive: true });
 
-    if (otherFiles.length > 0) {
-      const savedFiles = await saveSectionFiles(
-        otherFiles,
-        'Other',
-        {
-          fiscalYearId: fiscalYearRecord.id,
-          sourceId: sourceRecord.id,
-          grantTypeId: grantTypeRecord.id,
-          remarks: remarks || undefined
-        },
-        session.user.id,
-        mainFolder
-      );
-      allSavedFiles.push(...savedFiles);
-    }
+      // Create section folder record
+      const sectionFolder = await prisma.folder.create({
+        data: {
+          name: section.name,
+          path: sectionFolderPath,
+          user: {
+            connect: {
+              id: session.user.id
+            }
+          },
+          fiscalYear: {
+            connect: {
+              id: fiscalYear.id
+            }
+          },
+          source: {
+            connect: {
+              id: source.id
+            }
+          },
+          grantType: {
+            connect: {
+              id: grantType.id
+            }
+          },
+          parent: {
+            connect: {
+              id: mainFolder.id
+            }
+          }
+        }
+      });
+      console.log(`Upload API - Section folder created: ${sectionFolder.id}`);
 
-    if (allSavedFiles.length === 0) {
-      console.error('[Upload API] No files were successfully processed');
-      return NextResponse.json({ error: 'Failed to upload any files' }, { status: 500 });
-    }
+      // Process files in this section
+      console.log(`Upload API - Processing ${files.length} files for section ${section.name}`);
+      return Promise.all(files.map(async (file) => {
+        console.log(`Upload API - Processing file: ${file.name}`);
+        const bytes = await file.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+        const timestamp = Date.now();
+        const fileName = `${uuidv4()}-${file.name}`;
+        const filePath = path.join(sectionFolderPath, fileName);
+        
+        console.log(`Upload API - Writing file to disk: ${filePath}`);
+        await writeFile(filePath, buffer);
 
-    console.log('[Upload API] Upload completed successfully:', {
-      totalFiles: allSavedFiles.length
+        // Generate local hash for the file
+        const localHash = generateFileHash(file.name, file.size, timestamp);
+        console.log(`Upload API - Generated hash for file: ${localHash}`);
+
+        console.log(`Upload API - Creating file record in database: ${file.name}`);
+        return prisma.file.create({
+          data: {
+            name: file.name,
+            path: path.join(section.name, fileName),
+            type: file.type,
+            size: file.size,
+            status: 'online',
+            description: remarks,
+            localHash,
+            user: {
+              connect: {
+                id: session.user.id
+              }
+            },
+            folder: {
+              connect: {
+                id: sectionFolder.id
+              }
+            },
+            fiscalYear: {
+              connect: {
+                id: fiscalYear.id
+              }
+            },
+            source: {
+              connect: {
+                id: source.id
+              }
+            },
+            grantType: {
+              connect: {
+                id: grantType.id
+              }
+            }
+          }
+        });
+      }));
     });
+
+    console.log('Upload API - Waiting for all file uploads to complete');
+    const uploadedFiles = await Promise.all(filePromises);
+    console.log('Upload API - All files uploaded successfully');
 
     return NextResponse.json({
       message: 'Files uploaded successfully',
-      files: allSavedFiles
+      files: uploadedFiles.flat()
     });
-
   } catch (error) {
-    console.error('[Upload API] Error:', error);
-    return NextResponse.json(
-      { error: 'Failed to upload files' },
-      { status: 500 }
-    );
+    console.error('Upload API - Error details:', {
+      error: error instanceof Error ? {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      } : error
+    });
+    return NextResponse.json({
+      error: error instanceof Error ? error.message : 'Internal Server Error'
+    }, { status: 500 });
   }
-} 
+}

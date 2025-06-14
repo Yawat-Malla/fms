@@ -11,6 +11,8 @@ import { useRouter } from 'next/navigation';
 import SearchableSelect from '@/components/ui/SearchableSelect';
 import { generateFiscalYears } from '@/utils/fiscalYears';
 import { TranslatedText } from '@/components/TranslatedText';
+import { useApp } from '@/contexts/AppContext';
+import { useSession } from 'next-auth/react';
 
 interface Option {
   id: string;
@@ -49,8 +51,23 @@ const steps = [
   },
 ];
 
-const UploadPage = () => {
+export default function UploadPage() {
+  const { language } = useApp();
+  const { data: session } = useSession();
   const router = useRouter();
+
+  // Redirect viewers away from upload page
+  useEffect(() => {
+    if (session?.user?.role === 'viewer') {
+      router.push('/files');
+    }
+  }, [session, router]);
+
+  // Don't render anything for viewers
+  if (session?.user?.role === 'viewer') {
+    return null;
+  }
+
   const [step, setStep] = useState(0);
   const [a4Files, setA4Files] = useState<File[]>([]);
   const [nepaliFiles, setNepaliFiles] = useState<File[]>([]);
@@ -65,6 +82,8 @@ const UploadPage = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [sourceOptions, setSourceOptions] = useState<{ id: string; translationKey: string; translations: any; }[]>([]);
   const [grantTypeOptions, setGrantTypeOptions] = useState<{ id: string; translationKey: string; translations: any; }[]>([]);
+  const [uploadSections, setUploadSections] = useState<any[]>([]);
+  const [sectionFiles, setSectionFiles] = useState<{ [key: string]: File[] }>({});
 
   // Animation variants
   const containerVariants = {
@@ -121,6 +140,29 @@ const UploadPage = () => {
     fetchOptions();
   }, []);
 
+  // Fetch upload sections
+  useEffect(() => {
+    const fetchUploadSections = async () => {
+      try {
+        const response = await fetch('/api/admin/upload-sections');
+        if (!response.ok) throw new Error('Failed to fetch upload sections');
+        const data = await response.json();
+        setUploadSections(data);
+        // Initialize section files state
+        const initialSectionFiles: { [key: string]: File[] } = {};
+        data.forEach((section: any) => {
+          initialSectionFiles[section.key] = [];
+        });
+        setSectionFiles(initialSectionFiles);
+      } catch (error) {
+        console.error('Error fetching upload sections:', error);
+        toast.error('Failed to load upload sections');
+      }
+    };
+
+    fetchUploadSections();
+  }, []);
+
   // Convert fiscal years to options
   const fiscalYearOptions = fiscalYears;
 
@@ -135,7 +177,8 @@ const UploadPage = () => {
     return false;
   };
 
-  const isFormValid = title && fiscalYear && source && grantType && (a4Files.length > 0 || nepaliFiles.length > 0 || extraFiles.length > 0 || otherFiles.length > 0);
+  const isFormValid = title && fiscalYear && source && grantType && 
+    Object.values(sectionFiles).some(files => files.length > 0);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -148,27 +191,21 @@ const UploadPage = () => {
       formData.append('grantType', grantType?.id || '');
       formData.append('remarks', remarks);
       
-      // Debug log for values being sent
-      console.log('Uploading with:', {
+      // Append files from each section
+      Object.entries(sectionFiles).forEach(([sectionKey, files]) => {
+        files.forEach(file => {
+          formData.append(`${sectionKey}Files`, file);
+        });
+      });
+
+      // Log the form data for debugging
+      console.log('Submitting form data:', {
         title,
         fiscalYear: fiscalYear?.id,
         source: source?.id,
         grantType: grantType?.id,
-        remarks
-      });
-
-      // Append files with their section-specific keys
-      a4Files.forEach(file => {
-        formData.append('a4Files', file);
-      });
-      nepaliFiles.forEach(file => {
-        formData.append('nepaliFiles', file);
-      });
-      extraFiles.forEach(file => {
-        formData.append('extraFiles', file);
-      });
-      otherFiles.forEach(file => {
-        formData.append('otherFiles', file);
+        remarks,
+        sectionFiles
       });
 
       // Send request to API
@@ -176,19 +213,19 @@ const UploadPage = () => {
         method: 'POST',
         body: formData,
       });
+      
       const data = await response.json();
+      
       if (!response.ok) {
         throw new Error(data.error || 'Error uploading files');
       }
+      
       toast.success('Files uploaded successfully');
       setIsSuccess(true);
       setTimeout(() => {
         setIsSuccess(false);
         setStep(0);
-        setA4Files([]);
-        setNepaliFiles([]);
-        setExtraFiles([]);
-        setOtherFiles([]);
+        setSectionFiles({});
         setFiscalYear(null);
         setSource(null);
         setGrantType(null);
@@ -374,46 +411,23 @@ const UploadPage = () => {
                       </h2>
                       <p className="text-dark-300 mb-6"><TranslatedText text="files.upload.document.description" /></p>
                       <div className="space-y-8">
-                        <div>
-                          <h3 className="text-lg font-semibold text-dark-200 mb-2"><TranslatedText text="files.upload.document.a4Size" /></h3>
-                          <FileUploader
-                            onFilesSelected={setA4Files}
-                            maxFiles={20}
-                            maxSizeMB={10}
-                            acceptedFileTypes={['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'image/jpeg', 'image/png']}
-                            disabled={isSubmitting}
-                          />
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-semibold text-dark-200 mb-2"><TranslatedText text="files.upload.document.nepaliPaper" /></h3>
-                          <FileUploader
-                            onFilesSelected={setNepaliFiles}
-                            maxFiles={20}
-                            maxSizeMB={10}
-                            acceptedFileTypes={['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'image/jpeg', 'image/png']}
-                            disabled={isSubmitting}
-                          />
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-semibold text-dark-200 mb-2"><TranslatedText text="files.upload.document.extraSize" /></h3>
-                          <FileUploader
-                            onFilesSelected={setExtraFiles}
-                            maxFiles={20}
-                            maxSizeMB={10}
-                            acceptedFileTypes={['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'image/jpeg', 'image/png']}
-                            disabled={isSubmitting}
-                          />
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-semibold text-dark-200 mb-2"><TranslatedText text="files.upload.document.other" /></h3>
-                          <FileUploader
-                            onFilesSelected={setOtherFiles}
-                            maxFiles={20}
-                            maxSizeMB={10}
-                            acceptedFileTypes={['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'image/jpeg', 'image/png']}
-                            disabled={isSubmitting}
-                          />
-                        </div>
+                        {uploadSections.map((section) => (
+                          <div key={section.id}>
+                            <h3 className="text-lg font-semibold text-dark-200 mb-2">
+                              {section.translations[language] || section.name}
+                            </h3>
+                            <FileUploader
+                              onFilesSelected={(files) => setSectionFiles(prev => ({
+                                ...prev,
+                                [section.key]: files
+                              }))}
+                              maxFiles={20}
+                              maxSizeMB={10}
+                              acceptedFileTypes={['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'image/jpeg', 'image/png']}
+                              disabled={isSubmitting}
+                            />
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -456,6 +470,4 @@ const UploadPage = () => {
       </main>
     </motion.div>
   );
-};
-
-export default UploadPage; 
+} 

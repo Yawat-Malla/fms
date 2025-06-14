@@ -13,6 +13,11 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Prevent viewers from deleting all reports
+    if (session.user.role === 'viewer') {
+      return NextResponse.json({ error: 'Viewers cannot delete reports' }, { status: 403 });
+    }
+
     // Get all reports to delete their files
     const reports = await prisma.report.findMany();
     
