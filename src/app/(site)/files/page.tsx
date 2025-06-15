@@ -115,24 +115,24 @@ export default function FilesPage() {
         .sort((a, b) => new Date(b.lastModifiedAt).getTime() - new Date(a.lastModifiedAt).getTime())
         .slice(0, 5);
       setRecentlyModifiedFolders(recentFolders);
-    } catch (error) {
+      } catch (error) {
       console.error('Error fetching recently modified folders:', error);
-    }
-  };
+      }
+    };
 
   // Update fetchFolders to handle files
   const fetchFolders = async () => {
-    try {
-      setIsLoading(true);
-      
-      // Don't fetch if not authenticated
-      if (!session?.user?.email) return;
+      try {
+        setIsLoading(true);
+        
+        // Don't fetch if not authenticated
+        if (!session?.user?.email) return;
 
-      // Build the query URL with current filters
-      const queryParams = new URLSearchParams();
-      if (selectedFiscalYear) queryParams.append('fiscal-year', selectedFiscalYear);
-      if (selectedSource) queryParams.append('source', selectedSource);
-      if (selectedGrantType) queryParams.append('grant-type', selectedGrantType);
+        // Build the query URL with current filters
+        const queryParams = new URLSearchParams();
+        if (selectedFiscalYear) queryParams.append('fiscal-year', selectedFiscalYear);
+        if (selectedSource) queryParams.append('source', selectedSource);
+        if (selectedGrantType) queryParams.append('grant-type', selectedGrantType);
 
       let response;
       if (currentPath.length === 0) {
@@ -155,25 +155,25 @@ export default function FilesPage() {
           return;
         }
       }
-      
-      if (!response.ok) {
+        
+        if (!response.ok) {
         throw new Error('Failed to fetch folders');
-      }
+        }
 
-      const data = await response.json();
+        const data = await response.json();
       setFolders(data);
       setFilterOptions({
         fiscalYears: [...new Set(data.map((f: any) => f.fiscalYear?.name).filter(Boolean))] as string[],
         sources: [...new Set(data.map((f: any) => f.source?.name).filter(Boolean))] as string[],
         grantTypes: [...new Set(data.map((f: any) => f.grantType?.name).filter(Boolean))] as string[]
       });
-    } catch (error) {
+      } catch (error) {
       console.error('Error fetching folders:', error);
       toast.error('Failed to load folders');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
   // Update useEffect to handle path changes and fetch recently modified folders
   useEffect(() => {
@@ -618,7 +618,7 @@ export default function FilesPage() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
           </div>
         ) : (
-          <div>
+      <div>
             {viewType === 'grid' ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Show folders */}
@@ -722,44 +722,44 @@ export default function FilesPage() {
                         <TranslatedText text="files.createSubfolder" />
                       </Button>
                     )}
-                    {/* View toggle */}
-                    <div className="flex items-center bg-dark-700 border border-dark-600 rounded-md p-1">
-                      <button 
-                        className={viewType === 'grid' ? 'p-1 rounded bg-dark-600 text-dark-100' : 'p-1 rounded text-dark-400'}
-                        onClick={() => setViewType('grid')}
-                      >
-                        <svg className="h-5 w-5" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M3 5C3 3.89543 3.89543 3 5 3H7C8.10457 3 9 3.89543 9 5V7C9 8.10457 8.10457 9 7 9H5C3.89543 9 3 8.10457 3 7V5Z" stroke="currentColor" strokeWidth="1.5" />
-                          <path d="M11 5C11 3.89543 11.8954 3 13 3H15C16.1046 3 17 3.89543 17 5V7C17 8.10457 16.1046 9 15 9H13C11.8954 9 11 8.10457 11 7V5Z" stroke="currentColor" strokeWidth="1.5" />
-                          <path d="M3 13C3 11.8954 3.89543 11 5 11H7C8.10457 11 9 11.8954 9 13V15C9 16.1046 8.10457 17 7 17H5C3.89543 17 3 16.1046 3 15V13Z" stroke="currentColor" strokeWidth="1.5" />
-                          <path d="M11 13C11 11.8954 11.8954 11 13 11H15C16.1046 11 17 11.8954 17 13V15C17 16.1046 16.1046 17 15 17H13C11.8954 17 11 16.1046 11 15V13Z" stroke="currentColor" strokeWidth="1.5" />
-                        </svg>
-                      </button>
-                      <button 
-                        className={viewType === 'list' ? 'p-1 rounded bg-dark-600 text-dark-100' : 'p-1 rounded text-dark-400'}
-                        onClick={() => setViewType('list')}
-                      >
-                        <svg className="h-5 w-5" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M5 5H15M5 10H15M5 15H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      </button>
-                    </div>
+            {/* View toggle */}
+            <div className="flex items-center bg-dark-700 border border-dark-600 rounded-md p-1">
+              <button 
+                className={viewType === 'grid' ? 'p-1 rounded bg-dark-600 text-dark-100' : 'p-1 rounded text-dark-400'}
+                onClick={() => setViewType('grid')}
+              >
+                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M3 5C3 3.89543 3.89543 3 5 3H7C8.10457 3 9 3.89543 9 5V7C9 8.10457 8.10457 9 7 9H5C3.89543 9 3 8.10457 3 7V5Z" stroke="currentColor" strokeWidth="1.5" />
+                  <path d="M11 5C11 3.89543 11.8954 3 13 3H15C16.1046 3 17 3.89543 17 5V7C17 8.10457 16.1046 9 15 9H13C11.8954 9 11 8.10457 11 7V5Z" stroke="currentColor" strokeWidth="1.5" />
+                  <path d="M3 13C3 11.8954 3.89543 11 5 11H7C8.10457 11 9 11.8954 9 13V15C9 16.1046 8.10457 17 7 17H5C3.89543 17 3 16.1046 3 15V13Z" stroke="currentColor" strokeWidth="1.5" />
+                  <path d="M11 13C11 11.8954 11.8954 11 13 11H15C16.1046 11 17 11.8954 17 13V15C17 16.1046 16.1046 17 15 17H13C11.8954 17 11 16.1046 11 15V13Z" stroke="currentColor" strokeWidth="1.5" />
+                </svg>
+              </button>
+              <button 
+                className={viewType === 'list' ? 'p-1 rounded bg-dark-600 text-dark-100' : 'p-1 rounded text-dark-400'}
+                onClick={() => setViewType('list')}
+              >
+                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M5 5H15M5 10H15M5 15H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            </div>
 
-                    {/* Filters button */}
-                    <Button 
-                      variant="secondary" 
-                      size="sm"
-                      leftIcon={
-                        <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M5 10H15M3 5H17M7 15H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      }
-                      onClick={() => setShowFilters(!showFilters)}
-                    >
-                      <TranslatedText text="files.filters.title" />
-                    </Button>
-                  </div>
-                </div>
+            {/* Filters button */}
+            <Button 
+              variant="secondary" 
+              size="sm"
+              leftIcon={
+                <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M5 10H15M3 5H17M7 15H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              }
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <TranslatedText text="files.filters.title" />
+            </Button>
+          </div>
+        </div>
 
                 <div className="bg-dark-800 rounded-lg border border-dark-700 overflow-hidden">
                   <div className="overflow-x-auto">
@@ -767,8 +767,8 @@ export default function FilesPage() {
                       <thead className="bg-dark-700">
                         <tr>
                           <th className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
-                            <TranslatedText text="files.table.name" />
-                          </th>
+                    <TranslatedText text="files.table.name" />
+                  </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
                             <TranslatedText text="files.table.fiscalYear" />
                           </th>
@@ -777,15 +777,15 @@ export default function FilesPage() {
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
                             <TranslatedText text="files.table.grantType" />
-                          </th>
+                  </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
                             <TranslatedText text="files.table.created" />
-                          </th>
+                  </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
                             <TranslatedText text="files.table.actions" />
-                          </th>
-                        </tr>
-                      </thead>
+                  </th>
+                </tr>
+              </thead>
                       <tbody className="divide-y divide-dark-700">
                         {/* Show folders */}
                         {filteredFolders.map((folder) => (
@@ -875,9 +875,9 @@ export default function FilesPage() {
                               />
                             </td>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                ))}
+              </tbody>
+            </table>
                   </div>
                 </div>
               </>

@@ -312,10 +312,12 @@
     "selectGrantType": "अनुदान प्रकार चयन गर्नुहोस्",
     "sources": {
       "lollolol": "asdf",
-      "test0": "sadf"
+      "test0": "sadf",
+      "test": "test"
     },
     "grantTypes": {
-      "test1": "asdfsadf"
+      "test1": "asdfsadf",
+      "test": "test"
     },
     "types": {
       "missing_uploads": "अपलोडहरू हराइरहेका छन्",

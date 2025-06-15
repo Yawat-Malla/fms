@@ -474,10 +474,10 @@ const Dashboard = () => {
                     </td>
                   </tr>
                 ))
-              )}
+                )}
             </tbody>
           </table>
-        </div>
+              </div>
       </Card>
     </div>
   );

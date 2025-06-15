@@ -416,17 +416,17 @@ export default function UploadPage() {
                             <h3 className="text-lg font-semibold text-dark-200 mb-2">
                               {section.translations[language] || section.name}
                             </h3>
-                            <FileUploader
+                          <FileUploader
                               onFilesSelected={(files) => setSectionFiles(prev => ({
                                 ...prev,
                                 [section.key]: files
                               }))}
-                              maxFiles={20}
-                              maxSizeMB={10}
-                              acceptedFileTypes={['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'image/jpeg', 'image/png']}
-                              disabled={isSubmitting}
-                            />
-                          </div>
+                            maxFiles={20}
+                            maxSizeMB={10}
+                            acceptedFileTypes={['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'image/jpeg', 'image/png']}
+                            disabled={isSubmitting}
+                          />
+                        </div>
                         ))}
                       </div>
                     </div>

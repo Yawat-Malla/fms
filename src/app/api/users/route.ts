@@ -32,8 +32,8 @@ export async function GET(req: Request) {
       role: currentUser?.role
     });
 
-    if (!currentUser || currentUser.role !== 'admin') {
-      console.log('[Users API] User is not admin');
+    if (!currentUser || currentUser.role !== 'superadmin') {
+      console.log('[Users API] User is not superadmin');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -81,7 +81,7 @@ export async function POST(req: Request) {
       where: { email: session.user.email }
     });
 
-    if (!currentUser || currentUser.role !== 'admin') {
+    if (!currentUser || currentUser.role !== 'superadmin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

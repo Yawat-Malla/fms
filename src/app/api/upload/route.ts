@@ -17,8 +17,8 @@ function generateFileHash(fileName: string, size: number, timestamp: number): st
 
 export async function POST(request: Request) {
   console.log('Upload API - Starting request processing');
-  
-  const session = await getServerSession(authOptions);
+    
+    const session = await getServerSession(authOptions);
   console.log('Upload API - Session check:', { 
     isAuthenticated: !!session,
     userId: session?.user?.id 
@@ -26,8 +26,8 @@ export async function POST(request: Request) {
 
   if (!session) {
     console.log('Upload API - Unauthorized access attempt');
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
   try {
     console.log('Upload API - Parsing form data');
@@ -71,12 +71,12 @@ export async function POST(request: Request) {
     // Get the records by their keys instead of IDs
     const [fiscalYear, source, grantType] = await Promise.all([
       prisma.fiscalYear.findFirst({ 
-        where: { 
-          name: fiscalYearId
+      where: {
+          name: fiscalYearId.startsWith('FY ') ? fiscalYearId : `FY ${fiscalYearId}`
         } 
       }),
-      prisma.source.findFirst({ where: { key: sourceId } }),
-      prisma.grantType.findFirst({ where: { key: grantTypeId } })
+      prisma.source.findFirst({ where: { name: sourceId } }),
+      prisma.grantType.findFirst({ where: { name: grantTypeId } })
     ]);
 
     console.log('Upload API - Reference records found:', {
@@ -321,4 +321,4 @@ export async function POST(request: Request) {
       error: error instanceof Error ? error.message : 'Internal Server Error'
     }, { status: 500 });
   }
-}
+} 

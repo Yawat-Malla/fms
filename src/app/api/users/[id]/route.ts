@@ -73,8 +73,8 @@ export async function PATCH(
     if (notificationPreferences !== undefined) updateData.notificationPreferences = notificationPreferences;
     if (username !== undefined) updateData.username = username;
 
-    // Only admin can update role and active
-    if (currentUser.role === 'admin') {
+    // Only superadmin can update role and active
+    if (currentUser.role === 'superadmin') {
       if (role !== undefined) updateData.role = role;
       if (typeof active === 'boolean') updateData.active = active;
     }
@@ -129,7 +129,7 @@ export async function DELETE(
       where: { email: session.user.email }
     });
 
-    if (!currentUser || currentUser.role !== 'admin') {
+    if (!currentUser || currentUser.role !== 'superadmin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

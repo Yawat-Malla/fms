@@ -9,7 +9,8 @@
     "lint": "next lint",
     "create-admin": "tsx scripts/create-admin.ts",
     "db:seed": "prisma db seed",
-    "prisma:seed": "tsx prisma/seed.ts"
+    "prisma:seed": "tsx prisma/seed.ts",
+    "create-superadmin": "node scripts/create-superadmin-account.js"
   },
   "dependencies": {
     "@google-cloud/translate": "^9.1.0",

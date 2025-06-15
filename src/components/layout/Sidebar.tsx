@@ -391,7 +391,7 @@ export default function Sidebar() {
         </svg>
       ),
     }] : []),
-    ...(session?.user?.role === 'admin' ? [{
+    ...(session?.user?.role === 'superadmin' ? [{
       name: t('sidebar.users'),
       href: '/users',
       icon: (

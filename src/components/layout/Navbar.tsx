@@ -13,7 +13,6 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard' },
   { name: 'Files', href: '/files' },
   { name: 'Upload', href: '/upload' },
-  { name: 'Users', href: '/users' },
   { name: 'Sync', href: '/sync' },
   { name: 'Reports', href: '/reports' },
   { name: 'Settings', href: '/settings' },
@@ -27,6 +26,14 @@ const Navbar = () => {
   // Debug logging
   console.log('Navbar render - Session status:', status);
   console.log('Navbar render - Session data:', session);
+
+  // Filter navigation items based on user role
+  const filteredNavigation = navigation.filter(item => {
+    if (item.name === 'Users') {
+      return session?.user?.role === 'superadmin';
+    }
+    return true;
+  });
 
   return (
     <nav className="bg-white border-b border-dark-600/50">

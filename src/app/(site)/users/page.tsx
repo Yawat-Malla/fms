@@ -717,8 +717,8 @@ const UsersPage = () => {
     );
   }
 
-  // Add role check for admin access
-  if (session?.user?.role !== 'admin') {
+  // Add role check for superadmin access
+  if (session?.user?.role !== 'superadmin') {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="text-dark-300">You do not have permission to access this page</div>

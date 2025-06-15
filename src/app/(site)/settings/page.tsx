@@ -652,58 +652,63 @@ export default function SettingsPage() {
   };
   
   return (
-    <div className="max-w-6xl">
+    <div className="max-w-6xl mx-auto p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-dark-100">
           <TranslatedText text="settings.title" />
         </h1>
-        <p className="mt-1 text-sm text-dark-300">
-          <TranslatedText text="settings.subtitle" />
-        </p>
-      </div>
-
-      {/* Settings Navigation */}
-      <div className="mb-6">
-        <nav className="flex space-x-4 border-b border-dark-700">
-          {[
-            'profile',
-            'preferences',
-            ...(session?.user?.role === 'admin' ? ['admin'] : []),
-            'danger'
-          ].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={getTabButtonClasses(activeTab === tab)}
-            >
-              <TranslatedText text={`settings.${tab}.title`} />
-            </button>
-          ))}
-        </nav>
       </div>
       
-      {/* Main Content */}
-        <div className="space-y-6">
-        {/* Profile Settings */}
+      {/* Tabs */}
+      <div className="mb-6 border-b border-gray-200">
+        <nav className="flex space-x-8">
+          <button
+            onClick={() => setActiveTab('profile')}
+            className={`pb-4 px-1 ${
+              activeTab === 'profile'
+                ? 'border-b-2 border-primary-500 text-primary-600'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <TranslatedText text="settings.profile" />
+          </button>
+          <button
+            onClick={() => setActiveTab('notifications')}
+            className={`pb-4 px-1 ${
+              activeTab === 'notifications'
+                ? 'border-b-2 border-primary-500 text-primary-600'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <TranslatedText text="settings.notifications" />
+          </button>
+          {session?.user?.role === 'admin' && (
+            <button
+              onClick={() => setActiveTab('admin')}
+              className={`pb-4 px-1 ${
+                activeTab === 'admin'
+                  ? 'border-b-2 border-primary-500 text-primary-600'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <TranslatedText text="settings.admin" />
+            </button>
+          )}
+        </nav>
+      </div>
+
+      {/* Content */}
+      <div className="mt-6">
         {activeTab === 'profile' && (
           <Card>
-            <div className="space-y-4">
-              <h2 className="text-2xl font-semibold text-dark-100 mb-2">
-                <TranslatedText text="settings.profile.title" />
-              </h2>
-              <p className="text-dark-300 mb-4">
-                <TranslatedText text="settings.profile.pictureDescription" />
-              </p>
+            <div className="space-y-6">
               {/* Profile Picture */}
               <div className="flex items-center space-x-6">
-                <div className="relative h-24 w-24">
-                  <Avatar
-                    imageUrl={profileSettings.profilePicture}
-                    name={profileSettings.fullName}
-                    size="lg"
-                    className="w-24 h-24"
-                  />
-                </div>
+                <Avatar
+                  src={profileSettings.profilePicture}
+                  alt={profileSettings.fullName}
+                  size="lg"
+                />
                 <div>
                   <input
                     type="file"
@@ -714,609 +719,169 @@ export default function SettingsPage() {
                   />
                   <label
                     htmlFor="profile-picture"
-                    className="cursor-pointer inline-flex items-center px-4 py-2 border border-dark-600 rounded-md shadow-sm text-sm font-medium text-dark-100 hover:bg-dark-700"
+                    className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                   >
-                    <TranslatedText text="settings.profile.picture" />
+                    <TranslatedText text="settings.changePhoto" />
                   </label>
                 </div>
               </div>
-              {/* Full Name */}
+
+              {/* Profile Form */}
+              <div className="grid grid-cols-1 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    <TranslatedText text="settings.fullName" />
+                  </label>
+                  <input
+                    type="text"
+                    value={profileSettings.fullName}
+                    onChange={(e) =>
+                      setProfileSettings({ ...profileSettings, fullName: e.target.value })
+                    }
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    <TranslatedText text="settings.email" />
+                  </label>
+                  <input
+                    type="email"
+                    value={profileSettings.email}
+                    onChange={(e) =>
+                      setProfileSettings({ ...profileSettings, email: e.target.value })
+                    }
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  />
+                </div>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {activeTab === 'notifications' && (
+          <Card>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-medium">
+                    <TranslatedText text="settings.fileUpdates" />
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    <TranslatedText text="settings.fileUpdatesDesc" />
+                  </p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={notificationSettings.fileUpdates}
+                    onChange={(e) =>
+                      setNotificationSettings({
+                        ...notificationSettings,
+                        fileUpdates: e.target.checked,
+                      })
+                    }
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+                </label>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-medium">
+                    <TranslatedText text="settings.securityAlerts" />
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    <TranslatedText text="settings.securityAlertsDesc" />
+                  </p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={notificationSettings.securityAlerts}
+                    onChange={(e) =>
+                      setNotificationSettings({
+                        ...notificationSettings,
+                        securityAlerts: e.target.checked,
+                      })
+                    }
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+                </label>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {activeTab === 'admin' && session?.user?.role === 'admin' && (
+          <Card>
+            <div className="space-y-6">
               <div>
-                <label htmlFor="full-name" className="block text-sm font-medium text-dark-200">
-                  <TranslatedText text="settings.profile.fullName" />
+                <label className="block text-sm font-medium text-gray-700">
+                  <TranslatedText text="settings.siteName" />
                 </label>
                 <input
                   type="text"
-                  id="full-name"
-                  value={profileSettings.fullName}
-                  onChange={(e) => setProfileSettings(prev => ({ ...prev, fullName: e.target.value }))}
-                  className="mt-1 block w-full rounded-md border-dark-600 bg-dark-700 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                  value={adminSettings.siteName}
+                  onChange={(e) =>
+                    setAdminSettings({ ...adminSettings, siteName: e.target.value })
+                  }
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                 />
               </div>
-              {/* Username */}
-          <div>
-                <label htmlFor="username" className="block text-sm font-medium text-dark-200">
-                  <TranslatedText text="settings.profile.username" />
-            </label>
-              <input
-                type="text"
-                  id="username"
-                  value={profileSettings.username}
-                  onChange={(e) => setProfileSettings(prev => ({ ...prev, username: e.target.value }))}
-                  className="mt-1 block w-full rounded-md border-dark-600 bg-dark-700 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                />
-              </div>
-              {/* Email */}
+
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-dark-200">
-                  <TranslatedText text="settings.profile.email" />
+                <label className="block text-sm font-medium text-gray-700">
+                  <TranslatedText text="settings.enabledModules" />
                 </label>
-                <input
-                  type="email"
-                  id="email"
-                  value={profileSettings.email}
-                  onChange={(e) => setProfileSettings(prev => ({ ...prev, email: e.target.value }))}
-                  className="mt-1 block w-full rounded-md border-dark-600 bg-dark-700 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                />
-              </div>
-              {/* Save Button */}
-              <div className="mt-6 flex flex-col space-y-2">
-                <p className="text-sm text-dark-300 italic">
-                  <TranslatedText text="settings.profile.saveNote" />
-                </p>
-                <div className="flex justify-end">
-                  <Button
-                    variant="primary"
-                    onClick={handleSaveSettings}
-                    isLoading={isSaving}
-                  >
-                    <TranslatedText text="settings.buttons.save" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </Card>
-        )}
-
-        {/* Preferences & Notifications */}
-        {activeTab === 'preferences' && (
-          <Card>
-            <div className="space-y-6">
-              <h2 className="text-2xl font-semibold text-dark-100 mb-2">
-                <TranslatedText text="settings.preferences.title" />
-              </h2>
-              <p className="text-dark-300 mb-4">
-                <TranslatedText text="settings.preferences.description" />
-              </p>
-
-              {/* General Preferences */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium text-dark-100">
-                  <TranslatedText text="settings.preferences.general" />
-                </h3>
-                {/* Language Selection */}
-                <div>
-                  <label htmlFor="language" className="block text-sm font-medium text-dark-200">
-                    <TranslatedText text="settings.language.label" />
-                  </label>
-                  <select
-                    id="language"
-                    value={language}
-                    onChange={(e) => setLanguage(e.target.value as 'en' | 'ne')}
-                    className="mt-1 block w-full rounded-md border-dark-600 bg-dark-700 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                  >
-                    <option value="en">
-                      <TranslatedText text="settings.language.options.en" />
-                    </option>
-                    <option value="ne">
-                      <TranslatedText text="settings.language.options.ne" />
-                    </option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Notification Preferences */}
-              <div className="border-t border-dark-600 pt-6">
-                <h3 className="text-lg font-medium text-dark-100 mb-4">
-                  <TranslatedText text="settings.preferences.notifications" />
-                </h3>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <label className="text-dark-100">
-                        <TranslatedText text="settings.preferences.fileUpdates" />
-                      </label>
-                      <p className="text-sm text-dark-300">
-                        <TranslatedText text="settings.preferences.fileUpdatesDescription" />
-                      </p>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
+                <div className="mt-2 space-y-2">
+                  {adminModules.map((module) => (
+                    <label key={module.id} className="inline-flex items-center mr-4">
                       <input
                         type="checkbox"
-                        className="sr-only peer"
-                        checked={notificationSettings.fileUpdates}
-                        onChange={(e) => setNotificationSettings(prev => ({
-                          ...prev,
-                          fileUpdates: e.target.checked
-                        }))}
-                      />
-                      <div className="w-11 h-6 bg-dark-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-dark-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
-                    </label>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <label className="text-dark-100">
-                        <TranslatedText text="settings.preferences.securityAlerts" />
-                      </label>
-                      <p className="text-sm text-dark-300">
-                        <TranslatedText text="settings.preferences.securityAlertsDescription" />
-                      </p>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        className="sr-only peer"
-                        checked={notificationSettings.securityAlerts}
-                        onChange={(e) => setNotificationSettings(prev => ({
-                          ...prev,
-                          securityAlerts: e.target.checked
-                        }))}
-                      />
-                      <div className="w-11 h-6 bg-dark-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-dark-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
-                    </label>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <label className="text-dark-100">
-                        <TranslatedText text="settings.preferences.systemUpdates" />
-                      </label>
-                      <p className="text-sm text-dark-300">
-                        <TranslatedText text="settings.preferences.systemUpdatesDescription" />
-                      </p>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        className="sr-only peer"
-                        checked={notificationSettings.systemUpdates}
-                        onChange={(e) => setNotificationSettings(prev => ({
-                          ...prev,
-                          systemUpdates: e.target.checked
-                        }))}
-                      />
-                      <div className="w-11 h-6 bg-dark-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-dark-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Card>
-        )}
-
-        {/* Admin Settings */}
-        {activeTab === 'admin' && session?.user?.role === 'admin' ? (
-          <Card>
-            <div className="space-y-4">
-              <h2 className="text-2xl font-semibold text-dark-100 mb-2">
-                <TranslatedText text="settings.admin.title" />
-              </h2>
-              <p className="text-dark-300 mb-4">
-                <TranslatedText text="settings.admin.description" />
-              </p>
-              
-              {/* Site Configuration */}
-              <div>
-                <h3 className="text-sm font-medium text-dark-200 mb-4">
-                  <TranslatedText text="settings.admin.siteSettings" />
-                </h3>
-                <div className="space-y-4">
-                  <div>
-                    <label htmlFor="site-name" className="block text-sm font-medium text-dark-200">
-                      <TranslatedText text="settings.admin.siteName" />
-                    </label>
-                    <input
-                      type="text"
-                      id="site-name"
-                      value={adminSettings.siteName}
-                      onChange={(e) => setAdminSettings(prev => ({
-                        ...prev,
-                        siteName: e.target.value,
-                      }))}
-                      className="mt-1 block w-full rounded-md border-dark-600 bg-dark-700 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="site-logo" className="block text-sm font-medium text-dark-200">
-                      <TranslatedText text="settings.admin.siteLogo" />
-                    </label>
-                    <div className="mt-1 flex items-center space-x-4">
-                      <img
-                        src={adminSettings.siteLogo}
-                        alt="Site Logo"
-                        className="h-12 w-12 rounded-md object-contain bg-dark-800"
-                      />
-                      <input
-                        type="file"
-                        id="site-logo"
-                        accept="image/*"
+                        checked={adminSettings.enabledModules.includes(module.id)}
                         onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (event) => {
-                              setAdminSettings(prev => ({
-                                ...prev,
-                                siteLogo: event.target?.result as string,
-                              }));
-                            };
-                            reader.readAsDataURL(file);
-                          }
+                          const newModules = e.target.checked
+                            ? [...adminSettings.enabledModules, module.id]
+                            : adminSettings.enabledModules.filter((m) => m !== module.id);
+                          setAdminSettings({ ...adminSettings, enabledModules: newModules });
                         }}
-                        className="mt-1 block w-full text-sm text-dark-400
-                          file:mr-4 file:py-2 file:px-4
-                          file:rounded-md file:border-0
-                          file:text-sm file:font-medium
-                          file:bg-dark-700 file:text-dark-100
-                          hover:file:bg-dark-600"
+                        className="rounded border-gray-300 text-primary-600 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                       />
-                    </div>
-                  </div>
+                      <span className="ml-2">{module.label}</span>
+                    </label>
+                  ))}
                 </div>
-              </div>
-
-              {/* Maintenance Mode */}
-              <div className="flex items-center justify-between mt-6">
-                <div>
-                  <h3 className="text-sm font-medium text-dark-200">
-                    <TranslatedText text="settings.admin.maintenanceMode" />
-                  </h3>
-                  <p className="text-xs text-dark-400">
-                    <TranslatedText text="settings.admin.maintenanceModeDescription" />
-                  </p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={adminSettings.maintenanceMode}
-                  onChange={(e) => setAdminSettings(prev => ({
-                    ...prev,
-                    maintenanceMode: e.target.checked,
-                  }))}
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-dark-600 rounded"
-                />
-              </div>
-
-              {/* Source Types Management */}
-              <Card className="p-6 mt-8">
-                <h2 className="text-xl font-semibold mb-4">Source Types</h2>
-                <form onSubmit={handleSourceSave} className="space-y-2 mb-4">
-                  <div className="flex gap-2 flex-wrap">
-                    <input value={sourceForm.name} onChange={e => {
-                      const name = e.target.value;
-                      const key = name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-                      setSourceForm(f => ({ ...f, name, key }));
-                    }} placeholder="Admin Label" required className="input flex-1 min-w-[180px]" />
-                    <input value={sourceForm.key} disabled placeholder="Generated Key" className="input flex-1 min-w-[180px] bg-gray-100" />
-                    <input value={sourceForm.en} onChange={e => setSourceForm(f => ({ ...f, en: e.target.value }))} placeholder="English Translation" required className="input flex-1 min-w-[180px]" />
-                    <input value={sourceForm.ne} onChange={e => setSourceForm(f => ({ ...f, ne: e.target.value }))} placeholder="Nepali Translation" required className="input flex-1 min-w-[180px]" />
-                    <Button type="submit" className="h-10 px-6">{editingSourceId ? 'Update' : 'Add'}</Button>
-                    {editingSourceId && <Button type="button" onClick={() => { setSourceForm({ key: '', name: '', en: '', ne: '' }); setEditingSourceId(null); }} className="h-10 px-6">Cancel</Button>}
-                  </div>
-                </form>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm border-separate border-spacing-y-2">
-                    <thead>
-                      <tr className="text-left text-dark-400">
-                        <th className="px-2 py-1">Key</th>
-                        <th className="px-2 py-1">Label</th>
-                        <th className="px-2 py-1">EN</th>
-                        <th className="px-2 py-1">NE</th>
-                        <th className="px-2 py-1 text-center">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {sources.map((src: any) => (
-                        <tr key={src.id} className="bg-white rounded shadow-sm">
-                          <td className="px-2 py-1 font-mono text-xs text-dark-700">{src.key}</td>
-                          <td className="px-2 py-1">{src.name}</td>
-                          <td className="px-2 py-1">{src.translations?.en || src.en}</td>
-                          <td className="px-2 py-1">{src.translations?.ne || src.ne}</td>
-                          <td className="px-2 py-1 text-center">
-                            <div className="flex gap-2 justify-center">
-                              <button type="button" onClick={() => handleSourceEdit(src)} className="bg-white border border-blue-500 text-blue-600 px-3 py-1 rounded hover:bg-blue-50 transition">Edit</button>
-                              <button type="button" onClick={() => handleSourceDelete(src.id)} className="bg-white border border-red-500 text-red-600 px-3 py-1 rounded hover:bg-red-50 transition">Delete</button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </Card>
-
-              {/* Grant Types Management */}
-              <Card className="p-6 mt-8">
-                <h2 className="text-xl font-semibold mb-4">Grant Types</h2>
-                <form onSubmit={handleGrantTypeSave} className="space-y-2 mb-4">
-                  <div className="flex gap-2 flex-wrap">
-                    <input value={grantTypeForm.name} onChange={e => {
-                      const name = e.target.value;
-                      const key = name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-                      setGrantTypeForm(f => ({ ...f, name, key }));
-                    }} placeholder="Admin Label" required className="input flex-1 min-w-[180px]" />
-                    <input value={grantTypeForm.key} disabled placeholder="Generated Key" className="input flex-1 min-w-[180px] bg-gray-100" />
-                    <input value={grantTypeForm.en} onChange={e => setGrantTypeForm(f => ({ ...f, en: e.target.value }))} placeholder="English Translation" required className="input flex-1 min-w-[180px]" />
-                    <input value={grantTypeForm.ne} onChange={e => setGrantTypeForm(f => ({ ...f, ne: e.target.value }))} placeholder="Nepali Translation" required className="input flex-1 min-w-[180px]" />
-                    <Button type="submit" className="h-10 px-6">{editingGrantTypeId ? 'Update' : 'Add'}</Button>
-                    {editingGrantTypeId && <Button type="button" onClick={() => { setGrantTypeForm({ key: '', name: '', en: '', ne: '' }); setEditingGrantTypeId(null); }} className="h-10 px-6">Cancel</Button>}
-                  </div>
-                </form>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm border-separate border-spacing-y-2">
-                    <thead>
-                      <tr className="text-left text-dark-400">
-                        <th className="px-2 py-1">Key</th>
-                        <th className="px-2 py-1">Label</th>
-                        <th className="px-2 py-1">EN</th>
-                        <th className="px-2 py-1">NE</th>
-                        <th className="px-2 py-1 text-center">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {grantTypes.map((gt: any) => (
-                        <tr key={gt.id} className="bg-white rounded shadow-sm">
-                          <td className="px-2 py-1 font-mono text-xs text-dark-700">{gt.key}</td>
-                          <td className="px-2 py-1">{gt.name}</td>
-                          <td className="px-2 py-1">{gt.translations?.en || gt.en}</td>
-                          <td className="px-2 py-1">{gt.translations?.ne || gt.ne}</td>
-                          <td className="px-2 py-1 text-center">
-                            <div className="flex gap-2 justify-center">
-                              <button type="button" onClick={() => handleGrantTypeEdit(gt)} className="bg-white border border-blue-500 text-blue-600 px-3 py-1 rounded hover:bg-blue-50 transition">Edit</button>
-                              <button type="button" onClick={() => handleGrantTypeDelete(gt.id)} className="bg-white border border-red-500 text-red-600 px-3 py-1 rounded hover:bg-red-50 transition">Delete</button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </Card>
-
-              {/* Upload Sections Management */}
-              <Card className="p-6 mt-8">
-                <h2 className="text-xl font-semibold mb-4">Upload Sections</h2>
-                <form onSubmit={handleUploadSectionSave} className="space-y-2 mb-4">
-                  <div className="flex gap-2 flex-wrap">
-                    <input
-                      value={uploadSectionForm.name}
-                      onChange={e => {
-                        const name = e.target.value;
-                        const key = name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-                        setUploadSectionForm(f => ({ ...f, name, key }));
-                      }}
-                      placeholder="Admin Label"
-                      required
-                      className="input flex-1 min-w-[180px]"
-                    />
-                    <input
-                      value={uploadSectionForm.key}
-                      disabled
-                      placeholder="Generated Key"
-                      className="input flex-1 min-w-[180px] bg-gray-100"
-                    />
-                    <input
-                      value={uploadSectionForm.en}
-                      onChange={e => setUploadSectionForm(f => ({ ...f, en: e.target.value }))}
-                      placeholder="English Translation"
-                      required
-                      className="input flex-1 min-w-[180px]"
-                    />
-                    <input
-                      value={uploadSectionForm.ne}
-                      onChange={e => setUploadSectionForm(f => ({ ...f, ne: e.target.value }))}
-                      placeholder="Nepali Translation"
-                      required
-                      className="input flex-1 min-w-[180px]"
-                    />
-                    <Button type="submit" className="h-10 px-6">
-                      {editingUploadSectionId ? 'Update' : 'Add'}
-                    </Button>
-                    {editingUploadSectionId && (
-                      <Button
-                        type="button"
-                        onClick={() => {
-                          setUploadSectionForm({ name: '', key: '', en: '', ne: '' });
-                          setEditingUploadSectionId(null);
-                        }}
-                        className="h-10 px-6"
-                      >
-                        Cancel
-                      </Button>
-                    )}
-                  </div>
-                </form>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm border-separate border-spacing-y-2">
-                    <thead>
-                      <tr className="text-left text-dark-400">
-                        <th className="px-2 py-1">Key</th>
-                        <th className="px-2 py-1">Label</th>
-                        <th className="px-2 py-1">EN</th>
-                        <th className="px-2 py-1">NE</th>
-                        <th className="px-2 py-1 text-center">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {uploadSections.map((section: any) => (
-                        <tr key={section.id} className="bg-white rounded shadow-sm">
-                          <td className="px-2 py-1 font-mono text-xs text-dark-700">{section.key}</td>
-                          <td className="px-2 py-1">{section.name}</td>
-                          <td className="px-2 py-1">{section.translations?.en}</td>
-                          <td className="px-2 py-1">{section.translations?.ne}</td>
-                          <td className="px-2 py-1 text-center">
-                            <div className="flex gap-2 justify-center">
-                              <button
-                                type="button"
-                                onClick={() => handleUploadSectionEdit(section)}
-                                className="bg-white border border-blue-500 text-blue-600 px-3 py-1 rounded hover:bg-blue-50 transition"
-                              >
-                                Edit
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleUploadSectionDelete(section.id)}
-                                className="bg-white border border-red-500 text-red-600 px-3 py-1 rounded hover:bg-red-50 transition"
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </Card>
-
-              {/* Save Button */}
-              <div className="mt-6 flex justify-end">
-                <Button
-                  variant="primary"
-                  onClick={handleAdminSettingsSave}
-                  isLoading={isLoadingAdminSettings}
-                >
-                  <TranslatedText text="settings.buttons.save" />
-                </Button>
               </div>
             </div>
           </Card>
-        ) : activeTab === 'admin' ? (
-          <Card>
-            <div className="p-6 text-center">
-              <h2 className="text-xl font-semibold text-red-500 mb-2">
-                <TranslatedText text="settings.admin.accessDenied" />
-              </h2>
-              <p className="text-dark-300">
-                <TranslatedText text="settings.admin.accessDeniedDescription" />
-              </p>
-            </div>
-          </Card>
-        ) : null}
-
-        {/* Danger Zone */}
-        {activeTab === 'danger' && (
-          <Card className="border border-red-500">
-            <div className="space-y-4">
-              <h2 className="text-2xl font-semibold text-red-500 mb-2">
-                <TranslatedText text="settings.danger.title" />
-              </h2>
-              <p className="text-dark-300 mb-4">
-                <TranslatedText text="settings.danger.description" />
-              </p>
-              
-              {/* Delete Account */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-medium text-red-500">
-                    <TranslatedText text="settings.danger.deleteAccount" />
-                  </h3>
-                  <p className="text-xs text-dark-400">
-                    <TranslatedText text="settings.danger.deleteAccountDescription" />
-                  </p>
-                </div>
-                <Button
-                  variant="danger"
-                  onClick={() => setConfirmDialog({
-                    isOpen: true,
-                    title: translations[language].settings.danger.deleteAccount,
-                    message: translations[language].settings.danger.deleteAccountConfirm,
-                    onConfirm: handleDeleteAccount,
-                    variant: 'danger'
-                  })}
-                >
-                  <TranslatedText text="settings.danger.deleteAccount" />
-                </Button>
-          </div>
-
-              {/* Reset Settings */}
-              <div className="flex items-center justify-between">
-          <div>
-                  <h3 className="text-sm font-medium text-red-500">
-                    <TranslatedText text="settings.danger.resetSettings" />
-                  </h3>
-                  <p className="text-xs text-dark-400">
-                    <TranslatedText text="settings.danger.resetSettingsDescription" />
-                  </p>
-                </div>
-                <Button
-                  variant="danger"
-                  onClick={() => setConfirmDialog({
-                    isOpen: true,
-                    title: translations[language].settings.danger.resetSettings,
-                    message: translations[language].settings.danger.resetSettingsConfirm,
-                    onConfirm: handleResetSettings,
-                    variant: 'warning'
-                  })}
-                >
-                  <TranslatedText text="settings.danger.resetSettings" />
-                </Button>
-          </div>
-
-              {/* Wipe Data */}
-              {session?.user?.role === 'admin' && (
-              <div className="flex items-center justify-between">
-          <div>
-                    <h3 className="text-sm font-medium text-red-500">
-                      <TranslatedText text="settings.danger.wipeData" />
-                    </h3>
-                    <p className="text-xs text-dark-400">
-                      <TranslatedText text="settings.danger.wipeDataDescription" />
-                    </p>
-                </div>
-                <Button
-                  variant="danger"
-                    onClick={() => setConfirmDialog({
-                      isOpen: true,
-                      title: translations[language].settings.danger.wipeData,
-                      message: translations[language].settings.danger.wipeDataConfirm,
-                      onConfirm: handleWipeData,
-                      variant: 'danger'
-                    })}
-                >
-                    <TranslatedText text="settings.danger.wipeData" />
-                </Button>
-          </div>
-              )}
-        </div>
-      </Card>
         )}
-      </div>
 
-      {/* Save Button */}
-      <div className="mt-6 flex justify-end space-x-4">
-        <Button
-          variant="outline"
-          onClick={() => router.back()}
-        >
-          <TranslatedText text="settings.buttons.cancel" />
-        </Button>
-        <Button 
-          variant="primary"
-          onClick={handleSaveSettings}
-          isLoading={isSaving}
-        >
-          <TranslatedText text="settings.buttons.save" />
-        </Button>
+        {/* Save Button */}
+        <div className="mt-6 flex justify-end">
+          <Button
+            onClick={handleSaveSettings}
+            disabled={isSaving}
+            className="ml-3"
+          >
+            {isSaving ? (
+              <TranslatedText text="common.saving" />
+            ) : (
+              <TranslatedText text="common.save" />
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* Confirmation Dialog */}
       <ConfirmationDialog
         isOpen={confirmDialog.isOpen}
-        onClose={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
-        onConfirm={confirmDialog.onConfirm}
         title={confirmDialog.title}
         message={confirmDialog.message}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
         variant={confirmDialog.variant}
       />
     </div>
