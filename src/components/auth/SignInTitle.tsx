@@ -2,7 +2,7 @@
 
 import { useSettings } from '@/contexts/SettingsContext';
 
-export default function SignInTitle() {
+export default function SignInTitle({ siteName }: { siteName: string }) {
   const { settings, isLoading } = useSettings();
 
   console.log('[SignInTitle] Current state:', {
@@ -24,8 +24,13 @@ export default function SignInTitle() {
   console.log('[SignInTitle] Rendering with title:', title);
 
   return (
-    <h2 className="text-center text-3xl font-extrabold text-white">
-      {title}
-    </h2>
+    <div className="text-center">
+      <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+        {title}
+      </h2>
+      <p className="mt-2 text-sm text-gray-600">
+        Sign in to your account
+      </p>
+    </div>
   );
 } 

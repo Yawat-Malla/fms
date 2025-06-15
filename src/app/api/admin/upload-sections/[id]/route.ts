@@ -5,6 +5,11 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+// Helper function to check if user has admin privileges
+const hasAdminPrivileges = (role?: string) => {
+  return role === 'admin' || role === 'superadmin' || role === 'editor';
+};
+
 // PUT /api/admin/upload-sections/[id]
 export async function PUT(
   request: Request,
@@ -12,7 +17,7 @@ export async function PUT(
 ) {
   const session = await getServerSession(authOptions);
 
-  if (!session || session.user.role !== 'admin') {
+  if (!session?.user?.role || !hasAdminPrivileges(session.user.role)) {
     return new NextResponse('Unauthorized', { status: 401 });
   }
 
@@ -43,7 +48,7 @@ export async function DELETE(
 ) {
   const session = await getServerSession(authOptions);
 
-  if (!session || session.user.role !== 'admin') {
+  if (!session?.user?.role || !hasAdminPrivileges(session.user.role)) {
     return new NextResponse('Unauthorized', { status: 401 });
   }
 

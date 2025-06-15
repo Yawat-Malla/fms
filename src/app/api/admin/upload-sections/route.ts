@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 
 // Helper function to check if user has admin privileges
 const hasAdminPrivileges = (role?: string) => {
-  return role === 'admin' || role === 'superadmin';
+  return role === 'admin' || role === 'superadmin' || role === 'editor';
 };
 
 // GET /api/admin/upload-sections

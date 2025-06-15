@@ -10,13 +10,11 @@ export default async function SignInPage() {
   const siteName = settings?.siteName || 'File Management System';
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-primary-50">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-xl border border-primary-100">
-        <div className="flex flex-col items-center justify-center">
-          <Logo width={120} height={120} className="mb-4" initialLogoPath={logoPath} />
-          <h2 className="text-center text-3xl font-extrabold text-primary-500">
-            {siteName}
-          </h2>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-lg">
+        <div className="flex flex-col items-center">
+          <Logo src={logoPath} alt={siteName} className="h-16 w-auto" />
+          <SignInTitle siteName={siteName} />
         </div>
         <SignInForm />
       </div>
