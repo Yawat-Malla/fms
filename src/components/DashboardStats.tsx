@@ -5,6 +5,7 @@ import Card from '@/components/ui/Card';
 import { TranslatedText } from '@/components/TranslatedText';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { useApp } from '@/contexts/AppContext';
+import { useTranslation } from 'react-i18next';
 
 interface FiscalYearStats {
   fiscalYear: string;
@@ -14,6 +15,7 @@ interface FiscalYearStats {
 
 interface GrantTypeStats {
   name: string;
+  key: string;
   value: number;
 }
 
@@ -48,8 +50,16 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, per
   );
 };
 
+// Utility to convert English numbers to Nepali
+const toNepaliNumber = (input: string | number) => {
+  if (typeof input !== 'string') input = String(input);
+  const nepaliDigits = ['०','१','२','३','४','५','६','७','८','९'];
+  return input.replace(/[0-9]/g, d => nepaliDigits[d as any]);
+};
+
 export default function DashboardStats() {
   const { language } = useApp();
+  const { t } = useTranslation();
   const [fiscalYearStats, setFiscalYearStats] = useState<FiscalYearStats[]>([]);
   const [grantTypeStats, setGrantTypeStats] = useState<GrantTypeStats[]>([]);
   const [loading, setLoading] = useState(true);
@@ -97,6 +107,36 @@ export default function DashboardStats() {
     );
   }
 
+  // Format numbers based on language
+  const formatNumber = (value: number) => {
+    return language === 'ne' ? toNepaliNumber(value) : value;
+  };
+
+  // Format percentage based on language
+  const formatPercentage = (value: number) => {
+    const percentage = (value * 100).toFixed(0);
+    return language === 'ne' ? toNepaliNumber(percentage) + '%' : percentage + '%';
+  };
+
+  // Get translated grant type name
+  const getTranslatedGrantType = (key: string) => {
+    // Map the database keys to translation keys
+    const translationMap: { [key: string]: string } = {
+      'current_expenditure': 'currentExpenditure',
+      'capital_expenditure': 'capitalExpenditure',
+      'supplementary_grant': 'supplementaryGrant',
+      'special_grant': 'specialGrant',
+      'other': 'otherGrants'
+    };
+
+    // If we have a mapping, use it, otherwise use the key directly
+    const translationKey = translationMap[key] || key;
+    const translation = t(`files.filters.byGrantType.${translationKey}`);
+    
+    // If we get the key back (translation not found), use the original key
+    return translation === `files.filters.byGrantType.${translationKey}` ? key : translation;
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Fiscal Year Summary */}
@@ -120,10 +160,12 @@ export default function DashboardStats() {
                 dataKey="fiscalYear" 
                 stroke="#9CA3AF"
                 tick={{ fill: '#9CA3AF' }}
+                tickFormatter={(value) => language === 'ne' ? toNepaliNumber(value) : value}
               />
               <YAxis 
                 stroke="#9CA3AF"
                 tick={{ fill: '#9CA3AF' }}
+                tickFormatter={(value: number) => String(formatNumber(value))}
               />
               <Tooltip 
                 contentStyle={{ 
@@ -132,10 +174,11 @@ export default function DashboardStats() {
                   borderRadius: '0.375rem',
                   color: '#F3F4F6'
                 }}
+                formatter={(value: number) => formatNumber(value)}
               />
               <Legend />
-              <Bar dataKey="fileCount" name="Files" fill="#3B82F6" />
-              <Bar dataKey="folderCount" name="Folders" fill="#10B981" />
+              <Bar dataKey="fileCount" name={t('files.files')} fill="#3B82F6" />
+              <Bar dataKey="folderCount" name={t('files.folders')} fill="#10B981" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -154,7 +197,24 @@ export default function DashboardStats() {
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={renderCustomizedLabel}
+                label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name }) => {
+                  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+                  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+                  return (
+                    <text
+                      x={x}
+                      y={y}
+                      fill="white"
+                      textAnchor={x > cx ? 'start' : 'end'}
+                      dominantBaseline="central"
+                      className="text-sm font-medium"
+                    >
+                      {formatPercentage(percent)}
+                    </text>
+                  );
+                }}
                 outerRadius={150}
                 fill="#8884d8"
                 dataKey="value"
@@ -177,9 +237,9 @@ export default function DashboardStats() {
                   borderRadius: '0.375rem',
                   color: '#F3F4F6'
                 }}
-                formatter={(value: number, name: string) => [
-                  `${value} files`,
-                  name
+                formatter={(value: number, name: string, props: any) => [
+                  `${formatNumber(value)} ${t('files.files')}`,
+                  getTranslatedGrantType(props.payload.key)
                 ]}
               />
               <Legend 
@@ -189,6 +249,7 @@ export default function DashboardStats() {
                 wrapperStyle={{
                   paddingLeft: '20px'
                 }}
+                formatter={(value: string, entry: any) => getTranslatedGrantType(entry.payload.key)}
               />
             </PieChart>
           </ResponsiveContainer>

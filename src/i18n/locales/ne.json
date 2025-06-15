@@ -328,7 +328,8 @@
     "grantTypes": {
       "test1": "asdfsadf",
       "test": "teest",
-      "asdfsdf": "asdf"
+      "asdfsdf": "asdf",
+      "asdfsdfasdfsdf": "asdfasdf"
     },
     "types": {
       "folder_count": "फोल्डर गणना",

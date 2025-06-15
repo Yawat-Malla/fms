@@ -319,11 +319,20 @@ const Dashboard = () => {
   };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return language === 'ne' ? '० Bytes' : '0 Bytes';
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    const size = parseFloat((bytes / Math.pow(k, i)).toFixed(2));
+    return language === 'ne' 
+      ? `${toNepaliNumber(size)} ${sizes[i]}`
+      : `${size} ${sizes[i]}`;
+  };
+
+  const formatDate = (date: string) => {
+    const d = new Date(date);
+    const formatted = d.toLocaleDateString();
+    return language === 'ne' ? toNepaliNumber(formatted) : formatted;
   };
 
   if (error) {
@@ -355,7 +364,7 @@ const Dashboard = () => {
                 <TranslatedText text="dashboard.stats.totalFiles" />
               </p>
               <h3 className="text-2xl font-bold text-dark-100 mt-1">
-                {loading ? '...' : stats.totalFiles}
+                {loading ? '...' : language === 'ne' ? toNepaliNumber(stats.totalFiles) : stats.totalFiles}
               </h3>
             </div>
             <div className="p-3 bg-blue-500/10 rounded-lg">
@@ -373,7 +382,7 @@ const Dashboard = () => {
                 <TranslatedText text="dashboard.stats.totalFolders" />
               </p>
               <h3 className="text-2xl font-bold text-dark-100 mt-1">
-                {loading ? '...' : stats.totalFolders}
+                {loading ? '...' : language === 'ne' ? toNepaliNumber(stats.totalFolders) : stats.totalFolders}
               </h3>
             </div>
             <div className="p-3 bg-green-500/10 rounded-lg">
@@ -409,7 +418,7 @@ const Dashboard = () => {
                 <TranslatedText text="dashboard.stats.recentUploads" />
               </p>
               <h3 className="text-2xl font-bold text-dark-100 mt-1">
-                {loading ? '...' : stats.recentFiles.length}
+                {loading ? '...' : language === 'ne' ? toNepaliNumber(stats.recentFiles.length) : stats.recentFiles.length}
               </h3>
             </div>
             <div className="p-3 bg-yellow-500/10 rounded-lg">
@@ -470,14 +479,14 @@ const Dashboard = () => {
                       {formatFileSize(file.size)}
                     </td>
                     <td className="py-3 text-dark-400">
-                      {new Date(file.updatedAt).toLocaleDateString()}
+                      {formatDate(file.updatedAt)}
                     </td>
                   </tr>
                 ))
-                )}
+              )}
             </tbody>
           </table>
-              </div>
+        </div>
       </Card>
     </div>
   );

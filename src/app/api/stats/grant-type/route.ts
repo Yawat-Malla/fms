@@ -4,7 +4,9 @@ import { prisma } from '@/lib/prisma';
 export async function GET() {
   try {
     const grantTypes = await prisma.grantType.findMany({
-      include: {
+      select: {
+        name: true,
+        key: true,
         _count: {
           select: {
             files: true
@@ -15,6 +17,7 @@ export async function GET() {
 
     const stats = grantTypes.map(gt => ({
       name: gt.name,
+      key: gt.key,
       value: gt._count.files
     }));
 
