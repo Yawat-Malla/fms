@@ -26,6 +26,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Add debug logging
+    console.log('Session user:', session.user);
+
     const body = await req.json();
     const { name, type, parameters, fileFormat } = body;
 
@@ -38,11 +41,23 @@ export async function POST(req: Request) {
     }
 
     // Validate report type
-    const validReportTypes = ['file_count', 'missing_uploads', 'custom'] as const;
+    const validReportTypes = ['folder_count', 'empty_folders', 'folder_metadata', 'custom'] as const;
     if (!validReportTypes.includes(type)) {
       return NextResponse.json(
         { error: 'Invalid report type' },
         { status: 400 }
+      );
+    }
+
+    // Verify user exists in database
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'User not found in database' },
+        { status: 404 }
       );
     }
 
@@ -54,7 +69,7 @@ export async function POST(req: Request) {
         type: type as ReportType,
         parameters,
         fileFormat: fileFormat.toLowerCase() as FileFormat,
-        createdBy: session.user.id,
+        createdBy: Number(session.user.id),
         createdAt,
       },
       include: {
@@ -65,11 +80,14 @@ export async function POST(req: Request) {
     // Generate report based on type
     let reportData;
     switch (type) {
-      case 'file_count':
+      case 'folder_count':
         reportData = await generateFileCountReport(parameters);
         break;
-      case 'missing_uploads':
+      case 'empty_folders':
         reportData = await generateMissingUploadsReport(parameters);
+        break;
+      case 'folder_metadata':
+        reportData = await generateCustomReport(parameters);
         break;
       case 'custom':
         reportData = await generateCustomReport(parameters);
@@ -145,9 +163,9 @@ export async function GET(request: Request) {
 async function generateFileCountReport(parameters: any) {
   const { startDate, endDate, fiscalYear, source, grantType } = parameters;
 
-  const files = await prisma.file.findMany({
+  const folders = await prisma.folder.findMany({
     where: {
-      uploadedAt: {
+      createdAt: {
         gte: startDate ? new Date(startDate) : undefined,
         lte: endDate ? new Date(endDate) : undefined,
       },
@@ -160,19 +178,50 @@ async function generateFileCountReport(parameters: any) {
       fiscalYear: true,
       source: true,
       grantType: true,
+      files: {
+        where: {
+          isDeleted: false,
+        },
+      },
+      subfolders: {
+        where: {
+          isDeleted: false,
+        },
+        include: {
+          files: {
+            where: {
+              isDeleted: false,
+            },
+          },
+        },
+      },
     },
   });
 
   return {
-    title: 'File Count Report',
+    title: 'Folder Count Report',
     parameters,
     summary: {
-      totalFiles: files.length,
-      byFiscalYear: groupBy(files, 'fiscalYear.name'),
-      bySource: groupBy(files, 'source.name'),
-      byGrantType: groupBy(files, 'grantType.name'),
+      totalFolders: folders.length,
+      totalFiles: folders.reduce((sum, folder) => {
+        const directFiles = folder.files.length;
+        const subfolderFiles = folder.subfolders.reduce((subSum, subfolder) => subSum + subfolder.files.length, 0);
+        return sum + directFiles + subfolderFiles;
+      }, 0),
+      byFiscalYear: groupBy(folders, 'fiscalYear.name'),
+      bySource: groupBy(folders, 'source.name'),
+      byGrantType: groupBy(folders, 'grantType.name'),
     },
-    details: files,
+    details: folders.map(folder => ({
+      name: folder.name,
+      path: folder.path,
+      fiscalYear: folder.fiscalYear?.name || 'N/A',
+      source: folder.source?.name || 'N/A',
+      grantType: folder.grantType?.name || 'N/A',
+      createdAt: format(new Date(folder.createdAt), 'yyyy-MM-dd'),
+      totalFiles: folder.files.length + folder.subfolders.reduce((sum, subfolder) => sum + subfolder.files.length, 0),
+      subfolders: folder.subfolders.length,
+    })),
   };
 }
 
@@ -236,6 +285,7 @@ async function generateMissingUploadsReport(parameters: any) {
   // Format the details with all metadata fields
   const formattedDetails = foldersWithNoFiles.map(folder => ({
     name: folder.name,
+    path: folder.path,
     fiscalYear: folder.fiscalYear?.name || 'N/A',
     source: folder.source?.name || 'N/A',
     grantType: folder.grantType?.name || 'N/A',
@@ -261,10 +311,10 @@ async function generateMissingUploadsReport(parameters: any) {
 async function generateCustomReport(parameters: any) {
   const { startDate, endDate, fiscalYear, source, grantType } = parameters;
 
-  // Get all files matching the criteria
-  const files = await prisma.file.findMany({
+  // Get all folders matching the criteria
+  const folders = await prisma.folder.findMany({
     where: {
-      uploadedAt: {
+      createdAt: {
         gte: startDate ? new Date(startDate) : undefined,
         lte: endDate ? new Date(endDate) : undefined,
       },
@@ -274,46 +324,61 @@ async function generateCustomReport(parameters: any) {
       isDeleted: false,
     },
     include: {
-      fiscalYear: true,
-      source: true,
-      grantType: true,
-      folder: {
+      files: {
+        where: {
+          isDeleted: false,
+        },
+      },
+      subfolders: {
+        where: {
+          isDeleted: false,
+        },
         include: {
-          user: {
-            select: {
-              name: true,
-              email: true,
-            },
-          },
-          subfolders: {
+          files: {
             where: {
               isDeleted: false,
             },
           },
         },
       },
+      fiscalYear: true,
+      source: true,
+      grantType: true,
+      user: {
+        select: {
+          name: true,
+          email: true,
+        },
+      },
     },
   });
 
   // Format the details with all metadata fields
-  const formattedDetails = files.map(file => ({
-    name: file.name || 'N/A',
-    fiscalYear: file.fiscalYear?.name || 'N/A',
-    source: file.source?.name || 'N/A',
-    grantType: file.grantType?.name || 'N/A',
-    createdAt: format(new Date(file.uploadedAt), 'yyyy-MM-dd'),
-    createdBy: file.folder?.user?.name || 'N/A',
-    subfolders: file.folder?.subfolders?.length || 0,
+  const formattedDetails = folders.map(folder => ({
+    name: folder.name,
+    path: folder.path,
+    fiscalYear: folder.fiscalYear?.name || 'N/A',
+    source: folder.source?.name || 'N/A',
+    grantType: folder.grantType?.name || 'N/A',
+    createdAt: format(new Date(folder.createdAt), 'yyyy-MM-dd'),
+    createdBy: folder.user?.name || 'N/A',
+    totalFiles: folder.files.length + folder.subfolders.reduce((sum, subfolder) => sum + subfolder.files.length, 0),
+    subfolders: folder.subfolders.length,
   }));
 
   return {
-    title: 'Custom Report',
+    title: 'Custom Folder Report',
     parameters,
     summary: {
-      totalFiles: files.length,
-      byFiscalYear: groupBy(files, 'fiscalYear.name'),
-      bySource: groupBy(files, 'source.name'),
-      byGrantType: groupBy(files, 'grantType.name'),
+      totalFolders: folders.length,
+      totalFiles: folders.reduce((sum, folder) => {
+        const directFiles = folder.files.length;
+        const subfolderFiles = folder.subfolders.reduce((subSum, subfolder) => subSum + subfolder.files.length, 0);
+        return sum + directFiles + subfolderFiles;
+      }, 0),
+      byFiscalYear: groupBy(folders, 'fiscalYear.name'),
+      bySource: groupBy(folders, 'source.name'),
+      byGrantType: groupBy(folders, 'grantType.name'),
     },
     details: formattedDetails,
   };

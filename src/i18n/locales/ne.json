@@ -317,12 +317,12 @@
     },
     "grantTypes": {
       "test1": "asdfsadf",
-      "test": "test"
+      "test": "teest"
     },
     "types": {
-      "missing_uploads": "अपलोडहरू हराइरहेका छन्",
-      "fileCount": "फाइल गणना",
-      "missingUploads": "अपलोडहरू हराइरहेका छन्",
+      "folder_count": "फोल्डर गणना",
+      "empty_folders": "खाली फोल्डरहरू",
+      "folder_metadata": "फोल्डर मेटाडाटा",
       "custom": "अनुकूल रिपोर्ट"
     },
     "generateReport": "रिपोर्ट सिर्जना गर्नुहोस्",

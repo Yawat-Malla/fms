@@ -44,8 +44,9 @@ export default function ReportsPage() {
   const [grantTypeOptions, setGrantTypeOptions] = useState<{ id: string; translationKey: string; translations: any; }[]>([]);
 
   const reportTypes = [
-    { id: 'file_count', name: 'reports.types.fileCount' },
-    { id: 'missing_uploads', name: 'reports.types.missingUploads' },
+    { id: 'folder_count', name: 'reports.types.folder_count' },
+    { id: 'empty_folders', name: 'reports.types.empty_folders' },
+    { id: 'folder_metadata', name: 'reports.types.folder_metadata' },
     { id: 'custom', name: 'reports.types.custom' },
   ] as const;
 
@@ -70,7 +71,7 @@ export default function ReportsPage() {
         const grantTypesData = await grantTypesRes.json();
         setGrantTypeOptions(grantTypesData.map((grant: any) => ({
           id: grant.key,
-          translationKey: `reports.grantTypes.${grant.key}`,
+          translationKey: `reports.grant_types.${grant.key}`,
           translations: grant.translations
         })));
       } catch (error) {
@@ -383,7 +384,7 @@ export default function ReportsPage() {
               </label>
               <SearchableSelect
                 options={grantTypeOptions}
-                value={selectedGrantType ? { id: selectedGrantType, translationKey: `reports.grantTypes.${selectedGrantType}` } : null}
+                value={selectedGrantType ? { id: selectedGrantType, translationKey: `reports.grant_types.${selectedGrantType}` } : null}
                 onChange={(option) => setSelectedGrantType(option?.id || '')}
                 placeholderTranslationKey="reports.selectGrantType"
                 disabled={selectedReportType !== 'custom'}

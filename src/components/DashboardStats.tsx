@@ -166,8 +166,7 @@ export default function DashboardStats() {
                   <Cell 
                     key={`cell-${index}`} 
                     fill={COLORS[index % COLORS.length]}
-                    stroke="#1F2937"
-                    strokeWidth={2}
+                    stroke="none"
                   />
                 ))}
               </Pie>

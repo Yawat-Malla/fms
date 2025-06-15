@@ -36,6 +36,34 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { name, key, translations } = body;
 
+    // Validate required fields
+    if (!name || !key) {
+      return new NextResponse(
+        JSON.stringify({ message: 'Name and key are required' }),
+        { status: 400 }
+      );
+    }
+
+    // Validate translations
+    if (!translations || typeof translations !== 'object') {
+      return new NextResponse(
+        JSON.stringify({ message: 'Translations must be an object' }),
+        { status: 400 }
+      );
+    }
+
+    // Check if key already exists
+    const existingSection = await prisma.uploadSection.findUnique({
+      where: { key }
+    });
+
+    if (existingSection) {
+      return new NextResponse(
+        JSON.stringify({ message: 'An upload section with this key already exists' }),
+        { status: 400 }
+      );
+    }
+
     // Get the highest order value
     const lastSection = await prisma.uploadSection.findFirst({
       orderBy: { order: 'desc' }
@@ -54,6 +82,12 @@ export async function POST(request: Request) {
     return NextResponse.json(section);
   } catch (error) {
     console.error('Error creating upload section:', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    return new NextResponse(
+      JSON.stringify({ 
+        message: 'Failed to create upload section',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }),
+      { status: 500 }
+    );
   }
 } 

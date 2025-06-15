@@ -287,25 +287,35 @@ export default function SettingsPage() {
     e.preventDefault();
     const method = editingUploadSectionId ? 'PUT' : 'POST';
     const url = editingUploadSectionId ? `/api/admin/upload-sections/${editingUploadSectionId}` : '/api/admin/upload-sections';
-    const res = await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: uploadSectionForm.name,
-        key: uploadSectionForm.key,
-        translations: {
-          en: uploadSectionForm.en,
-          ne: uploadSectionForm.ne
-        }
-      }),
-    });
-    if (res.ok) {
+    
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: uploadSectionForm.name,
+          key: uploadSectionForm.key,
+          translations: {
+            en: uploadSectionForm.en,
+            ne: uploadSectionForm.ne
+          }
+        }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        console.error('Failed to save upload section:', errorData);
+        throw new Error(errorData?.message || 'Failed to save upload section');
+      }
+
+      const savedSection = await res.json();
       setUploadSectionForm({ name: '', key: '', en: '', ne: '' });
       setEditingUploadSectionId(null);
       fetchUploadSections();
-      toast.success('Upload section saved');
-    } else {
-      toast.error('Failed to save upload section');
+      toast.success('Upload section saved successfully');
+    } catch (error) {
+      console.error('Error saving upload section:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to save upload section');
     }
   };
 

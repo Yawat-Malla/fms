@@ -32,9 +32,9 @@ enum SyncStatus {
 }
 
 enum ReportType {
-  file_count
-  missing_uploads
-  recently_updated
+  folder_count
+  empty_folders
+  folder_metadata
   custom
 }
 

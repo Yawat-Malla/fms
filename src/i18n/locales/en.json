@@ -313,13 +313,12 @@
     },
     "grantTypes": {
       "test1": "test1",
-      "test": "test"
+      "test": "etst"
     },
     "types": {
-      "fileCount": "File Count",
-      "file_count": "File Count",
-      "missingUploads": "Missing Uploads",
-      "missing_uploads": "Missing Uploads",
+      "folder_count": "Folder Count",
+      "empty_folders": "Empty Folders",
+      "folder_metadata": "Folder Metadata",
       "custom": "Custom Report"
     },
     "generateReport": "Generate Report",
