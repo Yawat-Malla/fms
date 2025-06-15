@@ -728,40 +728,35 @@ export default function SettingsPage() {
     setIsChangingPassword(true);
 
     try {
-      // Validate passwords
       if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-        setPasswordError('New passwords do not match');
+        setPasswordError(t('settings.profile.passwordsDoNotMatch'));
         return;
       }
 
-      if (passwordForm.newPassword.length < 8) {
-        setPasswordError('New password must be at least 8 characters long');
-        return;
-      }
-
-      const response = await fetch('/api/users/change-password', {
+      const response = await fetch('/api/auth/change-password', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           currentPassword: passwordForm.currentPassword,
           newPassword: passwordForm.newPassword,
         }),
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to change password');
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to change password');
       }
 
-      // Clear form and show success message
+      toast.success(t('settings.profile.passwordChanged'));
       setPasswordForm({
         currentPassword: '',
         newPassword: '',
         confirmPassword: '',
       });
-      toast.success('Password changed successfully');
     } catch (error) {
+      console.error('Error changing password:', error);
       setPasswordError(error instanceof Error ? error.message : 'Failed to change password');
     } finally {
       setIsChangingPassword(false);
@@ -906,66 +901,61 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* Add password change form */}
-              <Card className="p-6">
-                <h3 className="text-lg font-semibold text-dark-100 mb-4">
-                  <TranslatedText text="settings.profile.changePassword" />
-                </h3>
+              {/* Password Change Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">{t('settings.profile.changePassword')}</h3>
                 <form onSubmit={handlePasswordChange} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-dark-200 mb-1">
-                      <TranslatedText text="settings.profile.currentPassword" />
+                    <label htmlFor="currentPassword" className="block text-sm font-medium">
+                      {t('settings.profile.currentPassword')}
                     </label>
                     <input
                       type="password"
+                      id="currentPassword"
                       value={passwordForm.currentPassword}
                       onChange={(e) => setPasswordForm(prev => ({ ...prev, currentPassword: e.target.value }))}
-                      className="w-full rounded-md border-dark-600 bg-dark-700 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-dark-200 mb-1">
-                      <TranslatedText text="settings.profile.newPassword" />
+                    <label htmlFor="newPassword" className="block text-sm font-medium">
+                      {t('settings.profile.newPassword')}
                     </label>
                     <input
                       type="password"
+                      id="newPassword"
                       value={passwordForm.newPassword}
                       onChange={(e) => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
-                      className="w-full rounded-md border-dark-600 bg-dark-700 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-dark-200 mb-1">
-                      <TranslatedText text="settings.profile.confirmPassword" />
+                    <label htmlFor="confirmPassword" className="block text-sm font-medium">
+                      {t('settings.profile.confirmPassword')}
                     </label>
                     <input
                       type="password"
+                      id="confirmPassword"
                       value={passwordForm.confirmPassword}
                       onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                      className="w-full rounded-md border-dark-600 bg-dark-700 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                       required
                     />
                   </div>
                   {passwordError && (
-                    <div className="text-red-500 text-sm">{passwordError}</div>
+                    <p className="text-red-500 text-sm">{passwordError}</p>
                   )}
-                  <div className="flex justify-end">
-                    <Button
-                      type="submit"
-                      variant="primary"
-                      disabled={isChangingPassword}
-                    >
-                      {isChangingPassword ? (
-                        <TranslatedText text="common.saving" />
-                      ) : (
-                        <TranslatedText text="settings.profile.changePassword" />
-                      )}
-                    </Button>
-                  </div>
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    disabled={isChangingPassword}
+                  >
+                    {isChangingPassword ? t('common.loading') : t('settings.profile.changePassword')}
+                  </Button>
                 </form>
-              </Card>
+              </div>
             </div>
           </Card>
         )}

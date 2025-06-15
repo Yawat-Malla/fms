@@ -126,7 +126,13 @@
       "username": "Username",
       "email": "Email",
       "password": "Password",
-      "saveNote": "Save your changes."
+      "saveNote": "Save your changes.",
+      "changePassword": "Change Password",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm Password",
+      "passwordsDoNotMatch": "New passwords do not match",
+      "passwordChanged": "Password changed successfully"
     },
     "preferences": {
       "title": "Preferences",

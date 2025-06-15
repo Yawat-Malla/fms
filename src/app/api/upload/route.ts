@@ -71,18 +71,32 @@ export async function POST(request: Request) {
     // Get the records by their keys instead of IDs
     const [fiscalYear, source, grantType] = await Promise.all([
       prisma.fiscalYear.findFirst({ 
-      where: {
+        where: {
           name: fiscalYearId.startsWith('FY ') ? fiscalYearId : `FY ${fiscalYearId}`
         } 
       }),
-      prisma.source.findFirst({ where: { name: sourceId } }),
-      prisma.grantType.findFirst({ where: { name: grantTypeId } })
+      prisma.source.findFirst({ 
+        where: { 
+          OR: [
+            { key: sourceId },
+            { name: sourceId }
+          ]
+        } 
+      }),
+      prisma.grantType.findFirst({ 
+        where: { 
+          OR: [
+            { key: grantTypeId },
+            { name: grantTypeId }
+          ]
+        } 
+      })
     ]);
 
     console.log('Upload API - Reference records found:', {
       fiscalYear: fiscalYear ? {
         id: fiscalYear.id,
-        key: fiscalYear.key
+        name: fiscalYear.name
       } : null,
       source: source ? {
         id: source.id,

@@ -130,7 +130,13 @@
       "username": "प्रयोगकर्ता नाम",
       "email": "इमेल",
       "password": "पासवर्ड",
-      "saveNote": "परिवर्तनहरू सेभ गर्नुहोस्।"
+      "saveNote": "परिवर्तनहरू सेभ गर्नुहोस्।",
+      "changePassword": "पासवर्ड परिवर्तन गर्नुहोस्",
+      "currentPassword": "वर्तमान पासवर्ड",
+      "newPassword": "नयाँ पासवर्ड",
+      "confirmPassword": "पासवर्ड पुष्टि गर्नुहोस्",
+      "passwordsDoNotMatch": "नयाँ पासवर्डहरू मिलेनन्",
+      "passwordChanged": "पासवर्ड सफलतापूर्वक परिवर्तन भयो"
     },
     "preferences": {
       "title": "प्राथमिकताहरू",

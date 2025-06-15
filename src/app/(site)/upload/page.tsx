@@ -214,11 +214,12 @@ export default function UploadPage() {
         body: formData,
       });
       
-      const data = await response.json();
-      
       if (!response.ok) {
-        throw new Error(data.error || 'Error uploading files');
+        const error = await response.json();
+        throw new Error(error.error || 'Error uploading files');
       }
+      
+      const data = await response.json();
       
       toast.success('Files uploaded successfully');
       setIsSuccess(true);
