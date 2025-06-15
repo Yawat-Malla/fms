@@ -30,6 +30,9 @@ export async function GET(
       where: {
         id: fileId,
       },
+      include: {
+        folder: true
+      }
     });
     console.log('[FILE_VIEW] file from DB:', file);
 
@@ -38,9 +41,23 @@ export async function GET(
       return new NextResponse('File not found', { status: 404 });
     }
 
-    // Resolve the file path relative to the project root
-    const filePath = path.resolve(process.cwd(), file.path);
-    console.log('[FILE_VIEW] Resolved file path:', filePath);
+    // Get the folder path from the database
+    const folderPath = file.folder?.path;
+    if (!folderPath) {
+      console.log('[FILE_VIEW] Folder path not found');
+      return new NextResponse('File path not found', { status: 404 });
+    }
+
+    // Get the actual file name with UUID prefix
+    const actualFileName = file.path.split('/').pop();
+    if (!actualFileName) {
+      console.log('[FILE_VIEW] Invalid file path in database');
+      return new NextResponse('Invalid file path', { status: 404 });
+    }
+
+    // Construct the full file path using the actual file name
+    const filePath = path.join(folderPath, actualFileName);
+    console.log('[FILE_VIEW] Full file path:', filePath);
 
     if (!fs.existsSync(filePath)) {
       console.log('[FILE_VIEW] File does not exist on disk');

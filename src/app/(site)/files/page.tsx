@@ -708,20 +708,7 @@ export default function FilesPage() {
                   </div>
                   <div className="flex items-center space-x-2">
                     {/* Add Create Subfolder button when in a subfolder */}
-                    {currentFolder && (
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        leftIcon={
-                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                          </svg>
-                        }
-                        onClick={handleCreateSubfolder}
-                      >
-                        <TranslatedText text="files.createSubfolder" />
-                      </Button>
-                    )}
+                    
             {/* View toggle */}
             <div className="flex items-center bg-dark-700 border border-dark-600 rounded-md p-1">
               <button 

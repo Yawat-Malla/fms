@@ -57,7 +57,7 @@ const FileActions: React.FC<FileActionsProps> = ({
     if (isFolder) {
       onOpen();
     } else {
-      setShowViewer(true);
+      window.open(`/api/files/${item.id}/view`, '_blank');
     }
     setIsOpen(false);
   };
