@@ -19,13 +19,42 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const parentId = searchParams.get('parentId');
     const path = searchParams.get('path');
+    const fiscalYear = searchParams.get('fiscal-year');
+    const source = searchParams.get('source');
+    const grantType = searchParams.get('grant-type');
+
+    // Build the where clause for filtering
+    const where: any = {
+      parentId: parentId ? parseInt(parentId) : null,
+      path: path ? path : undefined,
+      isDeleted: false,
+    };
+
+    // Add filters if they exist
+    if (fiscalYear) {
+      where.fiscalYear = {
+        name: fiscalYear.startsWith('FY ') ? fiscalYear : `FY ${fiscalYear}`
+      };
+    }
+    if (source) {
+      where.source = {
+        OR: [
+          { key: source },
+          { name: source }
+        ]
+      };
+    }
+    if (grantType) {
+      where.grantType = {
+        OR: [
+          { key: grantType },
+          { name: grantType }
+        ]
+      };
+    }
 
     const folders = await prisma.folder.findMany({
-      where: {
-        parentId: parentId ? parseInt(parentId) : null,
-        path: path ? path : undefined,
-        isDeleted: false,
-      },
+      where,
       include: {
         files: {
           where: {

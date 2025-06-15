@@ -178,9 +178,11 @@ export default function Sidebar() {
       const url = new URL(href, window.location.origin);
       const params = url.searchParams;
       
-      console.log('[Sidebar] Handling filter click:', {
+      console.log('[Sidebar] Starting filter click handler:', {
         href,
-        originalParams: Object.fromEntries(params.entries())
+        params: Object.fromEntries(params.entries()),
+        currentPath: window.location.pathname,
+        currentSearch: window.location.search
       });
 
       // For "All Files" navigation
@@ -191,46 +193,51 @@ export default function Sidebar() {
         await router.push('/files');
         return;
       }
+
+      // Create new URL with properly encoded parameters
+      const newParams = new URLSearchParams();
+      let filterValue = null;
       
-      // Update filter states immediately
+      // Handle different filter types
       if (params.has('fiscal-year')) {
-        const year = params.get('fiscal-year');
-        if (!year) return;
-
-        console.log('[Sidebar] Processing fiscal year:', year);
-
-        // Create new URL with properly encoded parameters
-        const newParams = new URLSearchParams();
-        newParams.set('fiscal-year', year);
-        
-        const newUrl = `${url.pathname}?${newParams.toString()}`;
-        console.log('[Sidebar] Navigating to:', newUrl);
-
-        // Update UI state immediately
+        filterValue = params.get('fiscal-year');
+        if (!filterValue) return;
+        // Remove any "FY " prefix if present
+        filterValue = filterValue.replace('FY ', '').trim();
+        newParams.set('fiscal-year', filterValue);
         setExpandedMenus({ 'Files': true });
         setExpandedSubmenus({ 'By Fiscal Year': true });
-        
-        // Update URL and trigger navigation
-        window.history.pushState({}, '', newUrl);
-        window.dispatchEvent(new Event('urlchange'));
-        await router.push(newUrl);
       } else if (params.has('source')) {
+        filterValue = params.get('source');
+        if (!filterValue) return;
+        // Normalize source value
+        filterValue = filterValue.toLowerCase().replace(/\s+/g, '_');
+        newParams.set('source', filterValue);
         setExpandedMenus({ 'Files': true });
         setExpandedSubmenus({ 'By Source': true });
-        window.history.pushState({}, '', href);
-        window.dispatchEvent(new Event('urlchange'));
-        await router.push(href);
       } else if (params.has('grant-type')) {
+        filterValue = params.get('grant-type');
+        if (!filterValue) return;
+        // Normalize grant type value
+        filterValue = filterValue.toLowerCase().replace(/\s+/g, '_');
+        newParams.set('grant-type', filterValue);
         setExpandedMenus({ 'Files': true });
         setExpandedSubmenus({ 'By Grant Type': true });
-        window.history.pushState({}, '', href);
-        window.dispatchEvent(new Event('urlchange'));
-        await router.push(href);
-      } else {
-        window.history.pushState({}, '', href);
-        window.dispatchEvent(new Event('urlchange'));
-        await router.push(href);
       }
+
+      const newUrl = `/files?${newParams.toString()}`;
+      console.log('[Sidebar] Constructed new URL:', {
+        newUrl,
+        filterValue,
+        params: Object.fromEntries(newParams.entries())
+      });
+
+      // Update URL and trigger navigation
+      window.history.pushState({}, '', newUrl);
+      window.dispatchEvent(new Event('urlchange'));
+      await router.push(newUrl);
+
+      console.log('[Sidebar] Navigation completed');
     } catch (error: unknown) {
       console.error('[Sidebar] Error in handleFilterClick:', error);
     } finally {

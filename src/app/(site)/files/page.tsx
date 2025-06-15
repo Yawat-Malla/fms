@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import Card from '@/components/ui/Card';
@@ -70,39 +70,49 @@ export default function FilesPage() {
   // Add state for files
   const [files, setFiles] = useState<any[]>([]);
 
-  // Insert filteredFolders definition here
-  const filteredFolders = folders.filter((folder) => {
-    // Fiscal year filter
-    if (selectedFiscalYear) {
-      const normalizedFolderFiscalYear = folder.fiscalYear?.name?.replace('FY ', '');
-      if (normalizedFolderFiscalYear !== selectedFiscalYear) return false;
-    }
-    // Source filter
-    if (selectedSource) {
-      if (folder.source?.name !== selectedSource) return false;
-    }
-    // Grant type filter
-    if (selectedGrantType) {
-      if (folder.grantType?.name !== selectedGrantType) return false;
-    }
-    // Tab filters
-    switch (activeTab) {
-      case 'by-source':
-        if (selectedSource && folder.source?.name !== selectedSource) return false;
-        return true;
-      default:
-        return true;
-    }
-  });
+  // Handle URL changes
+  useEffect(() => {
+    const handleUrlChange = () => {
+      const searchParams = new URLSearchParams(window.location.search);
+      const fiscalYear = searchParams.get('fiscal-year');
+      const source = searchParams.get('source');
+      const grantType = searchParams.get('grant-type');
+      const currentPath = searchParams.get('path')?.split('/').filter(Boolean) || [];
 
-  // Helper to fetch folder by path from backend
-  const fetchFolderByPath = async (pathArr: string[]) => {
-    if (pathArr.length === 0) return null;
-    const res = await fetch(`/api/folders/by-path?path=${encodeURIComponent(pathArr.join('/'))}`);
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data;
-  };
+      console.log('[Files] URL parameters changed:', {
+        fiscalYear,
+        source,
+        grantType,
+        currentPath,
+        searchParams: Object.fromEntries(searchParams.entries())
+      });
+
+      // Update state with new values
+      setSelectedFiscalYear(fiscalYear);
+      setSelectedSource(source);
+      setSelectedGrantType(grantType);
+      setCurrentPath(currentPath);
+    };
+
+    // Initial call
+    handleUrlChange();
+
+    // Add event listener
+    window.addEventListener('urlchange', handleUrlChange);
+    window.addEventListener('popstate', handleUrlChange);
+
+    return () => {
+      window.removeEventListener('urlchange', handleUrlChange);
+      window.removeEventListener('popstate', handleUrlChange);
+    };
+  }, []);
+
+  // Fetch folders when session or filters change
+  useEffect(() => {
+    if (session) {
+      fetchFolders();
+    }
+  }, [session, selectedFiscalYear, selectedSource, selectedGrantType, currentPath]);
 
   // Fetch recently modified folders
   const fetchRecentlyModifiedFolders = async () => {
@@ -174,11 +184,6 @@ export default function FilesPage() {
         setIsLoading(false);
       }
     };
-
-  // Update useEffect to handle path changes and fetch recently modified folders
-  useEffect(() => {
-    fetchFolders();
-  }, [session, selectedFiscalYear, selectedSource, selectedGrantType, currentPath]);
 
   // Fetch recently modified folders on initial load
   useEffect(() => {
@@ -580,6 +585,95 @@ export default function FilesPage() {
       toast.error(error instanceof Error ? error.message : 'Failed to create subfolder');
     }
   };
+
+  // Helper to fetch folder by path from backend
+  const fetchFolderByPath = async (pathArr: string[]) => {
+    if (pathArr.length === 0) return null;
+    const res = await fetch(`/api/folders/by-path?path=${encodeURIComponent(pathArr.join('/'))}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data;
+  };
+
+  // Insert filteredFolders definition here
+  const filteredFolders = useMemo(() => {
+    console.log('[Files] Filtering folders with state:', {
+      selectedFiscalYear,
+      selectedSource,
+      selectedGrantType,
+      totalFolders: folders.length
+    });
+
+    return folders.filter((folder) => {
+      console.log('[Files] Filtering folder:', {
+        folderName: folder.name,
+        folderFiscalYear: folder.fiscalYear?.name,
+        folderSource: folder.source?.name,
+        folderGrantType: folder.grantType?.name,
+        selectedFiscalYear,
+        selectedSource,
+        selectedGrantType
+      });
+
+      // Fiscal year filter
+      if (selectedFiscalYear) {
+        // Remove "FY " prefix and normalize both values
+        const normalizedFolderFiscalYear = folder.fiscalYear?.name?.replace('FY ', '').trim();
+        const normalizedSelectedFiscalYear = selectedFiscalYear.trim();
+        const matches = normalizedFolderFiscalYear === normalizedSelectedFiscalYear;
+        
+        console.log('[Files] Fiscal year filter:', {
+          normalizedFolderFiscalYear,
+          normalizedSelectedFiscalYear,
+          matches
+        });
+        
+        if (!matches) return false;
+      }
+
+      // Source filter
+      if (selectedSource) {
+        // Normalize both the selected source and folder source
+        const normalizedSource = selectedSource.toLowerCase().replace(/\s+/g, '_');
+        const folderSource = folder.source?.key?.toLowerCase() || 
+                            folder.source?.name?.toLowerCase().replace(/\s+/g, '_');
+        
+        const matches = folderSource === normalizedSource;
+        
+        console.log('[Files] Source filter:', {
+          normalizedSource,
+          folderSource,
+          matches,
+          folderSourceKey: folder.source?.key,
+          folderSourceName: folder.source?.name
+        });
+        
+        if (!matches) return false;
+      }
+
+      // Grant type filter
+      if (selectedGrantType) {
+        // Normalize both the selected grant type and folder grant type
+        const normalizedGrantType = selectedGrantType.toLowerCase().replace(/\s+/g, '_');
+        const folderGrantType = folder.grantType?.key?.toLowerCase() || 
+                              folder.grantType?.name?.toLowerCase().replace(/\s+/g, '_');
+        
+        const matches = folderGrantType === normalizedGrantType;
+        
+        console.log('[Files] Grant type filter:', {
+          normalizedGrantType,
+          folderGrantType,
+          matches,
+          folderGrantTypeKey: folder.grantType?.key,
+          folderGrantTypeName: folder.grantType?.name
+        });
+        
+        if (!matches) return false;
+      }
+
+      return true;
+    });
+  }, [folders, selectedFiscalYear, selectedSource, selectedGrantType]);
 
   return (
     <div>
