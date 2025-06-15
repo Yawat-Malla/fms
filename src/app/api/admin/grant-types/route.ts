@@ -44,9 +44,55 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  try {
   const { key, name, en: enVal, ne: neVal } = await req.json();
-  const created = await prisma.grantType.create({ data: { key, name } });
-  updateTranslationFile(EN_PATH, key, enVal, 'grantTypes');
-  updateTranslationFile(NE_PATH, key, neVal, 'grantTypes');
-  return NextResponse.json(created);
+
+    // Validate required fields
+    if (!key || !name) {
+      return NextResponse.json(
+        { error: 'Key and name are required' },
+        { status: 400 }
+      );
+    }
+
+    // Check if key already exists
+    const existingGrantType = await prisma.grantType.findUnique({
+      where: { key }
+    });
+
+    if (existingGrantType) {
+      return NextResponse.json(
+        { error: 'A grant type with this key already exists' },
+        { status: 400 }
+      );
+    }
+
+    // Create the grant type
+    const created = await prisma.grantType.create({ 
+      data: { key, name }
+    });
+
+    // Update translation files
+    try {
+      updateTranslationFile(EN_PATH, key, enVal || name, 'grantTypes');
+      updateTranslationFile(NE_PATH, key, neVal || name, 'grantTypes');
+    } catch (error) {
+      console.error('Error updating translation files:', error);
+      // Don't fail the request if translation update fails
+    }
+
+    return NextResponse.json({
+      ...created,
+      translations: {
+        en: enVal || name,
+        ne: neVal || name
+      }
+    });
+  } catch (error) {
+    console.error('Error creating grant type:', error);
+    return NextResponse.json(
+      { error: 'Failed to create grant type' },
+      { status: 500 }
+    );
+  }
 } 

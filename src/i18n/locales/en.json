@@ -309,11 +309,16 @@
     "sources": {
       "lollolol": "asdf",
       "test0": "test",
-      "test": "test"
+      "test": "test",
+      "testasdf": "asdf",
+      "asdf": "asdf",
+      "asdfasdfsdf": "asdf",
+      "dfasdf": "asdfsdf"
     },
     "grantTypes": {
       "test1": "test1",
-      "test": "etst"
+      "test": "etst",
+      "asdfsdf": "asdfs"
     },
     "types": {
       "folder_count": "Folder Count",

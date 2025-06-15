@@ -5,11 +5,16 @@ import prisma from '@/lib/prisma';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 
+// Helper function to check if user has admin privileges
+const hasAdminPrivileges = (role?: string) => {
+  return role === 'admin' || role === 'superadmin';
+};
+
 // GET /api/admin/settings - Get admin settings
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.role || session.user.role !== 'admin') {
+    if (!session?.user?.role || !hasAdminPrivileges(session.user.role)) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
@@ -25,7 +30,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.role || session.user.role !== 'admin') {
+    if (!session?.user?.role || !hasAdminPrivileges(session.user.role)) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
@@ -107,7 +112,7 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'admin') {
+    if (!session?.user?.role || !hasAdminPrivileges(session.user.role)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

@@ -92,17 +92,20 @@ export default function SettingsPage() {
   });
 
   // State for sources and grant types
-  const [sources, setSources] = useState([]);
-  const [grantTypes, setGrantTypes] = useState([]);
+  const [sources, setSources] = useState<any[]>([]);
+  const [grantTypes, setGrantTypes] = useState<any[]>([]);
+  const [uploadSections, setUploadSections] = useState<any[]>([]);
   const [sourceForm, setSourceForm] = useState({ key: '', name: '', en: '', ne: '' });
   const [grantTypeForm, setGrantTypeForm] = useState({ key: '', name: '', en: '', ne: '' });
+  const [uploadSectionForm, setUploadSectionForm] = useState({ name: '', key: '', en: '', ne: '' });
   const [editingSourceId, setEditingSourceId] = useState<number | null>(null);
   const [editingGrantTypeId, setEditingGrantTypeId] = useState<number | null>(null);
-
-  // Add state for upload sections
-  const [uploadSections, setUploadSections] = useState([]);
-  const [uploadSectionForm, setUploadSectionForm] = useState({ name: '', key: '', en: '', ne: '' });
   const [editingUploadSectionId, setEditingUploadSectionId] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState({
+    sources: false,
+    grantTypes: false,
+    uploadSections: false
+  });
 
   // Add password change state
   const [passwordForm, setPasswordForm] = useState({
@@ -113,117 +116,150 @@ export default function SettingsPage() {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
 
-  // Update useEffect to sync with session changes
+  // Debug logging for state changes
   useEffect(() => {
-    if (session?.user) {
-      console.log('[Settings Debug] Session updated:', session.user);
-      setProfileSettings(prev => ({
-        ...prev,
-        fullName: session.user.name || '',
-        email: session.user.email || '',
-        profilePicture: session.user.profilePicture || '',
-        username: session.user.email?.split('@')[0] || '',
-      }));
-    }
-  }, [session]);
-
-  // Debug logging for session changes
-  useEffect(() => {
-    console.log('[Settings Debug] Current session:', {
-      user: session?.user,
-      profilePicture: session?.user?.profilePicture,
-      username: session?.user?.email?.split('@')[0] || '',
+    console.log('[Admin Debug] Current state:', {
+      sources,
+      grantTypes,
+      uploadSections,
+      isLoading,
+      userRole: session?.user?.role
     });
-  }, [session]);
+  }, [sources, grantTypes, uploadSections, isLoading, session?.user?.role]);
 
-  // Load admin settings
+  // Load data when component mounts and when user role is admin or superadmin
   useEffect(() => {
-    const loadAdminSettings = async () => {
-      if (session?.user?.role === 'admin') {
-        try {
-          const response = await fetch('/api/admin/settings');
-          if (response.ok) {
-            const settings = await response.json();
-            setAdminSettings({
-              siteName: settings.siteName || 'File Management System',
-              siteLogo: settings.siteLogo || '/logo.png',
-              enabledModules: settings.enabledModules || ['files', 'users', 'reports'],
-              maintenanceMode: settings.maintenanceMode || false,
-            });
-          }
-        } catch (error) {
-          console.error('Error loading admin settings:', error);
-          toast.error('Failed to load admin settings');
-        }
-      }
-    };
-
-    loadAdminSettings();
-  }, [session?.user?.role]);
-
-  // Load notification settings
-  useEffect(() => {
-    const loadNotificationSettings = async () => {
-      if (session?.user?.id) {
-        try {
-          const response = await fetch(`/api/users/${session.user.id}`);
-          if (response.ok) {
-            const user = await response.json();
-            if (user.notificationPreferences) {
-              setNotificationSettings(user.notificationPreferences);
-            }
-          }
-        } catch (error) {
-          console.error('Error loading notification settings:', error);
-        }
-      }
-    };
-
-    loadNotificationSettings();
-  }, [session?.user?.id]);
-
-  useEffect(() => {
-    if (session?.user?.role === 'admin') {
-      fetchSources();
-      fetchGrantTypes();
-      fetchUploadSections();
+    console.log('[Admin Debug] Checking user role:', session?.user?.role);
+    if (session?.user?.role === 'admin' || session?.user?.role === 'superadmin') {
+      console.log('[Admin Debug] User has admin privileges, loading data...');
+      loadAdminData();
     }
   }, [session?.user?.role]);
+
+  const loadAdminData = async () => {
+    console.log('[Admin Debug] Starting to load admin data...');
+    try {
+      await Promise.all([
+        fetchSources(),
+        fetchGrantTypes(),
+        fetchUploadSections()
+      ]);
+      console.log('[Admin Debug] All admin data loaded successfully');
+    } catch (error) {
+      console.error('[Admin Debug] Error loading admin data:', error);
+    }
+  };
 
   const fetchSources = async () => {
-    const res = await fetch('/api/admin/sources');
-    const data = await res.json();
-    setSources(data);
+    console.log('[Admin Debug] Fetching sources...');
+    try {
+      setIsLoading(prev => ({ ...prev, sources: true }));
+      const res = await fetch('/api/admin/sources');
+      console.log('[Admin Debug] Sources API response status:', res.status);
+      
+      if (!res.ok) {
+        const error = await res.json();
+        console.error('[Admin Debug] Sources API error:', error);
+        throw new Error(error.error || 'Failed to fetch sources');
+      }
+      
+      const data = await res.json();
+      console.log('[Admin Debug] Sources data received:', data);
+      setSources(data);
+    } catch (error) {
+      console.error('[Admin Debug] Error fetching sources:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to fetch sources');
+    } finally {
+      setIsLoading(prev => ({ ...prev, sources: false }));
+    }
   };
+
   const fetchGrantTypes = async () => {
-    const res = await fetch('/api/admin/grant-types');
-    const data = await res.json();
-    setGrantTypes(data);
+    console.log('[Admin Debug] Fetching grant types...');
+    try {
+      setIsLoading(prev => ({ ...prev, grantTypes: true }));
+      const res = await fetch('/api/admin/grant-types');
+      console.log('[Admin Debug] Grant types API response status:', res.status);
+      
+      if (!res.ok) {
+        const error = await res.json();
+        console.error('[Admin Debug] Grant types API error:', error);
+        throw new Error(error.error || 'Failed to fetch grant types');
+      }
+      
+      const data = await res.json();
+      console.log('[Admin Debug] Grant types data received:', data);
+      setGrantTypes(data);
+    } catch (error) {
+      console.error('[Admin Debug] Error fetching grant types:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to fetch grant types');
+    } finally {
+      setIsLoading(prev => ({ ...prev, grantTypes: false }));
+    }
+  };
+
+  const fetchUploadSections = async () => {
+    console.log('[Admin Debug] Fetching upload sections...');
+    try {
+      setIsLoading(prev => ({ ...prev, uploadSections: true }));
+      const res = await fetch('/api/admin/upload-sections');
+      console.log('[Admin Debug] Upload sections API response status:', res.status);
+      
+      if (!res.ok) {
+        const error = await res.json();
+        console.error('[Admin Debug] Upload sections API error:', error);
+        throw new Error(error.error || 'Failed to fetch upload sections');
+      }
+      
+      const data = await res.json();
+      console.log('[Admin Debug] Upload sections data received:', data);
+      setUploadSections(data);
+    } catch (error) {
+      console.error('[Admin Debug] Error fetching upload sections:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to fetch upload sections');
+    } finally {
+      setIsLoading(prev => ({ ...prev, uploadSections: false }));
+    }
   };
 
   // CRUD handlers for sources
   const handleSourceSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    const method = editingSourceId ? 'PUT' : 'POST';
-    const url = editingSourceId ? `/api/admin/sources/${editingSourceId}` : '/api/admin/sources';
-    const res = await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(sourceForm),
-    });
-    if (res.ok) {
+    console.log('[Admin Debug] Saving source:', sourceForm);
+    try {
+      const method = editingSourceId ? 'PUT' : 'POST';
+      const url = editingSourceId ? `/api/admin/sources/${editingSourceId}` : '/api/admin/sources';
+      console.log('[Admin Debug] Source save request:', { method, url });
+      
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(sourceForm),
+      });
+
+      console.log('[Admin Debug] Source save response status:', res.status);
+      
+      if (!res.ok) {
+        const error = await res.json();
+        console.error('[Admin Debug] Source save error:', error);
+        throw new Error(error.error || 'Failed to save source');
+      }
+
+      await fetchSources();
       setSourceForm({ key: '', name: '', en: '', ne: '' });
       setEditingSourceId(null);
-      fetchSources();
-      toast.success('Source saved');
-    } else {
-      toast.error('Failed to save source');
+      toast.success('Source saved successfully');
+    } catch (error) {
+      console.error('[Admin Debug] Error saving source:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to save source');
     }
   };
+
   const handleSourceEdit = (src: any) => {
     setSourceForm({ key: src.key, name: src.name, en: src.en, ne: src.ne });
     setEditingSourceId(src.id);
   };
+
   const handleSourceDelete = async (id: number) => {
     if (!confirm('Delete this source?')) return;
     const res = await fetch(`/api/admin/sources/${id}`, { method: 'DELETE' });
@@ -238,26 +274,41 @@ export default function SettingsPage() {
   // CRUD handlers for grant types
   const handleGrantTypeSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    const method = editingGrantTypeId ? 'PUT' : 'POST';
-    const url = editingGrantTypeId ? `/api/admin/grant-types/${editingGrantTypeId}` : '/api/admin/grant-types';
-    const res = await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(grantTypeForm),
-    });
-    if (res.ok) {
+    console.log('[Admin Debug] Saving grant type:', grantTypeForm);
+    try {
+      const method = editingGrantTypeId ? 'PUT' : 'POST';
+      const url = editingGrantTypeId ? `/api/admin/grant-types/${editingGrantTypeId}` : '/api/admin/grant-types';
+      console.log('[Admin Debug] Grant type save request:', { method, url });
+      
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(grantTypeForm),
+      });
+
+      console.log('[Admin Debug] Grant type save response status:', res.status);
+      
+      if (!res.ok) {
+        const error = await res.json();
+        console.error('[Admin Debug] Grant type save error:', error);
+        throw new Error(error.error || 'Failed to save grant type');
+      }
+
+      await fetchGrantTypes();
       setGrantTypeForm({ key: '', name: '', en: '', ne: '' });
       setEditingGrantTypeId(null);
-      fetchGrantTypes();
-      toast.success('Grant type saved');
-    } else {
-      toast.error('Failed to save grant type');
+      toast.success('Grant type saved successfully');
+    } catch (error) {
+      console.error('[Admin Debug] Error saving grant type:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to save grant type');
     }
   };
+
   const handleGrantTypeEdit = (gt: any) => {
     setGrantTypeForm({ key: gt.key, name: gt.name, en: gt.en, ne: gt.ne });
     setEditingGrantTypeId(gt.id);
   };
+
   const handleGrantTypeDelete = async (id: number) => {
     if (!confirm('Delete this grant type?')) return;
     const res = await fetch(`/api/admin/grant-types/${id}`, { method: 'DELETE' });
@@ -269,26 +320,15 @@ export default function SettingsPage() {
     }
   };
 
-  // Add useEffect to fetch upload sections
-  useEffect(() => {
-    if (session?.user?.role === 'admin') {
-      fetchUploadSections();
-    }
-  }, [session?.user?.role]);
-
-  const fetchUploadSections = async () => {
-    const res = await fetch('/api/admin/upload-sections');
-    const data = await res.json();
-    setUploadSections(data);
-  };
-
-  // Add CRUD handlers for upload sections
+  // CRUD handlers for upload sections
   const handleUploadSectionSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    const method = editingUploadSectionId ? 'PUT' : 'POST';
-    const url = editingUploadSectionId ? `/api/admin/upload-sections/${editingUploadSectionId}` : '/api/admin/upload-sections';
-    
+    console.log('[Admin Debug] Saving upload section:', uploadSectionForm);
     try {
+      const method = editingUploadSectionId ? 'PUT' : 'POST';
+      const url = editingUploadSectionId ? `/api/admin/upload-sections/${editingUploadSectionId}` : '/api/admin/upload-sections';
+      console.log('[Admin Debug] Upload section save request:', { method, url });
+      
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -302,19 +342,20 @@ export default function SettingsPage() {
         }),
       });
 
+      console.log('[Admin Debug] Upload section save response status:', res.status);
+      
       if (!res.ok) {
-        const errorData = await res.json().catch(() => null);
-        console.error('Failed to save upload section:', errorData);
-        throw new Error(errorData?.message || 'Failed to save upload section');
+        const error = await res.json();
+        console.error('[Admin Debug] Upload section save error:', error);
+        throw new Error(error.error || 'Failed to save upload section');
       }
 
-      const savedSection = await res.json();
+      await fetchUploadSections();
       setUploadSectionForm({ name: '', key: '', en: '', ne: '' });
       setEditingUploadSectionId(null);
-      fetchUploadSections();
       toast.success('Upload section saved successfully');
     } catch (error) {
-      console.error('Error saving upload section:', error);
+      console.error('[Admin Debug] Error saving upload section:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to save upload section');
     }
   };
@@ -643,7 +684,7 @@ export default function SettingsPage() {
   };
 
   const handleAdminSettingsSave = async () => {
-    if (session?.user?.role !== 'admin') {
+    if (!hasAdminPrivileges()) {
       toast.error('Unauthorized');
       return;
     }
@@ -666,14 +707,15 @@ export default function SettingsPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update admin settings');
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update admin settings');
       }
 
       toast.success('Admin settings updated successfully');
       router.refresh();
     } catch (error) {
       console.error('Error saving admin settings:', error);
-      toast.error('Failed to save admin settings');
+      toast.error(error instanceof Error ? error.message : 'Failed to save admin settings');
     } finally {
       setIsLoadingAdminSettings(false);
     }
@@ -726,6 +768,16 @@ export default function SettingsPage() {
     }
   };
   
+  // Helper function to check if user has admin privileges
+  const hasAdminPrivileges = () => {
+    return session?.user?.role === 'admin' || session?.user?.role === 'superadmin';
+  };
+
+  // Helper function to check if user has upload section access
+  const hasUploadSectionAccess = () => {
+    return session?.user?.role === 'admin' || session?.user?.role === 'superadmin';
+  };
+
   return (
     <div className="max-w-6xl mx-auto p-6">
       <div className="mb-6">
@@ -743,7 +795,7 @@ export default function SettingsPage() {
           {[
             'profile',
             'preferences',
-            ...(session?.user?.role === 'admin' || session?.user?.role === 'superadmin' ? ['admin'] : []),
+            ...(hasAdminPrivileges() ? ['admin'] : []),
             ...(session?.user?.role === 'superadmin' ? ['danger'] : [])
           ].map((tab) => (
             <button
@@ -1036,7 +1088,7 @@ export default function SettingsPage() {
         )}
 
         {/* Admin Settings */}
-        {(activeTab === 'admin' && (session?.user?.role === 'admin' || session?.user?.role === 'superadmin')) && (
+        {(activeTab === 'admin' && hasAdminPrivileges()) && (
           <Card>
             <div className="space-y-4">
               <h2 className="text-2xl font-semibold text-dark-100 mb-2">

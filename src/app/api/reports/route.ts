@@ -327,9 +327,9 @@ async function generateCustomReport(parameters: any) {
       files: {
         where: {
           isDeleted: false,
-        },
-      },
-      subfolders: {
+            },
+          },
+          subfolders: {
         where: {
           isDeleted: false,
         },
