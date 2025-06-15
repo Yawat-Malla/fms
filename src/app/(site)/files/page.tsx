@@ -16,24 +16,10 @@ import { useApp } from '@/contexts/AppContext';
 import FileActions from '@/components/FileActions';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getFileOrFolderIcon } from '@/components/DriveTable';
-
-// Helper function to safely format dates
-const safeFormatDate = (date: string | Date | null | undefined) => {
-  if (!date) return '-';
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  return isValid(dateObj) ? format(dateObj, 'MMM d, yyyy') : '-';
-};
-
-// Helper function to format file size
-const formatFileSize = (bytes: number) => {
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
-};
+import { useTranslation } from 'react-i18next';
 
 export default function FilesPage() {
+  const { t, i18n } = useTranslation();
   const { data: session, status } = useSession();
   const searchParams = useSearchParams();
   const [folders, setFolders] = useState<any[]>([]);
@@ -55,7 +41,6 @@ export default function FilesPage() {
     grantTypes: []
   });
   const [showFilters, setShowFilters] = useState(false);
-  const { language } = useApp();
 
   // Add new state for folder navigation
   const [currentPath, setCurrentPath] = useState<string[]>([]);
@@ -69,6 +54,67 @@ export default function FilesPage() {
 
   // Add state for files
   const [files, setFiles] = useState<any[]>([]);
+
+  // Add state for filter options
+  const [fiscalYears, setFiscalYears] = useState<{ id: string; name: string; }[]>([]);
+  const [sourceOptions, setSourceOptions] = useState<{ id: string; translationKey: string; translations: any; }[]>([]);
+  const [grantTypeOptions, setGrantTypeOptions] = useState<{ id: string; translationKey: string; translations: any; }[]>([]);
+
+  // Add utility functions for translations and number conversion
+  const toNepaliNumber = (input: string | number) => {
+    if (typeof input !== 'string') input = String(input);
+    const nepaliDigits = ['०','१','२','३','४','५','६','७','८','९'];
+    return input.replace(/[0-9]/g, d => nepaliDigits[d as any]);
+  };
+
+  // Helper function to format date based on current language
+  const formatDate = (date: Date | string | null | undefined) => {
+    if (!date) return '-';
+    try {
+      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      if (isNaN(dateObj.getTime())) return '-';
+      
+      let formattedDate = format(dateObj, 'MMM d, yyyy');
+      if (i18n.language === 'ne') {
+        formattedDate = formattedDate
+          .replace('Jan', 'जनवरी')
+          .replace('Feb', 'फेब्रुअरी')
+          .replace('Mar', 'मार्च')
+          .replace('Apr', 'अप्रिल')
+          .replace('May', 'मे')
+          .replace('Jun', 'जुन')
+          .replace('Jul', 'जुलाई')
+          .replace('Aug', 'अगस्ट')
+          .replace('Sep', 'सेप्टेम्बर')
+          .replace('Oct', 'अक्टोबर')
+          .replace('Nov', 'नोभेम्बर')
+          .replace('Dec', 'डिसेम्बर');
+        formattedDate = toNepaliNumber(formattedDate);
+      }
+      return formattedDate;
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return '-';
+    }
+  };
+
+  // Helper function to get translated source name
+  const getTranslatedSource = (sourceName: string | undefined) => {
+    if (!sourceName) return '-';
+    const key = sourceName.toLowerCase().replace(/\s+/g, '_');
+    const translationKey = `reports.sources.${key}`;
+    const translation = t(translationKey);
+    return translation === translationKey ? sourceName : translation;
+  };
+
+  // Helper function to get translated grant type
+  const getTranslatedGrantType = (grantTypeName: string | undefined) => {
+    if (!grantTypeName) return '-';
+    const key = grantTypeName.toLowerCase().replace(/\s+/g, '_');
+    const translationKey = `reports.grantTypes.${key}`;
+    const translation = t(translationKey);
+    return translation === translationKey ? grantTypeName : translation;
+  };
 
   // Handle URL changes
   useEffect(() => {
@@ -352,7 +398,7 @@ export default function FilesPage() {
               <span className="text-xs text-dark-300">{folder.user?.name || 'Unknown User'}</span>
             </div>
             <span className="text-xs text-dark-400">
-              {safeFormatDate(folder.lastModifiedAt)}
+              {formatDate(folder.lastModifiedAt)}
             </span>
           </div>
 
@@ -400,7 +446,7 @@ export default function FilesPage() {
               <span className="text-xs text-dark-300">{folder.user?.name || 'Unknown User'}</span>
             </div>
             <span className="text-xs text-dark-400">
-              {safeFormatDate(folder.lastModifiedAt)}
+              {formatDate(folder.lastModifiedAt)}
             </span>
           </div>
         </div>
@@ -505,22 +551,6 @@ export default function FilesPage() {
     // Convert to lowercase and replace spaces with underscores
     const formatted = grantTypeName.toLowerCase().replace(/\s+/g, '_');
     return formatted;
-  };
-
-  // Helper function to get translated source name
-  const getTranslatedSource = (sourceName: string | undefined) => {
-    if (!sourceName) return '-';
-    const key = formatSourceName(sourceName);
-    const translationKey = `reports.sources.${key}`;
-    return translationKey;
-  };
-
-  // Helper function to get translated grant type
-  const getTranslatedGrantType = (grantTypeName: string | undefined) => {
-    if (!grantTypeName) return '-';
-    const key = formatGrantTypeName(grantTypeName);
-    const translationKey = `reports.grantTypes.${key}`;
-    return translationKey;
   };
 
   // Update the filter options to use the correct type
@@ -675,8 +705,41 @@ export default function FilesPage() {
     });
   }, [folders, selectedFiscalYear, selectedSource, selectedGrantType]);
 
+  // Initialize fiscal years
+  useEffect(() => {
+    setFiscalYears(generateFiscalYears());
+  }, []);
+
+  // Fetch sources and grant types
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        // Fetch sources
+        const sourcesRes = await fetch('/api/admin/sources');
+        const sourcesData = await sourcesRes.json();
+        setSourceOptions(sourcesData.map((source: any) => ({
+          id: source.key,
+          translationKey: `reports.sources.${source.key}`,
+          translations: source.translations
+        })));
+
+        // Fetch grant types
+        const grantTypesRes = await fetch('/api/admin/grant-types');
+        const grantTypesData = await grantTypesRes.json();
+        setGrantTypeOptions(grantTypesData.map((grant: any) => ({
+          id: grant.key,
+          translationKey: `reports.grantTypes.${grant.key}`,
+          translations: grant.translations
+        })));
+      } catch (error) {
+        console.error('Error fetching options:', error);
+      }
+    };
+    fetchOptions();
+  }, []);
+
   return (
-    <div>
+    <div className="min-h-screen bg-dark-800">
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-dark-100"><TranslatedText text="files.heading" /></h1>
         <p className="mt-1 text-dark-300">
@@ -702,7 +765,66 @@ export default function FilesPage() {
         {/* Filter panel */}
         {showFilters && (
           <div className="mb-6 p-4 bg-dark-800 rounded-lg border border-dark-700">
-            {/* ... existing filter panel code ... */}
+            {/* Add filter dropdowns */}
+            <div className="flex items-center space-x-4 mb-4">
+              {/* Fiscal Year Filter */}
+              <div className="relative">
+                <select
+                  value={selectedFiscalYear || ''}
+                  onChange={(e) => handleFilterChange('fiscalYear', e.target.value || null)}
+                  className="block w-full rounded-md border-dark-600 bg-dark-800 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                >
+                  <option value=""><TranslatedText text="files.filters.allFiscalYears" /></option>
+                  {fiscalYears.map((year) => (
+                    <option key={year.id} value={year.name}>
+                      {year.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Source Filter */}
+              <div className="relative">
+                <select
+                  value={selectedSource || ''}
+                  onChange={(e) => handleFilterChange('source', e.target.value || null)}
+                  className="block w-full rounded-md border-dark-600 bg-dark-800 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                >
+                  <option value=""><TranslatedText text="files.filters.allSources" /></option>
+                  {sourceOptions.map((source) => (
+                    <option key={source.id} value={source.id}>
+                      {source.translations[i18n.language] || source.translations.en}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Grant Type Filter */}
+              <div className="relative">
+                <select
+                  value={selectedGrantType || ''}
+                  onChange={(e) => handleFilterChange('grantType', e.target.value || null)}
+                  className="block w-full rounded-md border-dark-600 bg-dark-800 text-dark-100 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                >
+                  <option value=""><TranslatedText text="files.filters.allGrantTypes" /></option>
+                  {grantTypeOptions.map((grantType) => (
+                    <option key={grantType.id} value={grantType.id}>
+                      {grantType.translations[i18n.language] || grantType.translations.en}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Clear Filters Button */}
+              {(selectedFiscalYear || selectedSource || selectedGrantType) && (
+                <button
+                  onClick={clearFilters}
+                  className="px-3 py-2 text-sm text-dark-300 hover:text-white transition-colors"
+                >
+                  <TranslatedText text="files.emptyState.clearFilters" />
+                </button>
+              )}
+            </div>
           </div>
         )}
 
@@ -760,7 +882,7 @@ export default function FilesPage() {
                           <span className="text-xs text-dark-300">{file.user?.name || 'Unknown User'}</span>
                         </div>
                         <span className="text-xs text-dark-400">
-                          {safeFormatDate(file.lastModifiedAt)}
+                          {formatDate(file.lastModifiedAt)}
                         </span>
                       </div>
                     </div>
@@ -884,22 +1006,22 @@ export default function FilesPage() {
                             </td>
                             <td className="px-6 py-4">
                               <span className="truncate block">
-                                {folder.fiscalYear?.name || '-'}
+                                {i18n.language === 'ne' ? toNepaliNumber(folder.fiscalYear?.name ?? '') : folder.fiscalYear?.name}
                               </span>
                             </td>
                             <td className="px-6 py-4">
                               <span className="truncate block">
-                                {folder.source?.name || '-'}
+                                {getTranslatedSource(folder.source?.name)}
                               </span>
                             </td>
                             <td className="px-6 py-4">
                               <span className="truncate block">
-                                {folder.grantType?.name || '-'}
+                                {getTranslatedGrantType(folder.grantType?.name)}
                               </span>
                             </td>
                             <td className="px-6 py-4">
                               <span className="truncate block">
-                                {safeFormatDate(folder.createdAt)}
+                                {formatDate(folder.createdAt)}
                               </span>
                             </td>
                             <td className="px-6 py-4 text-right text-sm font-medium">
@@ -928,7 +1050,7 @@ export default function FilesPage() {
                             </td>
                             <td className="px-6 py-4">
                               <span className="truncate block">
-                                {file.fiscalYear?.name || '-'}
+                                {i18n.language === 'ne' ? toNepaliNumber(file.fiscalYear?.name ?? '') : file.fiscalYear?.name}
                               </span>
                             </td>
                             <td className="px-6 py-4">
@@ -943,7 +1065,7 @@ export default function FilesPage() {
                             </td>
                             <td className="px-6 py-4">
                               <span className="truncate block">
-                                {safeFormatDate(file.createdAt)}
+                                {formatDate(file.createdAt)}
                               </span>
                             </td>
                             <td className="px-6 py-4 text-right text-sm font-medium">
