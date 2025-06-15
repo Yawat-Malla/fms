@@ -218,7 +218,13 @@ export async function GET(
       const chunks: Buffer[] = [];
       const readStream = createReadStream(zipPath);
       
-      readStream.on('data', (chunk) => chunks.push(chunk));
+      readStream.on('data', (chunk) => {
+        if (Buffer.isBuffer(chunk)) {
+          chunks.push(chunk);
+        } else {
+          chunks.push(Buffer.from(chunk));
+        }
+      });
       readStream.on('end', () => resolve(Buffer.concat(chunks)));
       readStream.on('error', reject);
     });

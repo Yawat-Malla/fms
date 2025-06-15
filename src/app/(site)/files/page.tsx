@@ -17,6 +17,7 @@ import FileActions from '@/components/FileActions';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getFileOrFolderIcon } from '@/components/DriveTable';
 import { useTranslation } from 'react-i18next';
+import { File, Folder } from '@/types/file';
 
 export default function FilesPage() {
   const { t, i18n } = useTranslation();
@@ -27,7 +28,7 @@ export default function FilesPage() {
   const [activeTab, setActiveTab] = useState('view-all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFolders, setSelectedFolders] = useState<any[]>([]);
-  const [viewType, setViewType] = useState<'grid' | 'list'>('list');
+  const [viewType, setViewType] = useState<'list' | 'grid'>('list');
   const [selectedFiscalYear, setSelectedFiscalYear] = useState<string | null>(null);
   const [selectedSource, setSelectedSource] = useState<string | null>(null);
   const [selectedGrantType, setSelectedGrantType] = useState<string | null>(null);
@@ -60,11 +61,36 @@ export default function FilesPage() {
   const [sourceOptions, setSourceOptions] = useState<{ id: string; translationKey: string; translations: any; }[]>([]);
   const [grantTypeOptions, setGrantTypeOptions] = useState<{ id: string; translationKey: string; translations: any; }[]>([]);
 
+  // Add state for sorting
+  const [sortField, setSortField] = useState<keyof File | keyof Folder>('name');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  // Add state for selected items
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+
   // Add utility functions for translations and number conversion
   const toNepaliNumber = (input: string | number) => {
     if (typeof input !== 'string') input = String(input);
     const nepaliDigits = ['०','१','२','३','४','५','६','७','८','९'];
     return input.replace(/[0-9]/g, d => nepaliDigits[d as any]);
+  };
+
+  // Helper function to format file size
+  const formatFileSize = (bytes: number | undefined | null): string => {
+    if (!bytes) return '-';
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    let size = bytes;
+    let unitIndex = 0;
+    
+    while (size >= 1024 && unitIndex < units.length - 1) {
+      size /= 1024;
+      unitIndex++;
+    }
+    
+    const formattedSize = size.toFixed(1).replace(/\.0$/, '');
+    const formatted = `${formattedSize} ${units[unitIndex]}`;
+    
+    return i18n.language === 'ne' ? toNepaliNumber(formatted) : formatted;
   };
 
   // Helper function to format date based on current language
@@ -928,7 +954,7 @@ export default function FilesPage() {
             {/* View toggle */}
             <div className="flex items-center bg-dark-700 border border-dark-600 rounded-md p-1">
               <button 
-                className={viewType === 'grid' ? 'p-1 rounded bg-dark-600 text-dark-100' : 'p-1 rounded text-dark-400'}
+                className={(viewType as 'list' | 'grid') === 'grid' ? 'p-1 rounded bg-dark-600 text-dark-100' : 'p-1 rounded text-dark-400'}
                 onClick={() => setViewType('grid')}
               >
                 <svg className="h-5 w-5" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -939,7 +965,7 @@ export default function FilesPage() {
                 </svg>
               </button>
               <button 
-                className={viewType === 'list' ? 'p-1 rounded bg-dark-600 text-dark-100' : 'p-1 rounded text-dark-400'}
+                className={(viewType as 'list' | 'grid') === 'list' ? 'p-1 rounded bg-dark-600 text-dark-100' : 'p-1 rounded text-dark-400'}
                 onClick={() => setViewType('list')}
               >
                 <svg className="h-5 w-5" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
