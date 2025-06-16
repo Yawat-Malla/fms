@@ -55,11 +55,9 @@ export default async function RootLayout({
           <SettingsProvider>
             <Providers session={session}>
               <TextSettingsProvider>
-                <AppProvider>
-                  <DynamicTitle />
-                  {children}
-                  <Toaster position="top-right" />
-                </AppProvider>
+                <DynamicTitle />
+                {children}
+                <Toaster position="top-right" />
               </TextSettingsProvider>
             </Providers>
           </SettingsProvider>

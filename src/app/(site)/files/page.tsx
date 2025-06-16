@@ -992,29 +992,29 @@ export default function FilesPage() {
 
                 <div className="bg-dark-800 rounded-lg border border-dark-700 overflow-hidden">
                   <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-dark-700">
+                    <table className="min-w-full divide-y divide-dark-700 table-fixed">
                       <thead className="bg-dark-700">
                         <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
-                    <TranslatedText text="files.table.name" />
-                  </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
+                          <th className="w-1/3 px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
+                            <TranslatedText text="files.table.name" />
+                          </th>
+                          <th className="w-1/6 px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
                             <TranslatedText text="files.table.fiscalYear" />
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
+                          <th className="w-1/6 px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
                             <TranslatedText text="files.table.source" />
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
+                          <th className="w-1/6 px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
                             <TranslatedText text="files.table.grantType" />
-                  </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
+                          </th>
+                          <th className="w-1/6 px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
                             <TranslatedText text="files.table.created" />
-                  </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
+                          </th>
+                          <th className="w-1/12 px-6 py-3 text-left text-xs font-medium text-dark-300 uppercase tracking-wider">
                             <TranslatedText text="files.table.actions" />
-                  </th>
-                </tr>
-              </thead>
+                          </th>
+                        </tr>
+                      </thead>
                       <tbody className="divide-y divide-dark-700">
                         {/* Show folders */}
                         {filteredFolders.map((folder) => (
@@ -1024,7 +1024,7 @@ export default function FilesPage() {
                                 onClick={() => handleFolderClick(folder)}
                                 className="flex items-center text-dark-100 hover:text-primary-500 transition-colors w-full"
                               >
-                                <svg className="w-5 h-5 mr-2 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-5 h-5 mr-2 text-yellow-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                                 </svg>
                                 <span className="truncate">{folder.name}</span>
@@ -1070,7 +1070,7 @@ export default function FilesPage() {
                                 onClick={() => handleFileClick(file)}
                                 className="flex items-center text-dark-100 hover:text-primary-500 transition-colors w-full"
                               >
-                                {getFileOrFolderIcon(file, false, 'w-5 h-5 mr-2 text-primary-400')}
+                                {getFileOrFolderIcon(file, false, 'w-5 h-5 mr-2 text-primary-400 flex-shrink-0')}
                                 <span className="truncate">{file.name}</span>
                               </button>
                             </td>
@@ -1104,9 +1104,9 @@ export default function FilesPage() {
                               />
                             </td>
                           </tr>
-                ))}
-              </tbody>
-            </table>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </>

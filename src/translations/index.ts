@@ -309,6 +309,7 @@ export interface Translations {
     generate: string;
     generating: string;
     download: string;
+    view: string;
     delete: string;
     deleteAll: string;
     confirmDelete: string;
@@ -668,6 +669,7 @@ export const translations: Record<Language, Translations> = {
       generate: 'Generate',
       generating: 'Generating...',
       download: 'Download',
+      view: 'View',
       delete: 'Delete',
       deleteAll: 'Delete All',
       confirmDelete: 'Delete Report?',
@@ -1025,6 +1027,7 @@ export const translations: Record<Language, Translations> = {
       generate: 'तयार पार्नुहोस्',
       generating: 'प्रतिवेदन तयार पार्दै...',
       download: 'डाउनलोड गर्नुहोस्',
+      view: 'हेर्नुहोस्',
       delete: 'मेट्नुहोस्',
       deleteAll: 'सबै मेट्नुहोस्',
       confirmDelete: 'प्रतिवेदन मेट्ने?',

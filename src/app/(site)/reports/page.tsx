@@ -204,6 +204,20 @@ export default function ReportsPage() {
     }
   };
 
+  const handleView = async (report: Report) => {
+    if (!report.downloadUrl) {
+      toast.error(translations[language].reports.errors.downloadFailed);
+      return;
+    }
+
+    try {
+      window.open(report.downloadUrl, '_blank');
+    } catch (error) {
+      console.error('Error viewing report:', error);
+      toast.error(translations[language].reports.errors.downloadFailed);
+    }
+  };
+
   const handleDeleteAllReports = async () => {
     if (!confirm(translations[language].reports.confirmDeleteAllMessage)) {
       return;
@@ -569,15 +583,14 @@ export default function ReportsPage() {
                         >
                           <TranslatedText text="reports.download" />
                         </Button>
-                        {session?.user?.role !== 'viewer' && (
-                          <Button
-                            size="sm"
-                            variant="danger"
-                            onClick={() => handleDeleteReport(report)}
-                          >
-                            <TranslatedText text="reports.delete" />
-                          </Button>
-                        )}
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => handleView(report)}
+                          disabled={!report.downloadUrl}
+                        >
+                          <TranslatedText text="reports.view" />
+                        </Button>
                       </div>
                     </td>
                   </tr>
