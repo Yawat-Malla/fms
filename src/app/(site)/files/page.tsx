@@ -1018,8 +1018,8 @@ export default function FilesPage() {
                       <tbody className="divide-y divide-dark-700">
                         {/* Show folders */}
                         {filteredFolders.map((folder) => (
-                          <tr key={folder.id} className="hover:bg-dark-700 static overflow-visible">
-                            <td className="px-6 py-4">
+                          <tr key={folder.id} className="hover:bg-dark-700">
+                            <td className="px-6 py-4 max-w-0">
                               <button
                                 onClick={() => handleFolderClick(folder)}
                                 className="flex items-center text-dark-100 hover:text-primary-500 transition-colors w-full"
@@ -1027,25 +1027,25 @@ export default function FilesPage() {
                                 <svg className="w-5 h-5 mr-2 text-yellow-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                                 </svg>
-                                <span className="truncate">{folder.name}</span>
+                                <span className="truncate block">{folder.name}</span>
                               </button>
                             </td>
-                            <td className="px-6 py-4">
+                            <td className="px-6 py-4 max-w-0">
                               <span className="truncate block">
                                 {i18n.language === 'ne' ? toNepaliNumber(folder.fiscalYear?.name ?? '') : folder.fiscalYear?.name}
                               </span>
                             </td>
-                            <td className="px-6 py-4">
+                            <td className="px-6 py-4 max-w-0">
                               <span className="truncate block">
                                 {getTranslatedSource(folder.source?.name)}
                               </span>
                             </td>
-                            <td className="px-6 py-4">
+                            <td className="px-6 py-4 max-w-0">
                               <span className="truncate block">
                                 {getTranslatedGrantType(folder.grantType?.name)}
                               </span>
                             </td>
-                            <td className="px-6 py-4">
+                            <td className="px-6 py-4 max-w-0">
                               <span className="truncate block">
                                 {formatDate(folder.createdAt)}
                               </span>
@@ -1064,32 +1064,32 @@ export default function FilesPage() {
                         
                         {/* Show files from current folder */}
                         {files.map((file: any) => (
-                          <tr key={file.id} className="hover:bg-dark-700 static overflow-visible">
-                            <td className="px-6 py-4">
+                          <tr key={file.id} className="hover:bg-dark-700">
+                            <td className="px-6 py-4 max-w-0">
                               <button
                                 onClick={() => handleFileClick(file)}
                                 className="flex items-center text-dark-100 hover:text-primary-500 transition-colors w-full"
                               >
                                 {getFileOrFolderIcon(file, false, 'w-5 h-5 mr-2 text-primary-400 flex-shrink-0')}
-                                <span className="truncate">{file.name}</span>
+                                <span className="truncate block">{file.name}</span>
                               </button>
                             </td>
-                            <td className="px-6 py-4">
+                            <td className="px-6 py-4 max-w-0">
                               <span className="truncate block">
                                 {i18n.language === 'ne' ? toNepaliNumber(file.fiscalYear?.name ?? '') : file.fiscalYear?.name}
                               </span>
                             </td>
-                            <td className="px-6 py-4">
+                            <td className="px-6 py-4 max-w-0">
                               <span className="truncate block">
                                 {file.source?.name || '-'}
                               </span>
                             </td>
-                            <td className="px-6 py-4">
+                            <td className="px-6 py-4 max-w-0">
                               <span className="truncate block">
                                 {file.grantType?.name || '-'}
                               </span>
                             </td>
-                            <td className="px-6 py-4">
+                            <td className="px-6 py-4 max-w-0">
                               <span className="truncate block">
                                 {formatDate(file.createdAt)}
                               </span>
