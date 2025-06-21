@@ -8,7 +8,7 @@ const nextConfig = {
         protocol: 'http',
         hostname: 'localhost',
         port: '3000',
-        pathname: '/uploads/**',
+        pathname: '/**',
       },
     ],
   },
@@ -36,19 +36,15 @@ const nextConfig = {
     });
     return config;
   },
-  // Configure headers for static files
+  // Ensure public directory is properly served
   async headers() {
     return [
       {
-        source: '/uploads/:path*',
+        source: '/logos/:path*',
         headers: [
           {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, immutable',
-          },
-          {
-            key: 'Content-Type',
-            value: 'image/jpeg',
           },
         ],
       },

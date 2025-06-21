@@ -51,6 +51,7 @@ export default function FilesPage() {
   const [prevFolders, setPrevFolders] = useState<any[]>([]);
   const [prevFiles, setPrevFiles] = useState<any[]>([]);
   const [renamingGridItem, setRenamingGridItem] = useState<{ id: number; name: string; isFolder: boolean } | null>(null);
+  const [renamingListItem, setRenamingListItem] = useState<{ id: number; name: string; isFolder: boolean } | null>(null);
   const [recentlyModifiedFolders, setRecentlyModifiedFolders] = useState<any[]>([]);
 
   // Add state for files
@@ -319,6 +320,58 @@ export default function FilesPage() {
   };
 
   const handleGridRenameCancel = () => setRenamingGridItem(null);
+
+  const handleListRename = (item: any, isFolder: boolean) => {
+    setRenamingListItem({ id: item.id, name: item.name, isFolder });
+  };
+
+  const handleListRenameSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!renamingListItem) return;
+
+    const formData = new FormData(e.currentTarget);
+    const newName = formData.get('name') as string;
+
+    try {
+      const response = await fetch(
+        `/api/${renamingListItem.isFolder ? 'folders' : 'files'}/${
+          renamingListItem.id
+        }`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: newName }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to rename');
+      }
+
+      toast.success(
+        `${renamingListItem.isFolder ? 'Folder' : 'File'} renamed successfully`
+      );
+
+      // Optimistic UI Update
+      if (renamingListItem.isFolder) {
+        setFolders(folders.map(f => f.id === renamingListItem.id ? { ...f, name: newName } : f));
+      } else {
+        setFiles(files.map(f => f.id === renamingListItem.id ? { ...f, name: newName } : f));
+      }
+
+      setRenamingListItem(null);
+    } catch (error) {
+      toast.error(
+        `Failed to rename ${renamingListItem.isFolder ? 'folder' : 'file'}`
+      );
+      // Optional: Revert optimistic update on error
+      fetchFolders();
+    }
+  };
+
+  const handleListRenameCancel = () => {
+    setRenamingListItem(null);
+  };
 
   // Add breadcrumbs
   const breadcrumbs = [
@@ -1020,15 +1073,29 @@ export default function FilesPage() {
                         {filteredFolders.map((folder) => (
                           <tr key={folder.id} className="hover:bg-dark-700">
                             <td className="px-6 py-4 max-w-0">
-                              <button
-                                onClick={() => handleFolderClick(folder)}
-                                className="flex items-center text-dark-100 hover:text-primary-500 transition-colors w-full"
-                              >
-                                <svg className="w-5 h-5 mr-2 text-yellow-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                                </svg>
-                                <span className="truncate block">{folder.name}</span>
-                              </button>
+                              {renamingListItem?.id === folder.id ? (
+                                <form onSubmit={handleListRenameSubmit} className="flex items-center">
+                                  <input
+                                    type="text"
+                                    name="name"
+                                    defaultValue={renamingListItem.name}
+                                    className="bg-dark-900 border border-primary-500 rounded px-2 py-1 w-full text-black"
+                                    autoFocus
+                                  />
+                                  <button type="submit" className="p-1 text-green-500">✓</button>
+                                  <button type="button" onClick={handleListRenameCancel} className="p-1 text-red-500">✗</button>
+                                </form>
+                              ) : (
+                                <button
+                                  onClick={() => handleFolderClick(folder)}
+                                  className="flex items-center text-dark-100 hover:text-primary-500 transition-colors w-full"
+                                >
+                                  <svg className="w-5 h-5 mr-2 text-yellow-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                                  </svg>
+                                  <span className="truncate block">{folder.name}</span>
+                                </button>
+                              )}
                             </td>
                             <td className="px-6 py-4 max-w-0">
                               <span className="truncate block">
@@ -1055,7 +1122,7 @@ export default function FilesPage() {
                                 item={folder}
                                 isFolder={true}
                                 onOpen={() => handleFolderClick(folder)}
-                                onRename={() => handleGridRename(folder, true)}
+                                onRename={() => handleListRename(folder, true)}
                                 onDelete={() => handleDeleteFolder(folder)}
                               />
                             </td>
@@ -1066,6 +1133,19 @@ export default function FilesPage() {
                         {files.map((file: any) => (
                           <tr key={file.id} className="hover:bg-dark-700">
                             <td className="px-6 py-4 max-w-0">
+                            {renamingListItem?.id === file.id ? (
+                                <form onSubmit={handleListRenameSubmit} className="flex items-center">
+                                  <input
+                                    type="text"
+                                    name="name"
+                                    defaultValue={renamingListItem.name}
+                                    className="bg-dark-900 border border-primary-500 rounded px-2 py-1 w-full text-black"
+                                    autoFocus
+                                  />
+                                  <button type="submit" className="p-1 text-green-500">✓</button>
+                                  <button type="button" onClick={handleListRenameCancel} className="p-1 text-red-500">✗</button>
+                                </form>
+                              ) : (
                               <button
                                 onClick={() => handleFileClick(file)}
                                 className="flex items-center text-dark-100 hover:text-primary-500 transition-colors w-full"
@@ -1073,6 +1153,7 @@ export default function FilesPage() {
                                 {getFileOrFolderIcon(file, false, 'w-5 h-5 mr-2 text-primary-400 flex-shrink-0')}
                                 <span className="truncate block">{file.name}</span>
                               </button>
+                              )}
                             </td>
                             <td className="px-6 py-4 max-w-0">
                               <span className="truncate block">
@@ -1099,7 +1180,7 @@ export default function FilesPage() {
                                 item={file}
                                 isFolder={false}
                                 onOpen={() => handleFileClick(file)}
-                                onRename={() => handleGridRename(file, false)}
+                                onRename={() => handleListRename(file, false)}
                                 onDelete={() => handleDeleteFile(file)}
                               />
                             </td>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 
 const DEFAULT_LOGO = '/nepal-emblem.png';
@@ -21,21 +21,36 @@ export default function Logo({
   const [logoPath, setLogoPath] = useState<string>(initialLogoPath);
   const [error, setError] = useState<string | null>(null);
 
-  console.log('[Logo] Component props:', {
+  // Update logoPath when initialLogoPath changes
+  useEffect(() => {
+    console.log('[Logo] InitialLogoPath changed:', initialLogoPath);
+    setLogoPath(initialLogoPath);
+    setError(null);
+  }, [initialLogoPath]);
+
+  console.log('[Logo] Rendering with:', {
     width,
     height,
     className,
-    initialLogoPath
-  });
-
-  console.log('[Logo] Current state:', {
     logoPath,
     error
   });
 
   if (error) {
     console.error('[Logo] Error state:', error);
-    return <div className={`text-red-500 ${className}`}>Logo error: {error}</div>;
+    return (
+      <div className={`relative ${className}`} style={{ width, height }}>
+        <Image
+          src={DEFAULT_LOGO}
+          alt="Default Site Logo"
+          width={width}
+          height={height}
+          className={className}
+          priority
+          unoptimized
+        />
+      </div>
+    );
   }
   
   return (

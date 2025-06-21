@@ -45,12 +45,12 @@ export async function POST(request: Request) {
       const bytes = await logoFile.arrayBuffer();
       const buffer = Buffer.from(bytes);
       
-      // Create uploads directory if it doesn't exist
-      const uploadsDir = path.join(process.cwd(), 'uploads');
+      // Create public/logos directory if it doesn't exist
+      const logosDir = path.join(process.cwd(), 'public', 'logos');
       try {
-        await mkdir(uploadsDir, { recursive: true });
+        await mkdir(logosDir, { recursive: true });
       } catch (error) {
-        console.error('Error creating uploads directory:', error);
+        console.error('Error creating logos directory:', error);
       }
 
       // Get the file extension from the original filename
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
       // Generate a unique filename with the original extension
       const timestamp = Date.now();
       const filename = `site-logo-${timestamp}${extension}`;
-      const filePath = path.join(uploadsDir, filename);
+      const filePath = path.join(logosDir, filename);
       
       console.log('Saving logo file:', {
         originalName,
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
       });
 
       await writeFile(filePath, buffer);
-      logoPath = `/uploads/${filename}`;
+      logoPath = `/logos/${filename}`;
     }
 
     // First, try to find existing settings
