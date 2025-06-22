@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import Card from '@/components/ui/Card';
@@ -53,6 +53,8 @@ export default function FilesPage() {
   const [renamingGridItem, setRenamingGridItem] = useState<{ id: number; name: string; isFolder: boolean } | null>(null);
   const [renamingListItem, setRenamingListItem] = useState<{ id: number; name: string; isFolder: boolean } | null>(null);
   const [recentlyModifiedFolders, setRecentlyModifiedFolders] = useState<any[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Add state for files
   const [files, setFiles] = useState<any[]>([]);
@@ -371,6 +373,45 @@ export default function FilesPage() {
 
   const handleListRenameCancel = () => {
     setRenamingListItem(null);
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) {
+      return;
+    }
+
+    if (!currentFolder?.id) {
+      toast.error('Cannot upload to the root directory. Please select a folder.');
+      return;
+    }
+
+    setIsUploading(true);
+    const formData = new FormData();
+    Array.from(files).forEach(file => {
+      formData.append('files', file);
+    });
+
+    try {
+      const response = await fetch(`/api/folders/${currentFolder.id}/files`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('File upload failed');
+      }
+
+      toast.success('Files uploaded successfully');
+      fetchFolders(); // Refresh the file list
+    } catch (error) {
+      toast.error('Failed to upload files.');
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
   };
 
   // Add breadcrumbs
@@ -1002,6 +1043,28 @@ export default function FilesPage() {
                     </nav>
                   </div>
                   <div className="flex items-center space-x-2">
+                    {files.length > 0 && (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        leftIcon={
+                          <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M10 4v12m-6-6h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                          </svg>
+                        }
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploading}
+                      >
+                        <TranslatedText text={isUploading ? "Uploading..." : "Add Files"} />
+                      </Button>
+                    )}
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      multiple
+                    />
                     {/* Add Create Subfolder button when in a subfolder */}
                     
             {/* View toggle */}
@@ -1078,7 +1141,7 @@ export default function FilesPage() {
                                   <input
                                     type="text"
                                     name="name"
-                                    defaultValue={renamingListItem.name}
+                                    defaultValue={renamingListItem?.name || ''}
                                     className="bg-dark-900 border border-primary-500 rounded px-2 py-1 w-full text-black"
                                     autoFocus
                                   />
@@ -1138,7 +1201,7 @@ export default function FilesPage() {
                                   <input
                                     type="text"
                                     name="name"
-                                    defaultValue={renamingListItem.name}
+                                    defaultValue={renamingListItem?.name || ''}
                                     className="bg-dark-900 border border-primary-500 rounded px-2 py-1 w-full text-black"
                                     autoFocus
                                   />

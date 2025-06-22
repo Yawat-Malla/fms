@@ -8,6 +8,7 @@ import ExcelJS from 'exceljs';
 import { jsPDF } from 'jspdf';
 import fs from 'fs';
 import path from 'path';
+import { Buffer } from 'node:buffer';
 
 // Create uploads directory if it doesn't exist
 const uploadsDir = path.join(process.cwd(), 'uploads');
@@ -163,6 +164,9 @@ export async function GET(request: Request) {
 async function generateFileCountReport(parameters: any) {
   const { startDate, endDate, fiscalYear, source, grantType } = parameters;
 
+  // Get system settings for site name and logo
+  const settings = await prisma.systemSettings.findFirst();
+
   const folders = await prisma.folder.findMany({
     where: {
       createdAt: {
@@ -173,6 +177,7 @@ async function generateFileCountReport(parameters: any) {
       source: source ? { name: source } : undefined,
       grantType: grantType ? { name: grantType } : undefined,
       isDeleted: false,
+      parentId: null, // Only get root folders, exclude subfolders
     },
     include: {
       fiscalYear: true,
@@ -181,18 +186,6 @@ async function generateFileCountReport(parameters: any) {
       files: {
         where: {
           isDeleted: false,
-        },
-      },
-      subfolders: {
-        where: {
-          isDeleted: false,
-        },
-        include: {
-          files: {
-            where: {
-              isDeleted: false,
-            },
-          },
         },
       },
     },
@@ -200,27 +193,22 @@ async function generateFileCountReport(parameters: any) {
 
   return {
     title: 'Folder Count Report',
+    siteName: settings?.siteName || 'File Management System',
+    siteLogo: '/nepal-emblem.png', // Use default logo
     parameters,
     summary: {
       totalFolders: folders.length,
-      totalFiles: folders.reduce((sum, folder) => {
-        const directFiles = folder.files.length;
-        const subfolderFiles = folder.subfolders.reduce((subSum, subfolder) => subSum + subfolder.files.length, 0);
-        return sum + directFiles + subfolderFiles;
-      }, 0),
+      totalFiles: folders.reduce((sum, folder) => sum + folder.files.length, 0),
       byFiscalYear: groupBy(folders, 'fiscalYear.name'),
       bySource: groupBy(folders, 'source.name'),
       byGrantType: groupBy(folders, 'grantType.name'),
     },
     details: folders.map(folder => ({
       name: folder.name,
-      path: folder.path,
       fiscalYear: folder.fiscalYear?.name || 'N/A',
       source: folder.source?.name || 'N/A',
       grantType: folder.grantType?.name || 'N/A',
       createdAt: format(new Date(folder.createdAt), 'yyyy-MM-dd'),
-      totalFiles: folder.files.length + folder.subfolders.reduce((sum, subfolder) => sum + subfolder.files.length, 0),
-      subfolders: folder.subfolders.length,
     })),
   };
 }
@@ -228,90 +216,57 @@ async function generateFileCountReport(parameters: any) {
 async function generateMissingUploadsReport(parameters: any) {
   const { fiscalYear, source, grantType } = parameters;
 
-  // Get all folders with their files, subfolders, and metadata
+  // Get system settings for site name and logo
+  const settings = await prisma.systemSettings.findFirst();
+
+  // Get all root folders with their files, excluding subfolders
   const folders = await prisma.folder.findMany({
     where: {
       fiscalYear: fiscalYear ? { name: fiscalYear } : undefined,
       source: source ? { name: source } : undefined,
       grantType: grantType ? { name: grantType } : undefined,
       isDeleted: false,
+      parentId: null, // Only get root folders, exclude subfolders
     },
     include: {
+      fiscalYear: true,
+      source: true,
+      grantType: true,
       files: {
         where: {
           isDeleted: false,
         },
       },
-      subfolders: {
-        where: {
-          isDeleted: false,
-        },
-        include: {
-          files: {
-            where: {
-              isDeleted: false,
-            },
-          },
-        },
-      },
-      fiscalYear: true,
-      source: true,
-      grantType: true,
-      user: {
-        select: {
-          name: true,
-          email: true,
-        },
-      },
     },
   });
-
-  // Find folders with no files (including subfolders)
-  const foldersWithNoFiles = folders.filter(folder => {
-    // Check if the folder itself has files
-    if (folder.files.length > 0) {
-      return false;
-    }
-
-    // Check if any subfolder has files
-    const hasFilesInSubfolders = folder.subfolders.some(subfolder => subfolder.files.length > 0);
-    if (hasFilesInSubfolders) {
-      return false;
-    }
-
-    return true;
-  });
-
-  // Format the details with all metadata fields
-  const formattedDetails = foldersWithNoFiles.map(folder => ({
-    name: folder.name,
-    path: folder.path,
-    fiscalYear: folder.fiscalYear?.name || 'N/A',
-    source: folder.source?.name || 'N/A',
-    grantType: folder.grantType?.name || 'N/A',
-    createdAt: format(new Date(folder.createdAt), 'yyyy-MM-dd'),
-    createdBy: folder.user?.name || 'N/A',
-    subfolders: folder.subfolders.length,
-  }));
 
   return {
     title: 'Empty Folders Report',
+    siteName: settings?.siteName || 'File Management System',
+    siteLogo: '/nepal-emblem.png', // Use default logo
     parameters,
     summary: {
       totalFolders: folders.length,
-      emptyFolders: foldersWithNoFiles.length,
-      byFiscalYear: groupBy(foldersWithNoFiles, 'fiscalYear.name'),
-      bySource: groupBy(foldersWithNoFiles, 'source.name'),
-      byGrantType: groupBy(foldersWithNoFiles, 'grantType.name'),
+      emptyFolders: folders.filter(folder => folder.files.length === 0).length,
+      foldersWithFiles: folders.filter(folder => folder.files.length > 0).length,
     },
-    details: formattedDetails,
+    details: folders.map(folder => ({
+      name: folder.name,
+      fiscalYear: folder.fiscalYear?.name || 'N/A',
+      source: folder.source?.name || 'N/A',
+      grantType: folder.grantType?.name || 'N/A',
+      createdAt: format(new Date(folder.createdAt), 'yyyy-MM-dd'),
+      isEmpty: folder.files.length === 0,
+    })),
   };
 }
 
 async function generateCustomReport(parameters: any) {
   const { startDate, endDate, fiscalYear, source, grantType } = parameters;
 
-  // Get all folders matching the criteria
+  // Get system settings for site name and logo
+  const settings = await prisma.systemSettings.findFirst();
+
   const folders = await prisma.folder.findMany({
     where: {
       createdAt: {
@@ -322,65 +277,47 @@ async function generateCustomReport(parameters: any) {
       source: source ? { name: source } : undefined,
       grantType: grantType ? { name: grantType } : undefined,
       isDeleted: false,
+      parentId: null, // Only get root folders, exclude subfolders
     },
     include: {
+      fiscalYear: true,
+      source: true,
+      grantType: true,
       files: {
-        where: {
-          isDeleted: false,
-            },
-          },
-          subfolders: {
         where: {
           isDeleted: false,
         },
         include: {
-          files: {
-            where: {
-              isDeleted: false,
+          user: {
+            select: {
+              name: true,
+              email: true,
             },
           },
-        },
-      },
-      fiscalYear: true,
-      source: true,
-      grantType: true,
-      user: {
-        select: {
-          name: true,
-          email: true,
         },
       },
     },
   });
 
-  // Format the details with all metadata fields
-  const formattedDetails = folders.map(folder => ({
-    name: folder.name,
-    path: folder.path,
-    fiscalYear: folder.fiscalYear?.name || 'N/A',
-    source: folder.source?.name || 'N/A',
-    grantType: folder.grantType?.name || 'N/A',
-    createdAt: format(new Date(folder.createdAt), 'yyyy-MM-dd'),
-    createdBy: folder.user?.name || 'N/A',
-    totalFiles: folder.files.length + folder.subfolders.reduce((sum, subfolder) => sum + subfolder.files.length, 0),
-    subfolders: folder.subfolders.length,
-  }));
-
   return {
-    title: 'Custom Folder Report',
+    title: 'Folder Metadata Report',
+    siteName: settings?.siteName || 'File Management System',
+    siteLogo: '/nepal-emblem.png', // Use default logo
     parameters,
     summary: {
       totalFolders: folders.length,
-      totalFiles: folders.reduce((sum, folder) => {
-        const directFiles = folder.files.length;
-        const subfolderFiles = folder.subfolders.reduce((subSum, subfolder) => subSum + subfolder.files.length, 0);
-        return sum + directFiles + subfolderFiles;
-      }, 0),
-      byFiscalYear: groupBy(folders, 'fiscalYear.name'),
-      bySource: groupBy(folders, 'source.name'),
-      byGrantType: groupBy(folders, 'grantType.name'),
+      totalFiles: folders.reduce((sum, folder) => sum + folder.files.length, 0),
+      totalSize: folders.reduce((sum, folder) => 
+        sum + folder.files.reduce((fileSum, file) => fileSum + file.size, 0), 0
+      ),
     },
-    details: formattedDetails,
+    details: folders.map(folder => ({
+      name: folder.name,
+      fiscalYear: folder.fiscalYear?.name || 'N/A',
+      source: folder.source?.name || 'N/A',
+      grantType: folder.grantType?.name || 'N/A',
+      createdAt: format(new Date(folder.createdAt), 'yyyy-MM-dd'),
+    })),
   };
 }
 
@@ -397,8 +334,44 @@ async function generateExcelReport(data: any, filePath: string) {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('Report');
 
-  // Add title
-  worksheet.addRow([data.title]);
+  // Add logo and title on the same line
+  if (data.siteLogo) {
+    try {
+      const logoPath = path.join(process.cwd(), 'public', data.siteLogo.replace('/', ''));
+      if (fs.existsSync(logoPath)) {
+        const imageBuffer = Buffer.from(fs.readFileSync(logoPath));
+        const imageId = workbook.addImage({
+          buffer: imageBuffer as any,
+          extension: 'png',
+        });
+        
+        // Set row height to accommodate logo
+        worksheet.getRow(1).height = 35;
+
+        // Add logo to the first row
+        worksheet.addImage(imageId, {
+          tl: { col: 0.1, row: 0.1 },
+          ext: { width: 40, height: 40 }
+        });
+        
+        // Add site name next to logo on the same row
+        const titleCell = worksheet.getCell('B1');
+        titleCell.value = data.siteName;
+        titleCell.font = { bold: true, size: 16 };
+        titleCell.alignment = { vertical: 'middle', horizontal: 'left' };
+        worksheet.mergeCells(`B1:${String.fromCharCode(65 + Math.max(Object.keys(data.details?.[0] || {}).length - 1, 5))}1`);
+        worksheet.addRow([]); // empty row for spacing
+      }
+    } catch (error) {
+      console.log('Could not add logo to Excel report:', error);
+    }
+  }
+
+  // Add report title on the next line
+  const reportTitleRow = worksheet.addRow([data.title || 'Report']);
+  reportTitleRow.font = { bold: true, size: 14 };
+  reportTitleRow.alignment = { horizontal: 'center' };
+  worksheet.mergeCells(`A${worksheet.rowCount}:${String.fromCharCode(65 + Math.max(Object.keys(data.details?.[0] || {}).length - 1, 5))}${worksheet.rowCount}`);
   worksheet.addRow([]);
 
   // Add parameters
@@ -467,9 +440,38 @@ async function generatePDFReport(data: any, filePath: string) {
         }
       };
 
-      // Add title
+      // Add logo and site name on the same line
+      if (data.siteLogo) {
+        try {
+          const logoPath = path.join(process.cwd(), 'public', data.siteLogo.replace('/', ''));
+          if (fs.existsSync(logoPath)) {
+            const imageBuffer = Buffer.from(fs.readFileSync(logoPath));
+            const logoHeight = 25;
+            const logoWidth = 25;
+            doc.addImage(imageBuffer, 'PNG', margin, yPos, logoWidth, logoHeight);
+            
+            // Add site name next to the logo, vertically centered
+            if (data.siteName) {
+              doc.setFont('helvetica', 'bold');
+              doc.setFontSize(16);
+              const textY = yPos + (logoHeight / 2);
+              doc.text(String(data.siteName), margin + logoWidth + 5, textY, { baseline: 'middle' });
+            }
+            yPos += logoHeight + 10; // Move yPos below logo and add space
+          }
+        } catch (error) {
+          console.log('Could not add logo to PDF report:', error);
+        }
+      } else if (data.siteName) {
+        // If no logo, just add site name
+        doc.setFont('helvetica', 'bold');
+        addText(data.siteName, margin, 16);
+        yPos += 20;
+      }
+
+      // Add report title on the next line
       doc.setFont('helvetica', 'bold');
-      addText(data.title || 'Report', margin, 16);
+      addText(data.title || 'Report', margin, 14);
       yPos += 15;
 
       // Add parameters section
@@ -513,16 +515,13 @@ async function generatePDFReport(data: any, filePath: string) {
         addText('Details:', margin, 12);
         yPos += 10;
 
-        // Define columns for the report
-        const columns = [
-          { header: 'Name', key: 'name', width: 30 },
-          { header: 'Fiscal Year', key: 'fiscalYear', width: 20 },
-          { header: 'Source', key: 'source', width: 20 },
-          { header: 'Grant Type', key: 'grantType', width: 20 },
-          { header: 'Created Date', key: 'createdAt', width: 20 },
-          { header: 'Created By', key: 'createdBy', width: 25 },
-          { header: 'Subfolders', key: 'subfolders', width: 15 },
-        ];
+        // Define columns for the report based on available data
+        const availableKeys = Object.keys(data.details[0] || {});
+        const columns = availableKeys.map(key => ({
+          header: key.charAt(0).toUpperCase() + key.slice(1),
+          key: key,
+          width: 25
+        }));
 
         // Calculate column widths
         const totalWidth = columns.reduce((sum, col) => sum + col.width, 0);
