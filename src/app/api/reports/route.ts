@@ -461,14 +461,20 @@ async function generatePDFReport(data: any, filePath: string) {
         });
         
         const siteName = data.siteNameNepali || data.siteName || '';
-        const siteNameFont = data.siteNameNepali ? nepaliFont : englishFontBold;
-
-        page.drawText(siteName, {
-          x: margin + logoWidth + 10,
-          y: y - logoHeight / 2 - 5, // Adjust vertical alignment
-          font: siteNameFont,
-          size: 20,
-          color: rgb(0, 0, 0),
+        // Segment siteName into Nepali and non-Nepali parts and draw each with the correct font
+        const siteNameSegments = siteName.match(/[\u0900-\u097F]+|[^\u0900-\u097F]+/g) || [];
+        let currentX = margin + logoWidth + 10;
+        siteNameSegments.forEach((segment: string) => {
+          const isNepali = /[\u0900-\u097F]/.test(segment);
+          const font = isNepali ? nepaliFont : englishFontBold;
+          page.drawText(segment, {
+            x: currentX,
+            y: y - logoHeight / 2 - 5,
+            font,
+            size: 20,
+            color: rgb(0, 0, 0),
+          });
+          currentX += font.widthOfTextAtSize(segment, 20);
         });
         y -= logoHeight + 20;
       }
@@ -476,8 +482,20 @@ async function generatePDFReport(data: any, filePath: string) {
       console.log('Could not add logo to PDF report:', error);
       // Fallback for title if logo fails
       const siteName = data.siteNameNepali || data.siteName || '';
-      const siteNameFont = data.siteNameNepali ? nepaliFont : englishFontBold;
-      page.drawText(siteName, { x: margin, y, font: siteNameFont, size: 20 });
+      const siteNameSegments = siteName.match(/[\u0900-\u097F]+|[^\u0900-\u097F]+/g) || [];
+      let currentX = margin;
+      siteNameSegments.forEach((segment: string) => {
+        const isNepali = /[\u0900-\u097F]/.test(segment);
+        const font = isNepali ? nepaliFont : englishFontBold;
+        page.drawText(segment, {
+          x: currentX,
+          y,
+          font,
+          size: 20,
+          color: rgb(0, 0, 0),
+        });
+        currentX += font.widthOfTextAtSize(segment, 20);
+      });
       y -= 30;
     }
   }
@@ -632,7 +650,7 @@ async function generatePDFReport(data: any, filePath: string) {
         const segments = cellText.match(/[\u0900-\u097F]+|[^\u0900-\u097F]+/g) || [];
         let currentX = margin + i * colWidth + 5;
 
-        segments.forEach(segment => {
+        segments.forEach((segment: string) => {
             const isNepali = /[\u0900-\u097F]/.test(segment);
             const font = isNepali ? nepaliFont : englishFont;
             page.drawText(segment, {

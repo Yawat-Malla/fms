@@ -26,17 +26,30 @@ export async function GET(
       where: {
         id: fileId,
       },
+      include: {
+        folder: true
+      }
     });
 
     if (!file) {
       return new NextResponse('File not found', { status: 404 });
     }
 
-    // Ensure the file path is properly resolved relative to the project root
-    const filePath = path.isAbsolute(file.path) 
-      ? file.path 
-      : path.join(process.cwd(), file.path.replace(/^\/+/, ''));
-    
+    // Get the folder path from the database
+    const folderPath = file.folder?.path;
+    if (!folderPath) {
+      return new NextResponse('File path not found', { status: 404 });
+    }
+
+    // Get the actual file name with UUID prefix
+    const actualFileName = file.path.split('/').pop();
+    if (!actualFileName) {
+      return new NextResponse('Invalid file path', { status: 404 });
+    }
+
+    // Construct the full file path using the actual file name
+    const filePath = path.join(folderPath, actualFileName);
+
     try {
       const fileBuffer = await fs.readFile(filePath);
       const headers = new Headers();
