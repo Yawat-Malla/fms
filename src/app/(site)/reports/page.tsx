@@ -46,7 +46,6 @@ export default function ReportsPage() {
   const reportTypes = [
     { id: 'folder_count', name: 'reports.types.folder_count' },
     { id: 'empty_folders', name: 'reports.types.empty_folders' },
-    { id: 'folder_metadata', name: 'reports.types.folder_metadata' },
     { id: 'custom', name: 'reports.types.custom' },
   ] as const;
 

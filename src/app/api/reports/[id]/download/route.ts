@@ -53,7 +53,13 @@ export async function GET(
       }
       
       // Set filename for download
-      headers.set('Content-Disposition', `attachment; filename="${report.name}.${fileExt}"`);
+      const fileNameWithExt = `${report.name}.${fileExt}`;
+      // Fallback for older browsers: replace non-ASCII characters
+      const asciiFilename = fileNameWithExt.replace(/[^\x20-\x7E]/g, '_');
+      // Modern browser support for Unicode filenames
+      const encodedFilename = encodeURIComponent(fileNameWithExt);
+
+      headers.set('Content-Disposition', `attachment; filename="${asciiFilename}"; filename*=UTF-8''${encodedFilename}`);
 
       return new NextResponse(fileBuffer, {
         headers,
