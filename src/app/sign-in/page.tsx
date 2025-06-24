@@ -6,7 +6,9 @@ import prisma from '@/lib/prisma';
 export default async function SignInPage() {
   // Fetch settings server-side
   const settings = await prisma.systemSettings.findFirst();
-  const logoPath = settings?.siteLogo || '/nepal-emblem.png';
+  const logoPath = settings?.siteLogo
+    ? `${settings.siteLogo}?v=${settings.updatedAt ? new Date(settings.updatedAt).getTime() : Date.now()}`
+    : '/nepal-emblem.png';
   const siteName = settings?.siteName || 'File Management System';
 
   return (
