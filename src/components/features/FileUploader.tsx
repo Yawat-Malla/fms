@@ -16,7 +16,7 @@ interface FileUploaderProps {
 const FileUploader = ({
   onFilesSelected,
   maxFiles = 10,
-  maxSizeMB = 20,
+  maxSizeMB = 70,
   acceptedFileTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'image/jpeg', 'image/png'],
   disabled = false,
 }: FileUploaderProps) => {
