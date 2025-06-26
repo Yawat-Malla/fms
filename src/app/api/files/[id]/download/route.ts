@@ -49,7 +49,7 @@ export async function GET(
 
     // Construct the full file path using the actual file name
     const filePath = path.join(folderPath, actualFileName);
-
+    
     try {
       const fileBuffer = await fs.readFile(filePath);
       const headers = new Headers();

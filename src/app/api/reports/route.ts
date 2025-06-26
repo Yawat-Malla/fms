@@ -11,6 +11,9 @@ import path from 'path';
 import { Buffer } from 'node:buffer';
 // @ts-ignore
 import * as fontkit from 'fontkit';
+import puppeteer from 'puppeteer';
+import neTranslations from '@/i18n/locales/ne.json';
+import BikramSambat, { ADToBS } from 'bikram-sambat-js';
 
 // Base64 font strings (truncated for brevity, use full strings in real code)
 const ANNAPURNA_SIL_REGULAR_BASE64 = "AAEAAAARAQAABAAQR0RFRgB4AfYAAeGMAAABHkdQT1OSAp8yAAGP8AAAACpHU1VCA8DdaQAABqQAAAA0T1MvMkBCLSwAAEK8AAAAYGNtYXABDQGXAAACDAAAAGxjdnQgACgAigAABUgAAAAiZnBnbQ/8ANgAAAZgAAAJcGdhc3AAAAAQAAHhoAAAAAhnbHlmwhsQjwAAFrgAAEEgaGVhZAReyIkAAEBcAAAANmhoZWEH3gOIAA9AIAAAACRobXR4BEcE/AAAD3gAAAS0bG9jYQF0AhIAAAmAAAAAIW1tYXABDQF5AAwAaAAAAChtYXhwAQ4B5wAPAFAAAAAgbmFtZQOKBQMAABVYAAABinBvc3QAAwAAAAACBpAAAAAOcHJlcGr+j9wAAAXsAAAAOAAIAAgACgADAAEAAQAAAAAEAAAAAPgBTAABAAAAAAAAAAAAAAAAAAAADgABAAAAAQAAeL9GXcVfDzz1AAsD6AAAAADbTfdtAAAAANtN920AAP/ABAADgAAAAAgAAgAAAAAAAAABAAAAA4AAAAEAAABfAAEAAAAAAAEADgBEAAEAAAAAAAIABwBMAAEAAAAAAAMADgBXAAEAAAAAAAQADgCgAAEAAAAAAAUACwDDAAEAAAAAAAYADgCrAAEAAAAAAAoANADIAAMAAQQJAAAAAgB4AAoAAwABBAkAAQAMAFIAAwABBAkAAgAOAFAAAwABBAkAAwAMAFgAAwABBAkABAAMAKQAAwABBAkABQAWANQAAwABBAkABgAMAKwAAwABBAkACgA0ANAAAAADAAAAAAAAABQACgAAQABfAFMAAAAAAQAJABQACgAAQABgAFMAAAAAAQALAAIAAAAADgAAAgAAAAADAAEAAwAAAAAAAP8AIAADAAEECQAAACAAeAAGAAEECQABAAwAUgAGAAEECQACAA4AUAAGAAEECQADAAwAWAAHAAEECQAEAAwAKQAHAAEECQAFABYAzAAHAAEECQAGAAwArAAHAAEECQAKADQAyAAAAAA=";
@@ -24,6 +27,44 @@ if (!fs.existsSync(uploadsDir)) {
 }
 if (!fs.existsSync(reportsDir)) {
   fs.mkdirSync(reportsDir);
+}
+
+// Helper to convert English numbers to Nepali
+function toNepaliNumber(str: string | number): string {
+  return String(str).replace(/[0-9]/g, d =>
+    '०१२३४५६७८९'[parseInt(d)]
+  );
+}
+
+// Helper to map source, grantType, fiscalYear to Nepali
+function getNepaliSource(source: string) {
+  const key = source.toLowerCase();
+  // Try files.filters.bySource first
+  const bySource = (neTranslations.files?.filters?.bySource as Record<string, string>) || {};
+  if (bySource[key]) return bySource[key];
+  // Then try reports.sources
+  const reportSources = (neTranslations.reports?.sources as Record<string, string>) || {};
+  if (reportSources[key]) return reportSources[key];
+  // Fallback to key
+  return source;
+}
+function getNepaliGrantType(type: string) {
+  // Try files.filters.byGrantType first
+  const byGrantType = (neTranslations.files?.filters?.byGrantType as Record<string, string>) || {};
+  if (byGrantType[type]) return byGrantType[type];
+  // Then try reports.grantTypes
+  const reportGrantTypes = (neTranslations.reports?.grantTypes as Record<string, string>) || {};
+  if (reportGrantTypes[type]) return reportGrantTypes[type];
+  // Fallback to key
+  return type;
+}
+function getNepaliFiscalYear(fy: string) {
+  // Try to convert numbers to Nepali
+  return toNepaliNumber(fy);
+}
+function getNepaliDate(date: string) {
+  // Only convert numbers, not month names
+  return toNepaliNumber(date);
 }
 
 export async function POST(req: Request) {
@@ -117,7 +158,109 @@ export async function POST(req: Request) {
     if (fileFormat === 'excel') {
       await generateExcelReport(reportData, filePath);
     } else {
-      await generatePDFReport(reportData, filePath);
+      // Nepali column headings (user provided)
+      const nepaliHeaders = [
+        'क्र.सं.', // S.N.
+        'कार्यक्रमको नाम', // Name
+        'श्रोत', // Source
+        'प्रकार', // grantType
+        'आर्थिक वर्ष', // fiscalYear
+        'प्रविष्टि मिति', // createdDate
+        'कैफियत' // Remarks
+      ];
+      // Prepare logo as base64 data URL
+      let logoDataUrl = '';
+      try {
+        let logoPath = reportData.siteLogo || '/nepal-emblem.png';
+        if (logoPath.startsWith('/')) logoPath = logoPath.slice(1);
+        const absLogoPath = path.join(process.cwd(), 'public', logoPath);
+        if (fs.existsSync(absLogoPath)) {
+          const logoBuffer = fs.readFileSync(absLogoPath);
+          const ext = logoPath.split('.').pop()?.toLowerCase() || 'png';
+          logoDataUrl = `data:image/${ext};base64,${logoBuffer.toString('base64')}`;
+        }
+      } catch (e) {
+        logoDataUrl = '';
+      }
+      // Map details to match the new order and field mapping
+      const detailsWithSN = reportData.details.map((row: any, idx: number) => ({
+        sn: toNepaliNumber(idx + 1),
+        name: row.name,
+        source: getNepaliSource(row.source),
+        grantType: getNepaliGrantType(row.grantType),
+        fiscalYear: getNepaliFiscalYear(row.fiscalYear),
+        createdAt: getNepaliDate(row.createdAt),
+        remarks: ''
+      }));
+      // Prepare dynamic intro text with AD to BS conversion and conditional logic
+      // Determine if 'all' is selected for fiscal year, date range, grant type, or source
+      const isAllFiscalYear = !parameters.fiscalYear || parameters.fiscalYear === 'all';
+      const isAllDateRange = !parameters.startDate || !parameters.endDate || parameters.startDate === 'all' || parameters.endDate === 'all';
+      const isAllGrantType = !parameters.grantType || parameters.grantType === 'all';
+      const isAllSource = !parameters.source || parameters.source === 'all';
+
+      // Grant type and source (Nepali or 'सबै'/'सबै प्रकार')
+      const selectedGrantType = isAllGrantType ? 'सबै प्रकार' : getNepaliGrantType(parameters.grantType || '');
+      const selectedSource = isAllSource ? 'सबै' : getNepaliSource(parameters.source || '');
+      // Fiscal year (Nepali or skip)
+      let selectedFiscalYear = '';
+      if (!isAllFiscalYear && parameters.fiscalYear) {
+        // Fetch fiscal year name from DB if ID is provided
+        const fyRecord = await prisma.fiscalYear.findUnique({
+          where: { id: Number(parameters.fiscalYear) },
+          select: { name: true },
+        });
+        if (fyRecord && fyRecord.name) {
+          // Remove 'FY' prefix if present
+          let fyName = fyRecord.name.trim();
+          if (fyName.startsWith('FY')) {
+            fyName = fyName.replace(/^FY\s*/, '');
+          }
+          selectedFiscalYear = getNepaliFiscalYear(fyName);
+        } else {
+          selectedFiscalYear = getNepaliFiscalYear(parameters.fiscalYear);
+        }
+      }
+      // Date range (BS or 'सबै')
+      let selectedStartDate = '';
+      let selectedEndDate = '';
+      if (isAllDateRange) {
+        selectedStartDate = 'सबै';
+        selectedEndDate = '';
+      } else {
+        // Convert AD to BS and then to Nepali numerals
+        try {
+          const bsStart = ADToBS(format(new Date(parameters.startDate), 'yyyy-MM-dd'));
+          const bsEnd = ADToBS(format(new Date(parameters.endDate), 'yyyy-MM-dd'));
+          selectedStartDate = toNepaliNumber(bsStart.replace(/-/g, '/'));
+          selectedEndDate = toNepaliNumber(bsEnd.replace(/-/g, '/'));
+        } catch (e) {
+          selectedStartDate = '';
+          selectedEndDate = '';
+        }
+      }
+      // Compose intro text
+      let introText = '';
+      if (!isAllFiscalYear) {
+        introText += `आर्थिक वर्ष ${selectedFiscalYear} को लागि तयार पारिएको यो प्रतिवेदनमा `;
+      } else {
+        introText += 'यो प्रतिवेदनमा ';
+      }
+      if (isAllDateRange) {
+        introText += `सबै `;
+      } else {
+        introText += `मिति ${selectedStartDate} देखि ${selectedEndDate} को अवधिमा `;
+      }
+      introText += 'अपलोड गरिएका कार्यक्रमका फाइलहरूको विवरण समेटिएको छ। ';
+      introText += `सो प्रतिवेदन ${selectedSource} स्रोत अन्तर्गतको ${selectedGrantType} को आधारमा तयार पारिएको हो।`;
+      await generatePDFWithPuppeteer({
+        siteLogo: logoDataUrl,
+        siteName: reportData.siteName,
+        introText,
+        heading: 'समग्र विवरणहरू',
+        details: detailsWithSN,
+        tableHeaders: nepaliHeaders
+      }, filePath);
     }
 
     // Update report with download URL
@@ -173,13 +316,19 @@ async function generateFileCountReport(parameters: any) {
   // Get system settings for site name and logo
   const settings = await prisma.systemSettings.findFirst();
 
+  // Always use fiscalYearId for filtering
+  let fiscalYearFilter = undefined;
+  if (fiscalYear) {
+    fiscalYearFilter = { fiscalYearId: Number(fiscalYear) };
+  }
+
   const folders = await prisma.folder.findMany({
     where: {
       createdAt: {
         gte: startDate ? new Date(startDate) : undefined,
         lte: endDate ? new Date(endDate) : undefined,
       },
-      fiscalYear: fiscalYear ? { name: fiscalYear } : undefined,
+      ...fiscalYearFilter,
       source: source ? { name: source } : undefined,
       grantType: grantType ? { name: grantType } : undefined,
       isDeleted: false,
@@ -200,7 +349,7 @@ async function generateFileCountReport(parameters: any) {
   return {
     title: 'Folder Count Report',
     siteName: settings?.siteName || 'File Management System',
-    siteLogo: '/nepal-emblem.png', // Use default logo
+    siteLogo: settings?.siteLogo || '/nepal-emblem.png', // Use saved logo or default
     parameters,
     summary: {
       totalFolders: folders.length,
@@ -212,8 +361,8 @@ async function generateFileCountReport(parameters: any) {
     details: folders.map(folder => ({
       name: folder.name,
       fiscalYear: folder.fiscalYear?.name || 'N/A',
-      source: folder.source?.name || 'N/A',
-      grantType: folder.grantType?.name || 'N/A',
+      source: folder.source?.key || folder.source?.name || 'N/A',
+      grantType: folder.grantType?.key || folder.grantType?.name || 'N/A',
       createdAt: format(new Date(folder.createdAt), 'yyyy-MM-dd'),
     })),
   };
@@ -225,10 +374,16 @@ async function generateMissingUploadsReport(parameters: any) {
   // Get system settings for site name and logo
   const settings = await prisma.systemSettings.findFirst();
 
+  // Always use fiscalYearId for filtering
+  let fiscalYearFilter = undefined;
+  if (fiscalYear) {
+    fiscalYearFilter = { fiscalYearId: Number(fiscalYear) };
+  }
+
   // Get all root folders with their files, excluding subfolders
   const folders = await prisma.folder.findMany({
     where: {
-      fiscalYear: fiscalYear ? { name: fiscalYear } : undefined,
+      ...fiscalYearFilter,
       source: source ? { name: source } : undefined,
       grantType: grantType ? { name: grantType } : undefined,
       isDeleted: false,
@@ -249,7 +404,7 @@ async function generateMissingUploadsReport(parameters: any) {
   return {
     title: 'Empty Folders Report',
     siteName: settings?.siteName || 'File Management System',
-    siteLogo: '/nepal-emblem.png', // Use default logo
+    siteLogo: settings?.siteLogo || '/nepal-emblem.png', // Use saved logo or default
     parameters,
     summary: {
       totalFolders: folders.length,
@@ -259,8 +414,8 @@ async function generateMissingUploadsReport(parameters: any) {
     details: folders.map(folder => ({
       name: folder.name,
       fiscalYear: folder.fiscalYear?.name || 'N/A',
-      source: folder.source?.name || 'N/A',
-      grantType: folder.grantType?.name || 'N/A',
+      source: folder.source?.key || folder.source?.name || 'N/A',
+      grantType: folder.grantType?.key || folder.grantType?.name || 'N/A',
       createdAt: format(new Date(folder.createdAt), 'yyyy-MM-dd'),
       isEmpty: folder.files.length === 0,
     })),
@@ -268,19 +423,32 @@ async function generateMissingUploadsReport(parameters: any) {
 }
 
 async function generateCustomReport(parameters: any) {
-  const { startDate, endDate, fiscalYear, source, grantType } = parameters;
+  let { startDate, endDate, fiscalYear, source, grantType } = parameters;
+
+  // Treat 'all', empty string, and undefined as no filter
+  if (!startDate || startDate === 'all' || startDate === '') startDate = undefined;
+  if (!endDate || endDate === 'all' || endDate === '') endDate = undefined;
+  if (!fiscalYear || fiscalYear === 'all' || fiscalYear === '') fiscalYear = undefined;
+  if (!source || source === 'all' || source === '') source = undefined;
+  if (!grantType || grantType === 'all' || grantType === '') grantType = undefined;
 
   // Get system settings for site name and logo
   const settings = await prisma.systemSettings.findFirst();
+
+  // Always use fiscalYearId for filtering
+  let fiscalYearFilter = undefined;
+  if (fiscalYear) {
+    fiscalYearFilter = { fiscalYearId: Number(fiscalYear) };
+  }
 
   const folderWhere = {
     createdAt: {
       gte: startDate ? new Date(startDate) : undefined,
       lte: endDate ? new Date(endDate) : undefined,
     },
-    fiscalYear: fiscalYear ? { name: fiscalYear } : undefined,
-    source: source ? { name: source } : undefined,
-    grantType: grantType ? { name: grantType } : undefined,
+    ...fiscalYearFilter,
+    source: source ? { key: source } : undefined,
+    grantType: grantType ? { key: grantType } : undefined,
     isDeleted: false,
     parentId: null,
   };
@@ -303,18 +471,17 @@ async function generateCustomReport(parameters: any) {
           gte: startDate ? new Date(startDate) : undefined,
           lte: endDate ? new Date(endDate) : undefined,
         },
-        fiscalYear: fiscalYear ? { name: fiscalYear } : undefined,
-        source: source ? { name: source } : undefined,
-        grantType: grantType ? { name: grantType } : undefined,
+        ...fiscalYearFilter,
+        source: source ? { key: source } : undefined,
+        grantType: grantType ? { key: grantType } : undefined,
       },
     },
   });
 
-
   return {
     title: 'Folder Metadata Report',
     siteName: settings?.siteName || 'File Management System',
-    siteLogo: '/nepal-emblem.png', // Use default logo
+    siteLogo: settings?.siteLogo || '/nepal-emblem.png', // Use saved logo or default
     parameters,
     summary: {
       totalFolders: folders.length,
@@ -324,8 +491,8 @@ async function generateCustomReport(parameters: any) {
     details: folders.map(folder => ({
       name: folder.name,
       fiscalYear: folder.fiscalYear?.name || 'N/A',
-      source: folder.source?.name || 'N/A',
-      grantType: folder.grantType?.name || 'N/A',
+      source: folder.source?.key || folder.source?.name || 'N/A',
+      grantType: folder.grantType?.key || folder.grantType?.name || 'N/A',
       createdAt: format(new Date(folder.createdAt), 'yyyy-MM-dd'),
     })),
   };
@@ -501,22 +668,56 @@ async function generatePDFReport(data: any, filePath: string) {
   }
   
   // Draw a line under the header
-  y -= 10
+  y -= 10;
   page.drawLine({
     start: { x: margin, y: y },
     end: { x: width - margin, y: y },
     thickness: 1,
     color: rgb(0.8, 0.8, 0.8),
-  })
+  });
+  y -= 20;
+
+  // Nepali intro paragraph
+  const introText =
+    'आर्थिक वर्ष २०८०/८१ को लागि तयार पारिएको यो प्रतिवेदनमा मिति २०८१/०२/१५ देखि २०८१/०३/१५ को अवधिमा अपलोड गरिएका कार्यक्रमका फाइलहरूको विवरण समेटिएको छ। सो प्रतिवेदन संघीय सरकार स्रोत अन्तर्गतको सशर्त अनुदानको आधारमा तयार पारिएको हो।';
+  const introFontSize = 12;
+  const introLineHeight = 18;
+  const introWidth = width - 2 * margin;
+  // Improved line wrapping for Nepali: wrap at character level
+  let introLines = [];
+  let currentLine = '';
+  for (const char of introText) {
+    const testLine = currentLine + char;
+    const testWidth = nepaliFont.widthOfTextAtSize(testLine, introFontSize);
+    if (testWidth > introWidth && currentLine) {
+      introLines.push(currentLine);
+      currentLine = char;
+    } else {
+      currentLine = testLine;
+    }
+  }
+  if (currentLine) introLines.push(currentLine);
+  introLines.forEach(line => {
+    page.drawText(line, {
+      x: margin,
+      y,
+      font: nepaliFont,
+      size: introFontSize,
+      color: rgb(0, 0, 0),
+    });
+    y -= introLineHeight;
+  });
   y -= 10;
 
-  // Report Title
-  y -= 20;
-  page.drawText(data.title || 'Report', {
-    x: margin,
+  // Centered heading
+  const heading = 'समग्र विवरणहरू';
+  const headingFontSize = 16;
+  const headingWidth = nepaliFont.widthOfTextAtSize(heading, headingFontSize);
+  page.drawText(heading, {
+    x: margin + (introWidth - headingWidth) / 2,
     y,
-    font: englishFontBold,
-    size: 18,
+    font: nepaliFont,
+    size: headingFontSize,
     color: rgb(0, 0, 0),
   });
   y -= 30;
@@ -686,4 +887,53 @@ function groupBy(array: any[], key: string) {
 function formatSummaryKey(key: string): string {
   const result = key.replace(/([A-Z])/g, ' $1');
   return result.charAt(0).toUpperCase() + result.slice(1);
+}
+
+// Generate PDF using Puppeteer for proper Nepali rendering
+async function generatePDFWithPuppeteer(data: any, filePath: string) {
+  // Prepare the HTML by rendering a template (to be created)
+  const fs = require('fs');
+  const path = require('path');
+  const templatePath = path.join(process.cwd(), 'src', 'app', 'api', 'reports', 'report-template.html');
+  let html = fs.readFileSync(templatePath, 'utf8');
+
+  // Simple variable replacement (for now)
+  html = html.replace('{{siteLogo}}', data.siteLogo || '/nepal-emblem.png');
+  html = html.replace('{{siteName}}', data.siteName || '');
+  html = html.replace('{{introText}}', data.introText || '');
+  html = html.replace('{{heading}}', data.heading || '');
+
+  // Table rows
+  let tableRows = '';
+  if (data.details && data.details.length > 0) {
+    for (const row of data.details) {
+      tableRows += '<tr>' +
+        `<td>${row.sn}</td>` +
+        `<td>${row.name}</td>` +
+        `<td>${row.source}</td>` +
+        `<td>${row.grantType}</td>` +
+        `<td>${row.fiscalYear}</td>` +
+        `<td>${row.createdAt}</td>` +
+        `<td>${row.remarks}</td>` +
+        '</tr>';
+    }
+  }
+  html = html.replace('{{tableRows}}', tableRows);
+
+  // Table headers
+  let tableHeaders = '';
+  if (data.tableHeaders && Array.isArray(data.tableHeaders)) {
+    tableHeaders = (data.tableHeaders as string[]).map((header: string) => `<th>${header}</th>`).join('');
+  }
+  html = html.replace('{{tableHeaders}}', tableHeaders);
+
+  // Launch Puppeteer and generate PDF
+  const browser = await puppeteer.launch({
+    headless: 'new',
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
+  });
+  const page = await browser.newPage();
+  await page.setContent(html, { waitUntil: 'networkidle0' });
+  await page.pdf({ path: filePath, format: 'A4', printBackground: true });
+  await browser.close();
 } 

@@ -773,6 +773,28 @@ export default function SettingsPage() {
     return session?.user?.role === 'admin' || session?.user?.role === 'superadmin';
   };
 
+  // Fetch admin settings from API on mount
+  useEffect(() => {
+    const fetchAdminSettings = async () => {
+      try {
+        const res = await fetch('/api/admin/settings');
+        if (res.ok) {
+          const data = await res.json();
+          setAdminSettings(prev => ({
+            ...prev,
+            siteName: data.siteName || prev.siteName,
+            siteLogo: data.siteLogo || prev.siteLogo,
+            enabledModules: data.enabledModules || prev.enabledModules,
+            maintenanceMode: data.maintenanceMode ?? prev.maintenanceMode,
+          }));
+        }
+      } catch (error) {
+        console.error('Failed to fetch admin settings:', error);
+      }
+    };
+    fetchAdminSettings();
+  }, []);
+
   return (
     <div className="max-w-6xl mx-auto p-6">
       <div className="mb-6">

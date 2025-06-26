@@ -51,7 +51,17 @@ export default function ReportsPage() {
 
   // Initialize fiscal years
   useEffect(() => {
-    setFiscalYears(generateFiscalYears());
+    const fetchFiscalYears = async () => {
+      try {
+        const res = await fetch('/api/admin/fiscal-years');
+        const data = await res.json();
+        setFiscalYears(data);
+      } catch (error) {
+        console.error('Error fetching fiscal years:', error);
+        toast.error('Failed to load fiscal years');
+      }
+    };
+    fetchFiscalYears();
   }, []);
 
   // Fetch sources and grant types
@@ -368,7 +378,7 @@ export default function ReportsPage() {
               >
                 <option value=""><TranslatedText text="files.filters.allFiscalYears" /></option>
                 {fiscalYears.map((year) => (
-                  <option key={year.id} value={year.name}>
+                  <option key={year.id} value={year.id}>
                     {year.name}
                   </option>
                 ))}

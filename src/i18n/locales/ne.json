@@ -330,7 +330,9 @@
       "test1": "asdfsadf",
       "test": "teest",
       "asdfsdf": "asdf",
-      "asdfsdfasdfsdf": "asdfasdf"
+      "asdfsdfasdfsdf": "asdfasdf",
+      "supplementary_grant": "पूरक अनुदान",
+      "special_grant": "विशेष अनुदान"
     },
     "types": {
       "folder_count": "फोल्डर गणना",

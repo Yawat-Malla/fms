@@ -229,12 +229,20 @@ export default function AdminSettingsPage() {
             <div className="flex items-center space-x-4">
               {settings.siteLogo && (
                 <div className="relative w-16 h-16">
-                  <Image
-                    src={settings.siteLogo}
-                    alt="Site Logo"
-                    fill
-                    className="object-contain"
-                  />
+                  {settings.siteLogo.startsWith('data:') ? (
+                    <img
+                      src={settings.siteLogo}
+                      alt="Site Logo"
+                      className="object-contain w-16 h-16 rounded-md bg-dark-800"
+                    />
+                  ) : (
+                    <Image
+                      src={settings.siteLogo}
+                      alt="Site Logo"
+                      fill
+                      className="object-contain rounded-md bg-dark-800"
+                    />
+                  )}
                 </div>
               )}
               <input

@@ -326,7 +326,9 @@
       "test1": "test1",
       "test": "etst",
       "asdfsdf": "asdfs",
-      "asdfsdfasdfsdf": "asdfsdf"
+      "asdfsdfasdfsdf": "asdfsdf",
+      "supplementary_grant": "Supplementary Grant",
+      "special_grant": "Special Grant"
     },
     "types": {
       "folder_count": "Folder Count",

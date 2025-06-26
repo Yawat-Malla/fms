@@ -59,7 +59,11 @@ export async function GET(
       // Modern browser support for Unicode filenames
       const encodedFilename = encodeURIComponent(fileNameWithExt);
 
+      if (report.fileFormat === FileFormat.pdf) {
+        headers.set('Content-Disposition', `inline; filename="${asciiFilename}"; filename*=UTF-8''${encodedFilename}`);
+      } else {
       headers.set('Content-Disposition', `attachment; filename="${asciiFilename}"; filename*=UTF-8''${encodedFilename}`);
+      }
 
       return new NextResponse(fileBuffer, {
         headers,

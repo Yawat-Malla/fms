@@ -24,16 +24,14 @@ export default function Header() {
         <div className="flex justify-between h-16">
           <div className="flex">
             <div className="flex-shrink-0 flex items-center space-x-3">
-              {settings?.siteLogo && (
-                <div className="h-8 w-8 relative">
-                  <Image
-                    src={settings.siteLogo}
-                    alt="Site Logo"
-                    fill
-                    className="object-contain"
-                  />
-                </div>
-              )}
+              <div className="h-8 w-8 relative">
+                <Image
+                  src={settings?.siteLogo || '/nepal-emblem.png'}
+                  alt="Site Logo"
+                  fill
+                  className="object-contain"
+                />
+              </div>
               <Link href="/" className="text-xl font-bold text-gray-900">
                 {isLoading ? 'Loading...' : settings?.siteName || 'File Management System'}
               </Link>

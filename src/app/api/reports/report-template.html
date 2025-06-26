@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ne">
+<head>
+  <meta charset="UTF-8">
+  <title>Report</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Noto Sans Devanagari', Arial, sans-serif;
+      margin: 40px 40px 40px 40px;
+      color: #222;
+      background: #fff;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .logo {
+      width: 72px;
+      height: 72px;
+      margin-right: 16px;
+    }
+    .site-name {
+      font-size: 2rem;
+      font-weight: 700;
+      font-family: 'Noto Sans Devanagari', Arial, sans-serif;
+      color: black;
+    }
+    .intro {
+      font-size: 1rem;
+      margin-bottom: 24px;
+      white-space: pre-line;
+      font-family: 'Noto Sans Devanagari', Arial, sans-serif;
+    }
+    .heading {
+      text-align: center;
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 24px;
+      font-family: 'Noto Sans Devanagari', Arial, sans-serif;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+      font-size: 0.95rem;
+    }
+    th, td {
+      border: 1px solid #bbb;
+      padding: 8px 10px;
+      text-align: left;
+      font-family: 'Noto Sans Devanagari', Arial, sans-serif;
+      word-break: break-word;
+      vertical-align: top;
+      white-space: pre-line;
+      max-width: 140px;
+    }
+    th {
+      background: #f3f3f3;
+      font-weight: 700;
+    }
+    tr:nth-child(even) td {
+      background: #fafafa;
+    }
+  </style>
+</head>
+<body>
+  <div style="margin-top: 40px;"></div>
+  <div class="header" style="justify-content: flex-start; margin-bottom: 40px; padding-top: 24px; padding-bottom: 24px;">
+    <img class="logo" src="{{siteLogo}}" alt="Logo" />
+    <div style="flex:1; text-align:center;">
+      <div class="site-name" style="text-align:center; margin-bottom: 0; color: black;">{{siteName}}</div>
+      <div class="second-heading" style="font-size:1.1rem; font-weight:600; margin-top:12px; margin-bottom:24px; font-family: 'Noto Sans Devanagari', Arial, sans-serif; color: black;">डिजिटाइज गरिएका कार्यक्रमका फाइलहरूको विवरण</div>
+      <hr>
+    </div>
+  </div>
+  
+  <div class="intro">{{introText}}</div>
+  <div class="heading">{{heading}}</div>
+  <table>
+    <thead>
+      <tr>{{tableHeaders}}</tr>
+    </thead>
+    <tbody>
+      {{tableRows}}
+    </tbody>
+  </table>
+</body>
+</html> 

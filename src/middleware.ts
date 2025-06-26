@@ -5,8 +5,11 @@ import { getToken } from 'next-auth/jwt';
 
 // Combined middleware function
 async function mainMiddleware(request: NextRequest) {
-  // Allow access to uploads
-  if (request.nextUrl.pathname.startsWith('/uploads/')) {
+  // Allow access to uploads and logos
+  if (
+    request.nextUrl.pathname.startsWith('/uploads/') ||
+    request.nextUrl.pathname.startsWith('/logos/')
+  ) {
     return NextResponse.next();
   }
 
